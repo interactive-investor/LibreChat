@@ -80,6 +80,8 @@ const AttachFileMenu = ({
   const { agentsConfig } = useGetAgentsConfig();
   const { data: startupConfig } = useGetStartupConfig();
   const sharePointEnabled = startupConfig?.sharePointFilePickerEnabled;
+  const canUploadToProvider = endpointFileConfig?.disableProviderUpload !== true;
+  const canUploadText = endpointFileConfig?.disableTextUpload !== true;
 
   const [isSharePointDialogOpen, setIsSharePointDialogOpen] = useState(false);
 
@@ -131,9 +133,10 @@ const AttachFileMenu = ({
         currentProvider === EModelEndpoint.azureOpenAI && useResponsesApi;
 
       if (
-        isDocumentSupportedProvider(endpointType) ||
-        isDocumentSupportedProvider(currentProvider) ||
-        isAzureWithResponsesApi
+        canUploadToProvider &&
+        (isDocumentSupportedProvider(endpointType) ||
+          isDocumentSupportedProvider(currentProvider) ||
+          isAzureWithResponsesApi)
       ) {
         items.push({
           label: localize('com_ui_upload_provider'),
@@ -152,7 +155,7 @@ const AttachFileMenu = ({
           },
           icon: <FileImageIcon className="icon-md" />,
         });
-      } else {
+      } else if (canUploadToProvider) {
         items.push({
           label: localize('com_ui_upload_image_input'),
           onClick: () => {
@@ -163,7 +166,7 @@ const AttachFileMenu = ({
         });
       }
 
-      if (capabilities.contextEnabled) {
+      if (capabilities.contextEnabled && canUploadText) {
         items.push({
           label: localize('com_ui_upload_ocr_text'),
           onClick: () => {
@@ -237,6 +240,8 @@ const AttachFileMenu = ({
     codeAllowedByAgent,
     fileSearchAllowedByAgent,
     setIsSharePointDialogOpen,
+    canUploadToProvider,
+    canUploadText,
   ]);
 
   const menuTrigger = (

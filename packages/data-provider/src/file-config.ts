@@ -388,6 +388,8 @@ const assistantsFileConfig = {
   fileSizeLimit: defaultSizeLimit,
   totalSizeLimit: defaultSizeLimit,
   supportedMimeTypes,
+  disableProviderUpload: false,
+  disableTextUpload: false,
   disabled: false,
 };
 
@@ -401,6 +403,8 @@ export const fileConfig = {
       fileSizeLimit: defaultSizeLimit,
       totalSizeLimit: defaultSizeLimit,
       supportedMimeTypes,
+      disableProviderUpload: false,
+      disableTextUpload: false,
       disabled: false,
     },
     default: {
@@ -408,6 +412,8 @@ export const fileConfig = {
       fileSizeLimit: defaultSizeLimit,
       totalSizeLimit: defaultSizeLimit,
       supportedMimeTypes,
+      disableProviderUpload: false,
+      disableTextUpload: false,
       disabled: false,
     },
   },
@@ -453,6 +459,8 @@ const supportedMimeTypesSchema = z
 
 export const endpointFileConfigSchema = z.object({
   disabled: z.boolean().optional(),
+  disableProviderUpload: z.boolean().optional(),
+  disableTextUpload: z.boolean().optional(),
   fileLimit: z.number().min(0).optional(),
   fileSizeLimit: z.number().min(0).optional(),
   totalSizeLimit: z.number().min(0).optional(),
@@ -529,6 +537,8 @@ function mergeWithDefault(
 
   return {
     disabled: endpointConfig.disabled ?? defaultConfig.disabled,
+    disableProviderUpload: endpointConfig.disableProviderUpload ?? defaultConfig.disableProviderUpload,
+    disableTextUpload: endpointConfig.disableTextUpload ?? defaultConfig.disableTextUpload,
     fileLimit: endpointConfig.fileLimit ?? defaultConfig.fileLimit,
     fileSizeLimit: endpointConfig.fileSizeLimit ?? defaultConfig.fileSizeLimit,
     totalSizeLimit: endpointConfig.totalSizeLimit ?? defaultConfig.totalSizeLimit,
@@ -719,6 +729,8 @@ export function mergeFileConfig(dynamic: z.infer<typeof fileConfigSchema> | unde
 
     if (dynamicEndpoint.disabled === true) {
       mergedEndpoint.disabled = true;
+      mergedEndpoint.disableProviderUpload = true;
+      mergedEndpoint.disableTextUpload = true;
       mergedEndpoint.fileLimit = 0;
       mergedEndpoint.fileSizeLimit = 0;
       mergedEndpoint.totalSizeLimit = 0;
@@ -741,9 +753,12 @@ export function mergeFileConfig(dynamic: z.infer<typeof fileConfigSchema> | unde
       }
     });
 
-    if (dynamicEndpoint.disabled !== undefined) {
-      mergedEndpoint.disabled = dynamicEndpoint.disabled;
-    }
+    const booleanConfigKeys = ['disabled', 'disableProviderUpload', 'disableTextUpload'] as const;
+    booleanConfigKeys.forEach((field) => {
+      if (dynamicEndpoint[field] !== undefined) {
+        mergedEndpoint[field] = dynamicEndpoint[field];
+      }
+    });
 
     if (dynamicEndpoint.supportedMimeTypes) {
       mergedEndpoint.supportedMimeTypes = convertStringsToRegex(
