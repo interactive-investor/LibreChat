@@ -121,7 +121,7 @@ export const applyTranslationOverrides = (
       (resources as Record<string, { translation: TranslationBundle | undefined }>)[language]
         ?.translation || (resources.en.translation as TranslationBundle);
 
-    const mergedTranslations = mergeTranslations(baseTranslation ?? {}, bundle);
+    const mergedTranslations = mergeTranslations(baseTranslation, bundle);
     i18n.addResourceBundle(language, defaultNS, mergedTranslations, true, true);
   });
 };

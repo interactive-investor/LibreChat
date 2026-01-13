@@ -19,6 +19,12 @@ describe('i18next translation tests', () => {
   });
 
   const resetResources = () => {
+    ['en', 'fr', 'es', 'xx'].forEach((lng) => {
+      if (i18n.hasResourceBundle(lng, 'translation')) {
+        i18n.removeResourceBundle(lng, 'translation');
+      }
+    });
+
     i18n.addResourceBundle('en', 'translation', English, true, true);
     i18n.addResourceBundle('fr', 'translation', French, true, true);
     i18n.addResourceBundle('es', 'translation', Spanish, true, true);
@@ -80,5 +86,27 @@ describe('i18next translation tests', () => {
     i18n.changeLanguage('xx');
     expect(i18n.t('com_ui_examples')).toBe('Custom XX');
     expect(i18n.t('com_ui_assistant')).toBe(English.com_ui_assistant);
+  });
+
+  it('should merge nested overrides while preserving existing nested keys', () => {
+    i18n.addResourceBundle(
+      'en',
+      'translation',
+      { nested: { existing: 'Base Value', label: 'Base Label' } },
+      true,
+      true,
+    );
+
+    applyTranslationOverrides({
+      en: {
+        nested: {
+          label: 'Custom Label',
+        },
+      },
+    });
+
+    i18n.changeLanguage('en');
+    expect(i18n.t('nested.label')).toBe('Custom Label');
+    expect(i18n.t('nested.existing')).toBe('Base Value');
   });
 });
