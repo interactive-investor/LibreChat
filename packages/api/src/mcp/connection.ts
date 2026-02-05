@@ -518,7 +518,13 @@ export class MCPConnection extends EventEmitter {
          * //    return {};
          * //  });
          */
-      } else if (state === 'error' && !this.isReconnecting && !this.isInitializing) {
+      } else if (
+        state === 'error' &&
+        !this.isReconnecting &&
+        !this.isInitializing &&
+        !this.shouldStopReconnecting
+      ) {
+        // Guard: only start reconnection if not already reconnecting
         this.handleReconnection().catch((error) => {
           logger.error(`${this.getLogPrefix()} Reconnection handler failed:`, error);
         });
@@ -565,14 +571,8 @@ export class MCPConnection extends EventEmitter {
         } catch (error) {
           logger.error(`${this.getLogPrefix()} Reconnection attempt failed:`, error);
 
-          // Stop immediately if rate limited - retrying will only make it worse
+          // Stop immediately if rate limited
           if (this.isRateLimitError(error)) {
-            /**
-             * Rate limiting sets shouldStopReconnecting to prevent hammering the server.
-             * Silent return here (vs throw in connectClient) because we're already in
-             * error recovery mode - throwing would just add noise. The connection
-             * must be recreated to retry after rate limit lifts.
-             */
             logger.warn(
               `${this.getLogPrefix()} Rate limited (429), stopping reconnection attempts`,
             );
@@ -583,11 +583,11 @@ export class MCPConnection extends EventEmitter {
             return;
           }
 
-          if (
-            this.reconnectAttempts === this.MAX_RECONNECT_ATTEMPTS ||
-            (this.shouldStopReconnecting as boolean)
-          ) {
-            logger.error(`${this.getLogPrefix()} Stopping reconnection attempts`);
+          if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
+            logger.error(
+              `${this.getLogPrefix()} Max reconnection attempts (${this.MAX_RECONNECT_ATTEMPTS}) reached, stopping`,
+            );
+            this.shouldStopReconnecting = true;
             return;
           }
         }
