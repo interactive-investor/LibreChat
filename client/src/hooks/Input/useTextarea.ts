@@ -219,6 +219,7 @@ export default function useTextarea({
 
       // Prioritize plain text if available
       const plainText = clipboardData.getData('text/plain');
+      console.log({ clipboardData, plainText });
       if (plainText) {
         // Let the browser handle text insertion naturally
         return;
