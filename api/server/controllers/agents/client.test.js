@@ -10,12 +10,16 @@ jest.mock('@librechat/agents', () => ({
   }),
 }));
 
-jest.mock('@librechat/api', () => ({
-  ...jest.requireActual('@librechat/api'),
-  checkAccess: jest.fn(),
-  initializeAgent: jest.fn(),
-  createMemoryProcessor: jest.fn(),
-}));
+jest.mock('@librechat/api', () => {
+  const actual = jest.requireActual('@librechat/api');
+  return {
+    ...actual,
+    checkAccess: jest.fn(),
+    initializeAgent: jest.fn(),
+    applyContextToAgent: jest.fn(async (params) => actual.applyContextToAgent(params)),
+    createMemoryProcessor: jest.fn(),
+  };
+});
 
 jest.mock('~/models/Agent', () => ({
   loadAgent: jest.fn(),
@@ -2311,6 +2315,9 @@ describe('AgentClient - titleConvo', () => {
       client.responseMessageId = 'response-123';
       client.shouldSummarize = false;
       client.maxContextTokens = 4096;
+
+      const { applyContextToAgent } = require('@librechat/api');
+      applyContextToAgent.mockClear();
     });
 
     it('should add file context to shared run context when latestAttachmentsAsSystemMessage is true', async () => {
@@ -2325,6 +2332,16 @@ describe('AgentClient - titleConvo', () => {
         },
       ];
 
+      const fileContextText = 'FILE_CONTEXT_BLOCK';
+      const { applyContextToAgent } = require('@librechat/api');
+      const tokenSpy = jest.spyOn(client, 'getTokenCountForMessage').mockReturnValue(0);
+
+      jest.spyOn(client, 'addFileContextToMessage').mockImplementation(async (message) => {
+        message.fileContext = fileContextText;
+      });
+      jest.spyOn(client, 'processAttachments').mockResolvedValue(mockAttachments);
+      client.useMemory = jest.fn().mockResolvedValue(undefined);
+
       client.options.attachments = Promise.resolve(mockAttachments);
 
       const messages = [
@@ -2337,7 +2354,7 @@ describe('AgentClient - titleConvo', () => {
         },
       ];
 
-      await client.buildMessages(messages, null, {
+      await client.buildMessages(messages, 'msg-1', {
         instructions: 'Build messages with file context',
         additional_instructions: null,
       });
@@ -2346,13 +2363,21 @@ describe('AgentClient - titleConvo', () => {
       expect(client.message_file_map).toBeDefined();
       expect(client.message_file_map['msg-1']).toEqual(mockAttachments);
 
-      // Since latestAttachmentsAsSystemMessage is true, file context should be in system context
-      // which means it's added to sharedRunContextParts (for agent instructions)
-      const orderedMessages = client.attachments ?? [];
-      if (orderedMessages.length === 0) {
-        // If no messages (test setup), verify message_file_map was set
-        expect(client.message_file_map['msg-1']).toBeDefined();
+      // Since latestAttachmentsAsSystemMessage is true, file context should be in shared run context
+      expect(applyContextToAgent).toHaveBeenCalled();
+      const { sharedRunContext } = applyContextToAgent.mock.calls[0][0];
+      expect(sharedRunContext).toContain(fileContextText);
+
+      // Latest message should not have file context prepended when true
+      const formattedMessage = tokenSpy.mock.calls[0][0];
+      if (typeof formattedMessage.content === 'string') {
+        expect(formattedMessage.content.startsWith(fileContextText)).toBe(false);
+      } else {
+        const textPart = formattedMessage.content.find((part) => part.type === 'text');
+        expect(textPart?.text?.startsWith(fileContextText)).toBe(false);
       }
+
+      tokenSpy.mockRestore();
     });
 
     it('should merge file context with message content when latestAttachmentsAsSystemMessage is false', async () => {
@@ -2375,6 +2400,16 @@ describe('AgentClient - titleConvo', () => {
         },
       ];
 
+      const fileContextText = 'FILE_CONTEXT_BLOCK';
+      const { applyContextToAgent } = require('@librechat/api');
+      const tokenSpy = jest.spyOn(client, 'getTokenCountForMessage').mockReturnValue(0);
+
+      jest.spyOn(client, 'addFileContextToMessage').mockImplementation(async (message) => {
+        message.fileContext = fileContextText;
+      });
+      jest.spyOn(client, 'processAttachments').mockResolvedValue(mockAttachments);
+      client.useMemory = jest.fn().mockResolvedValue(undefined);
+
       client.options.attachments = Promise.resolve(mockAttachments);
 
       const messages = [
@@ -2387,7 +2422,7 @@ describe('AgentClient - titleConvo', () => {
         },
       ];
 
-      await client.buildMessages(messages, null, {
+      await client.buildMessages(messages, 'msg-1', {
         instructions: 'Build messages with file context merged',
         additional_instructions: null,
       });
@@ -2395,6 +2430,22 @@ describe('AgentClient - titleConvo', () => {
       // Verify that the latest message has file context recorded
       expect(client.message_file_map).toBeDefined();
       expect(client.message_file_map['msg-1']).toEqual(mockAttachments);
+
+      // File context should NOT be in shared run context when false
+      expect(applyContextToAgent).toHaveBeenCalled();
+      const { sharedRunContext } = applyContextToAgent.mock.calls[0][0];
+      expect(sharedRunContext).not.toContain(fileContextText);
+
+      // Latest message should have file context prepended when false
+      const formattedMessage = tokenSpy.mock.calls[0][0];
+      if (typeof formattedMessage.content === 'string') {
+        expect(formattedMessage.content.startsWith(fileContextText)).toBe(true);
+      } else {
+        const textPart = formattedMessage.content.find((part) => part.type === 'text');
+        expect(textPart?.text?.startsWith(fileContextText)).toBe(true);
+      }
+
+      tokenSpy.mockRestore();
     });
 
     it('should use default value true when latestAttachmentsAsSystemMessage is not configured', async () => {
@@ -2431,7 +2482,7 @@ describe('AgentClient - titleConvo', () => {
         },
       ];
 
-      await client.buildMessages(messages, null, {
+      await client.buildMessages(messages, 'msg-1', {
         instructions: 'Build messages with default config',
         additional_instructions: null,
       });
@@ -2478,7 +2529,7 @@ describe('AgentClient - titleConvo', () => {
         },
       ];
 
-      await client.buildMessages(messages, null, {
+      await client.buildMessages(messages, 'msg-1', {
         instructions: 'Build messages with custom config',
         additional_instructions: null,
       });
@@ -2492,7 +2543,7 @@ describe('AgentClient - titleConvo', () => {
     });
 
     it('should not add file context to message when no attachments are present', async () => {
-      client.options.attachments = Promise.resolve(null);
+      client.options.attachments = Promise.resolve([]);
 
       const messages = [
         {
@@ -2504,13 +2555,13 @@ describe('AgentClient - titleConvo', () => {
         },
       ];
 
-      await client.buildMessages(messages, null, {
+      await client.buildMessages(messages, 'msg-1', {
         instructions: 'Build messages without files',
         additional_instructions: null,
       });
 
-      // message_file_map may not be set if there are no attachments
-      expect(client.message_file_map === undefined || !client.message_file_map['msg-1']).toBe(true);
+      // When attachments are empty, message_file_map should still be set with an empty array
+      expect(client.message_file_map['msg-1']).toEqual([]);
     });
 
     it('should preserve message structure when merging file context with false setting', async () => {
@@ -2545,7 +2596,7 @@ describe('AgentClient - titleConvo', () => {
       ];
 
       // Build messages and verify the structure is preserved
-      await client.buildMessages(messages, null, {
+      await client.buildMessages(messages, 'msg-1', {
         instructions: 'Build messages',
         additional_instructions: null,
       });
