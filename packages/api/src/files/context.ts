@@ -4,6 +4,13 @@ import type { IMongoFile } from '@librechat/data-schemas';
 import type { ServerRequest } from '~/types';
 import { processTextWithTokenLimit } from '~/utils/text';
 
+export interface FileContextConfig {
+  prefixText?: string;
+  showFilenameHeaders?: boolean;
+  filenameHeaderTemplate?: string;
+  latestAttachmentsAsSystemMessage?: boolean;
+}
+
 /**
  * Extracts text context from attachments and returns formatted text.
  * This handles text that was already extracted from files (OCR, transcriptions, document text, etc.)
@@ -17,10 +24,12 @@ export async function extractFileContext({
   attachments,
   req,
   tokenCountFn,
+  contextConfig,
 }: {
   attachments: IMongoFile[];
   req?: ServerRequest;
   tokenCountFn: (text: string) => number;
+  contextConfig?: FileContextConfig;
 }): Promise<string | undefined> {
   if (!attachments || attachments.length === 0) {
     return undefined;
@@ -28,6 +37,11 @@ export async function extractFileContext({
 
   const fileConfig = mergeFileConfig(req?.config?.fileConfig);
   const fileTokenLimit = req?.body?.fileTokenLimit ?? fileConfig.fileTokenLimit;
+  const fileContextConfig = contextConfig ?? fileConfig.fileContext;
+  const prefixText = fileContextConfig?.prefixText ?? 'Attached document(s):';
+  const showFilenameHeaders = fileContextConfig?.showFilenameHeaders ?? true;
+  const filenameHeaderTemplate =
+    fileContextConfig?.filenameHeaderTemplate ?? '# "{filename}"';
 
   if (!fileTokenLimit) {
     // If no token limit, return undefined (no processing)
@@ -51,7 +65,12 @@ export async function extractFileContext({
         );
       }
 
-      resultText += `${!resultText ? 'Attached document(s):\n```md' : '\n\n---\n\n'}# "${file.filename}"\n${limitedText}\n`;
+      const filenameHeader = showFilenameHeaders
+        ? filenameHeaderTemplate.replace('{filename}', file.filename)
+        : '';
+      const prefixBlock = !resultText ? `${prefixText}\n\`\`\`md` : '\n\n---\n\n';
+      const headerBlock = showFilenameHeaders ? `${filenameHeader}\n` : '';
+      resultText += `${prefixBlock}\n${headerBlock}${limitedText}\n`;
     }
   }
 
