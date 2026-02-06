@@ -399,7 +399,7 @@ class AgentClient extends BaseClient {
 
     const fileContextConfig = appConfig?.fileConfig?.fileContext;
     const latestAttachmentsAsSystemMessage =
-      appConfig?.fileConfig?.fileContext?.latestAttachmentsAsSystemMessage ?? false;
+      fileContextConfig?.latestAttachmentsAsSystemMessage ?? true;
 
     if (this.options.attachments) {
       const attachments = await this.options.attachments;
