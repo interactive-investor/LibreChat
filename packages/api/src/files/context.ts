@@ -3,14 +3,7 @@ import { FileSources, mergeFileConfig } from 'librechat-data-provider';
 import type { IMongoFile } from '@librechat/data-schemas';
 import type { ServerRequest } from '~/types';
 import { processTextWithTokenLimit } from '~/utils/text';
-
-export interface FileContextConfig {
-  prefixText?: string;
-  showFilenameHeaders?: boolean;
-  filenameHeaderTemplate?: string;
-  latestAttachmentsAsSystemMessage?: boolean;
-}
-
+import type { FileContextConfig } from 'librechat-data-provider';
 /**
  * Extracts text context from attachments and returns formatted text.
  * This handles text that was already extracted from files (OCR, transcriptions, document text, etc.)
