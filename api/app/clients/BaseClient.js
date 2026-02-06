@@ -1278,11 +1278,12 @@ class BaseClient {
    * @param {MongoFile[]} attachments - Array of file attachments
    * @returns {Promise<void>}
    */
-  async addFileContextToMessage(message, attachments) {
+  async addFileContextToMessage(message, attachments, contextConfig) {
     const fileContext = await extractFileContext({
       attachments,
       req: this.options?.req,
       tokenCountFn: (text) => countTokens(text),
+      contextConfig,
     });
 
     if (fileContext) {
