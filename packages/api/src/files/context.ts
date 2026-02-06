@@ -12,6 +12,7 @@ import type { FileContextConfig } from 'librechat-data-provider';
  * @param params.attachments - Array of file attachments
  * @param params.req - Express request object for config access
  * @param params.tokenCountFn - Function to count tokens in text
+ * @param params.contextConfig - Optional file context configuration (prefixText, showFilenameHeaders, filenameHeaderTemplate)
  * @returns The formatted file context text, or undefined if no text found
  */
 export async function extractFileContext({

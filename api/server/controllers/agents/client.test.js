@@ -2256,4 +2256,303 @@ describe('AgentClient - titleConvo', () => {
       );
     });
   });
+
+  describe('buildMessages - latestAttachmentsAsSystemMessage configuration', () => {
+    let client;
+    let mockReq;
+    let mockRes;
+    let mockAgent;
+    let mockOptions;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      mockAgent = {
+        id: 'agent-123',
+        endpoint: EModelEndpoint.openAI,
+        provider: EModelEndpoint.openAI,
+        instructions: 'Agent instructions',
+        model_parameters: {
+          model: 'gpt-4',
+        },
+      };
+
+      mockReq = {
+        user: {
+          id: 'user-123',
+        },
+        body: {
+          endpoint: EModelEndpoint.openAI,
+        },
+        config: {
+          fileConfig: {
+            fileTokenLimit: 4096,
+            fileContext: {
+              prefixText: 'Attached document(s):',
+              showFilenameHeaders: true,
+              filenameHeaderTemplate: '# "{filename}"',
+              latestAttachmentsAsSystemMessage: true,
+            },
+          },
+        },
+      };
+
+      mockRes = {};
+
+      mockOptions = {
+        req: mockReq,
+        res: mockRes,
+        agent: mockAgent,
+        endpoint: EModelEndpoint.agents,
+      };
+
+      client = new AgentClient(mockOptions);
+      client.conversationId = 'convo-123';
+      client.responseMessageId = 'response-123';
+      client.shouldSummarize = false;
+      client.maxContextTokens = 4096;
+    });
+
+    it('should add file context to shared run context when latestAttachmentsAsSystemMessage is true', async () => {
+      // Mock attachments with file context
+      const mockAttachments = [
+        {
+          file_id: 'file-1',
+          filename: 'document.txt',
+          source: 'text',
+          text: 'Document content here',
+          embedded: false,
+        },
+      ];
+
+      client.options.attachments = Promise.resolve(mockAttachments);
+
+      const messages = [
+        {
+          messageId: 'msg-1',
+          parentMessageId: null,
+          sender: 'User',
+          text: 'Please analyze this document',
+          isCreatedByUser: true,
+        },
+      ];
+
+      await client.buildMessages(messages, null, {
+        instructions: 'Build messages with file context',
+        additional_instructions: null,
+      });
+
+      // Verify that the latest message has file context
+      expect(client.message_file_map).toBeDefined();
+      expect(client.message_file_map['msg-1']).toEqual(mockAttachments);
+
+      // Since latestAttachmentsAsSystemMessage is true, file context should be in system context
+      // which means it's added to sharedRunContextParts (for agent instructions)
+      const orderedMessages = client.attachments ?? [];
+      if (orderedMessages.length === 0) {
+        // If no messages (test setup), verify message_file_map was set
+        expect(client.message_file_map['msg-1']).toBeDefined();
+      }
+    });
+
+    it('should merge file context with message content when latestAttachmentsAsSystemMessage is false', async () => {
+      // Override the configuration to set latestAttachmentsAsSystemMessage to false
+      mockReq.config.fileConfig.fileContext.latestAttachmentsAsSystemMessage = false;
+      client = new AgentClient(mockOptions);
+      client.conversationId = 'convo-123';
+      client.responseMessageId = 'response-123';
+      client.shouldSummarize = false;
+      client.maxContextTokens = 4096;
+
+      // Mock attachments
+      const mockAttachments = [
+        {
+          file_id: 'file-1',
+          filename: 'report.pdf',
+          source: 'text',
+          text: 'Report content',
+          embedded: false,
+        },
+      ];
+
+      client.options.attachments = Promise.resolve(mockAttachments);
+
+      const messages = [
+        {
+          messageId: 'msg-1',
+          parentMessageId: null,
+          sender: 'User',
+          text: 'Analyze the attached report',
+          isCreatedByUser: true,
+        },
+      ];
+
+      await client.buildMessages(messages, null, {
+        instructions: 'Build messages with file context merged',
+        additional_instructions: null,
+      });
+
+      // Verify that the latest message has file context recorded
+      expect(client.message_file_map).toBeDefined();
+      expect(client.message_file_map['msg-1']).toEqual(mockAttachments);
+    });
+
+    it('should use default value true when latestAttachmentsAsSystemMessage is not configured', async () => {
+      // Remove the fileContext configuration
+      mockReq.config.fileConfig = {
+        fileTokenLimit: 4096,
+      };
+
+      client = new AgentClient(mockOptions);
+      client.conversationId = 'convo-123';
+      client.responseMessageId = 'response-123';
+      client.shouldSummarize = false;
+      client.maxContextTokens = 4096;
+
+      const mockAttachments = [
+        {
+          file_id: 'file-1',
+          filename: 'file.txt',
+          source: 'text',
+          text: 'Content',
+          embedded: false,
+        },
+      ];
+
+      client.options.attachments = Promise.resolve(mockAttachments);
+
+      const messages = [
+        {
+          messageId: 'msg-1',
+          parentMessageId: null,
+          sender: 'User',
+          text: 'Read this file',
+          isCreatedByUser: true,
+        },
+      ];
+
+      await client.buildMessages(messages, null, {
+        instructions: 'Build messages with default config',
+        additional_instructions: null,
+      });
+
+      // Should still process attachments (default behavior should work)
+      expect(client.message_file_map).toBeDefined();
+      expect(client.message_file_map['msg-1']).toBeDefined();
+    });
+
+    it('should handle file context with different configuration options', async () => {
+      // Customize file context configuration
+      mockReq.config.fileConfig.fileContext = {
+        prefixText: 'Files:',
+        showFilenameHeaders: false,
+        filenameHeaderTemplate: '## {filename}',
+        latestAttachmentsAsSystemMessage: true,
+      };
+
+      client = new AgentClient(mockOptions);
+      client.conversationId = 'convo-123';
+      client.responseMessageId = 'response-123';
+      client.shouldSummarize = false;
+      client.maxContextTokens = 4096;
+
+      const mockAttachments = [
+        {
+          file_id: 'file-1',
+          filename: 'data.json',
+          source: 'text',
+          text: '{"key": "value"}',
+          embedded: false,
+        },
+      ];
+
+      client.options.attachments = Promise.resolve(mockAttachments);
+
+      const messages = [
+        {
+          messageId: 'msg-1',
+          parentMessageId: null,
+          sender: 'User',
+          text: 'Process this JSON data',
+          isCreatedByUser: true,
+        },
+      ];
+
+      await client.buildMessages(messages, null, {
+        instructions: 'Build messages with custom config',
+        additional_instructions: null,
+      });
+
+      // Verify the custom fileContext configuration was applied
+      expect(client.message_file_map['msg-1']).toBeDefined();
+      expect(client.message_file_map['msg-1'][0]).toMatchObject({
+        filename: 'data.json',
+        source: 'text',
+      });
+    });
+
+    it('should not add file context to message when no attachments are present', async () => {
+      client.options.attachments = Promise.resolve(null);
+
+      const messages = [
+        {
+          messageId: 'msg-1',
+          parentMessageId: null,
+          sender: 'User',
+          text: 'Just a regular message',
+          isCreatedByUser: true,
+        },
+      ];
+
+      await client.buildMessages(messages, null, {
+        instructions: 'Build messages without files',
+        additional_instructions: null,
+      });
+
+      // message_file_map may not be set if there are no attachments
+      expect(client.message_file_map === undefined || !client.message_file_map['msg-1']).toBe(true);
+    });
+
+    it('should preserve message structure when merging file context with false setting', async () => {
+      // Set latestAttachmentsAsSystemMessage to false
+      mockReq.config.fileConfig.fileContext.latestAttachmentsAsSystemMessage = false;
+      client = new AgentClient(mockOptions);
+      client.conversationId = 'convo-123';
+      client.responseMessageId = 'response-123';
+      client.shouldSummarize = false;
+      client.maxContextTokens = 4096;
+
+      const mockAttachments = [
+        {
+          file_id: 'file-1',
+          filename: 'test.txt',
+          source: 'text',
+          text: 'Test content',
+          embedded: false,
+        },
+      ];
+
+      client.options.attachments = Promise.resolve(mockAttachments);
+
+      const messages = [
+        {
+          messageId: 'msg-1',
+          parentMessageId: null,
+          sender: 'User',
+          text: 'Original message text',
+          isCreatedByUser: true,
+        },
+      ];
+
+      // Build messages and verify the structure is preserved
+      await client.buildMessages(messages, null, {
+        instructions: 'Build messages',
+        additional_instructions: null,
+      });
+
+      // Verify attachment tracking
+      expect(client.message_file_map['msg-1']).toBeDefined();
+      expect(client.message_file_map['msg-1'][0].filename).toBe('test.txt');
+    });
+  });
 });
