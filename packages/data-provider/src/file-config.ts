@@ -537,7 +537,8 @@ function mergeWithDefault(
 
   return {
     disabled: endpointConfig.disabled ?? defaultConfig.disabled,
-    disableProviderUpload: endpointConfig.disableProviderUpload ?? defaultConfig.disableProviderUpload,
+    disableProviderUpload:
+      endpointConfig.disableProviderUpload ?? defaultConfig.disableProviderUpload,
     disableTextUpload: endpointConfig.disableTextUpload ?? defaultConfig.disableTextUpload,
     fileLimit: endpointConfig.fileLimit ?? defaultConfig.fileLimit,
     fileSizeLimit: endpointConfig.fileSizeLimit ?? defaultConfig.fileSizeLimit,

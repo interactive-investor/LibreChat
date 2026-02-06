@@ -133,6 +133,7 @@ const processCodeOutput = async ({
     const newFileId = v4();
     const claimed = await claimCodeFile({
       filename: name,
+      type: mimeType,
       conversationId,
       file_id: newFileId,
       user: req.user.id,
