@@ -507,18 +507,14 @@ export class MCPConnection extends EventEmitter {
         this.isInitializing = false;
         this.shouldStopReconnecting = false;
         this.reconnectAttempts = 0;
-        /**
-         * // FOR DEBUGGING
-         * // this.client.setRequestHandler(PingRequestSchema, async (request, extra) => {
-         * //    logger.info(`[MCP][${this.serverName}] PingRequest: ${JSON.stringify(request)}`);
-         * //    if (getEventListeners && extra.signal) {
-         * //      const listenerCount = getEventListeners(extra.signal, 'abort').length;
-         * //      logger.debug(`Signal has ${listenerCount} abort listeners`);
-         * //    }
-         * //    return {};
-         * //  });
-         */
-      } else if (state === 'error' && !this.isReconnecting && !this.isInitializing) {
+      } else if (
+        state === 'error' &&
+        !this.isReconnecting &&
+        !this.isInitializing &&
+        !this.shouldStopReconnecting &&
+        this.connectionState !== 'connecting' // Prevent triggering while already connecting
+      ) {
+        // Guard: only start reconnection if not already reconnecting
         this.handleReconnection().catch((error) => {
           logger.error(`${this.getLogPrefix()} Reconnection handler failed:`, error);
         });
@@ -565,14 +561,8 @@ export class MCPConnection extends EventEmitter {
         } catch (error) {
           logger.error(`${this.getLogPrefix()} Reconnection attempt failed:`, error);
 
-          // Stop immediately if rate limited - retrying will only make it worse
+          // Stop immediately if rate limited
           if (this.isRateLimitError(error)) {
-            /**
-             * Rate limiting sets shouldStopReconnecting to prevent hammering the server.
-             * Silent return here (vs throw in connectClient) because we're already in
-             * error recovery mode - throwing would just add noise. The connection
-             * must be recreated to retry after rate limit lifts.
-             */
             logger.warn(
               `${this.getLogPrefix()} Rate limited (429), stopping reconnection attempts`,
             );
@@ -583,11 +573,11 @@ export class MCPConnection extends EventEmitter {
             return;
           }
 
-          if (
-            this.reconnectAttempts === this.MAX_RECONNECT_ATTEMPTS ||
-            (this.shouldStopReconnecting as boolean)
-          ) {
-            logger.error(`${this.getLogPrefix()} Stopping reconnection attempts`);
+          if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
+            logger.error(
+              `${this.getLogPrefix()} Max reconnection attempts (${this.MAX_RECONNECT_ATTEMPTS}) reached, stopping`,
+            );
+            this.shouldStopReconnecting = true;
             return;
           }
         }
@@ -788,7 +778,19 @@ export class MCPConnection extends EventEmitter {
   }
 
   private setupTransportErrorHandlers(transport: Transport): void {
+    let lastErrorTime = 0;
+    const ERROR_DEBOUNCE_MS = 1000; // Debounce errors within 1 second
+
     transport.onerror = (error) => {
+      const now = Date.now();
+
+      // Debounce rapid error events from the same transport
+      if (now - lastErrorTime < ERROR_DEBOUNCE_MS) {
+        logger.debug(`${this.getLogPrefix()} Debouncing rapid transport error`);
+        return;
+      }
+      lastErrorTime = now;
+
       // Extract meaningful error information (handles "SSE error: undefined" cases)
       const {
         message: errorMessage,
@@ -809,16 +811,6 @@ export class MCPConnection extends EventEmitter {
         this.emit('oauthError', error);
       }
 
-      /**
-       * Log with enhanced context for debugging.
-       * All transport.onerror events are logged as errors to preserve stack traces.
-       * isTransient indicates whether auto-reconnection is expected to succeed.
-       *
-       * The MCP SDK's SseError extends Error and includes:
-       * - code: HTTP status code or eventsource error code
-       * - event: The original eventsource ErrorEvent
-       * - stack: Full stack trace
-       */
       const errorContext: Record<string, unknown> = {
         code: errorCode,
         isTransient,
@@ -828,11 +820,9 @@ export class MCPConnection extends EventEmitter {
         errorContext.hint = 'Check Nginx/proxy configuration for SSE endpoints';
       }
 
-      // Extract additional debug info from SseError if available
       if (error && typeof error === 'object') {
         const sseError = error as { event?: unknown; stack?: string };
 
-        // Include the original eventsource event for debugging
         if (sseError.event && typeof sseError.event === 'object') {
           const event = sseError.event as { code?: number; message?: string; type?: string };
           errorContext.eventDetails = {
@@ -842,7 +832,6 @@ export class MCPConnection extends EventEmitter {
           };
         }
 
-        // Include stack trace if available
         if (sseError.stack) {
           errorContext.stack = sseError.stack;
         }
@@ -854,7 +843,10 @@ export class MCPConnection extends EventEmitter {
 
       logger.error(`${this.getLogPrefix()} ${errorLabel}: ${errorMessage}`, errorContext);
 
-      this.emit('connectionChange', 'error');
+      // Only emit error state change if we're currently connected
+      if (this.connectionState === 'connected') {
+        this.emit('connectionChange', 'error');
+      }
     };
   }
 
