@@ -46,6 +46,13 @@ export type EndpointFileConfig = {
   supportedMimeTypes?: RegExp[];
 };
 
+export type FileContextConfig = {
+  prefixText?: string;
+  showFilenameHeaders?: boolean;
+  filenameHeaderTemplate?: string;
+  latestAttachmentsAsSystemMessage?: boolean;
+};
+
 export type FileConfig = {
   endpoints: {
     [key: string]: EndpointFileConfig;
@@ -53,6 +60,7 @@ export type FileConfig = {
   fileTokenLimit?: number;
   serverFileSizeLimit?: number;
   avatarSizeLimit?: number;
+  fileContext?: FileContextConfig;
   clientImageResize?: {
     enabled?: boolean;
     maxWidth?: number;
@@ -77,6 +85,7 @@ export type FileConfigInput = {
   };
   serverFileSizeLimit?: number;
   avatarSizeLimit?: number;
+  fileContext?: FileContextConfig;
   clientImageResize?: {
     enabled?: boolean;
     maxWidth?: number;
