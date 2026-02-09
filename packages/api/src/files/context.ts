@@ -61,7 +61,7 @@ export async function extractFileContext({
       }
 
       const filenameHeader = showFilenameHeaders
-        ? filenameHeaderTemplate.replace('{filename}', file.filename)
+        ? filenameHeaderTemplate.replace(/\{filename\}/g, file.filename)
         : '';
       const prefixBlock = !resultText ? `${prefixText}\n\`\`\`md` : '\n---\n\n';
       const headerBlock = showFilenameHeaders ? `${filenameHeader}\n` : '';
