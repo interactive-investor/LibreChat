@@ -245,6 +245,10 @@ export default function AgentConfig() {
                 }
                 const chatUrl = new URL('/c/new', window.location.origin);
                 chatUrl.searchParams.set('agent_id', String(field.value));
+                if (!navigator.clipboard?.writeText) {
+                  showToast({ message: localize('com_agents_link_copy_failed') });
+                  return;
+                }
                 navigator.clipboard
                   .writeText(chatUrl.toString())
                   .then(() => {
