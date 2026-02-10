@@ -77,6 +77,25 @@ export default function AgentConfig() {
   const tools = useWatch({ control, name: 'tools' });
   const agent_id = useWatch({ control, name: 'id' });
 
+  const handleCopyLink = useCallback(() => {
+    if (!agent_id || copiedAgentId === agent_id) {
+      return;
+    }
+    const chatUrl = new URL('/c/new', window.location.origin);
+    chatUrl.searchParams.set('agent_id', String(agent_id));
+    const success = copy(chatUrl.toString(), { format: 'text/plain' });
+    if (success) {
+      setCopiedAgentId(agent_id);
+      showToast({ message: localize('com_agents_link_copied') });
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+      copyTimeoutRef.current = setTimeout(() => setCopiedAgentId(null), 3000);
+    } else {
+      showToast({ message: localize('com_agents_link_copy_failed') });
+    }
+  }, [agent_id, copiedAgentId, localize, showToast]);
+
   const { data: agentFiles = [] } = useGetAgentFiles(agent_id);
 
   const mergedFileMap = useMemo(() => {
@@ -234,45 +253,26 @@ export default function AgentConfig() {
             render={({ field }) => {
               if (!field.value || isEphemeralAgent(field.value)) {
                 return (
-                  <p className="h-3 text-xs italic text-text-secondary" aria-live="polite">
+                  <p className="text-xs italic text-text-secondary" aria-live="polite">
                     {field.value}
                   </p>
                 );
               }
               const isCopied = copiedAgentId === field.value;
-              const handleCopyLink = () => {
-                if (isCopied) {
-                  return;
-                }
-                const chatUrl = new URL('/c/new', window.location.origin);
-                chatUrl.searchParams.set('agent_id', String(field.value));
-                const success = copy(chatUrl.toString(), { format: 'text/plain' });
-                if (success) {
-                  setCopiedAgentId(field.value);
-                  showToast({ message: localize('com_agents_link_copied') });
-                  if (copyTimeoutRef.current) {
-                    clearTimeout(copyTimeoutRef.current);
-                  }
-                  copyTimeoutRef.current = setTimeout(() => setCopiedAgentId(null), 3000);
-                } else {
-                  showToast({ message: localize('com_agents_link_copy_failed') });
-                }
-              };
               return (
                 <button
                   type="button"
                   onClick={handleCopyLink}
-                  className="flex h-3 cursor-pointer items-center gap-1 text-xs italic text-text-secondary transition-colors hover:text-text-primary"
+                  className="flex cursor-pointer items-center gap-1 text-xs italic text-text-secondary transition-colors hover:text-text-primary"
                   title={localize('com_agents_copy_link')}
-                  aria-live="polite"
                   aria-label={localize('com_agents_copy_link')}
                 >
-                  <Link className="h-3 w-3" aria-hidden="true" />
+                  <Link className="h-3 w-3 shrink-0" aria-hidden="true" />
                   {field.value}
                   {isCopied ? (
-                    <CopyCheck className="h-3 w-3" aria-hidden="true" />
+                    <CopyCheck className="h-3 w-3 shrink-0" aria-hidden="true" />
                   ) : (
-                    <Copy className="h-3 w-3" aria-hidden="true" />
+                    <Copy className="h-3 w-3 shrink-0" aria-hidden="true" />
                   )}
                 </button>
               );
