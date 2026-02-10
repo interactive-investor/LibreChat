@@ -262,7 +262,7 @@ export default function AgentConfig() {
                 <button
                   type="button"
                   onClick={handleCopyLink}
-                  className="flex h-3 cursor-pointer items-center gap-1 text-xs italic text-text-secondary transition-colors hover:text-text-primary"
+                  className="flex min-h-[32px] cursor-pointer items-center gap-1 px-2 py-1 text-xs italic text-text-secondary transition-colors hover:text-text-primary"
                   title={localize('com_agents_copy_link')}
                   aria-live="polite"
                   aria-label={localize('com_agents_copy_link')}
