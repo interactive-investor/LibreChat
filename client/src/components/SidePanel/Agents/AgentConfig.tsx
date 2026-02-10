@@ -77,24 +77,27 @@ export default function AgentConfig() {
   const tools = useWatch({ control, name: 'tools' });
   const agent_id = useWatch({ control, name: 'id' });
 
-  const handleCopyLink = useCallback(() => {
-    if (!agent_id || copiedAgentId === agent_id) {
-      return;
-    }
-    const chatUrl = new URL('/c/new', window.location.origin);
-    chatUrl.searchParams.set('agent_id', String(agent_id));
-    const success = copy(chatUrl.toString(), { format: 'text/plain' });
-    if (success) {
-      setCopiedAgentId(agent_id);
-      showToast({ message: localize('com_agents_link_copied') });
-      if (copyTimeoutRef.current) {
-        clearTimeout(copyTimeoutRef.current);
+  const handleCopyLink = useCallback(
+    (id: string) => {
+      if (copiedAgentId === id) {
+        return;
       }
-      copyTimeoutRef.current = setTimeout(() => setCopiedAgentId(null), 3000);
-    } else {
-      showToast({ message: localize('com_agents_link_copy_failed') });
-    }
-  }, [agent_id, copiedAgentId, localize, showToast]);
+      const chatUrl = new URL('/c/new', window.location.origin);
+      chatUrl.searchParams.set('agent_id', id);
+      const success = copy(chatUrl.toString(), { format: 'text/plain' });
+      if (success) {
+        setCopiedAgentId(id);
+        showToast({ message: localize('com_agents_link_copied') });
+        if (copyTimeoutRef.current) {
+          clearTimeout(copyTimeoutRef.current);
+        }
+        copyTimeoutRef.current = setTimeout(() => setCopiedAgentId(null), 3000);
+      } else {
+        showToast({ message: localize('com_agents_link_copy_failed') });
+      }
+    },
+    [copiedAgentId, localize, showToast],
+  );
 
   const { data: agentFiles = [] } = useGetAgentFiles(agent_id);
 
@@ -262,7 +265,7 @@ export default function AgentConfig() {
               return (
                 <button
                   type="button"
-                  onClick={handleCopyLink}
+                  onClick={() => handleCopyLink(field.value)}
                   className="flex cursor-pointer items-center gap-1 text-xs italic text-text-secondary transition-colors hover:text-text-primary"
                   title={localize('com_agents_copy_link')}
                   aria-label={localize('com_agents_copy_link')}
