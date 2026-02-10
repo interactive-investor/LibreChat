@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Link, Copy, CopyCheck } from 'lucide-react';
 import { useToastContext } from '@librechat/client';
 import { Controller, useWatch, useFormContext } from 'react-hook-form';
@@ -45,7 +45,16 @@ export default function AgentConfig() {
   const methods = useFormContext<AgentForm>();
   const [showToolDialog, setShowToolDialog] = useState(false);
   const [showMCPToolDialog, setShowMCPToolDialog] = useState(false);
-  const [isCopied, setIsCopied] = useState(false);
+  const [copiedAgentId, setCopiedAgentId] = useState<string | null>(null);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
   const {
     actions,
     setAction,
@@ -229,6 +238,7 @@ export default function AgentConfig() {
                   </p>
                 );
               }
+              const isCopied = copiedAgentId === field.value;
               const handleCopyLink = () => {
                 if (isCopied) {
                   return;
@@ -238,9 +248,12 @@ export default function AgentConfig() {
                 navigator.clipboard
                   .writeText(chatUrl.toString())
                   .then(() => {
-                    setIsCopied(true);
+                    setCopiedAgentId(field.value);
                     showToast({ message: localize('com_agents_link_copied') });
-                    setTimeout(() => setIsCopied(false), 3000);
+                    if (copyTimeoutRef.current) {
+                      clearTimeout(copyTimeoutRef.current);
+                    }
+                    copyTimeoutRef.current = setTimeout(() => setCopiedAgentId(null), 3000);
                   })
                   .catch(() => {
                     showToast({ message: localize('com_agents_link_copy_failed') });
