@@ -252,13 +252,14 @@ export default function AgentConfig() {
                   className="flex h-3 cursor-pointer items-center gap-1 text-xs italic text-text-secondary transition-colors hover:text-text-primary"
                   title={localize('com_agents_copy_link')}
                   aria-live="polite"
+                  aria-label={localize('com_agents_copy_link')}
                 >
-                  <Link className="h-3 w-3" />
+                  <Link className="h-3 w-3" aria-hidden="true" />
                   {field.value}
                   {isCopied ? (
-                    <CopyCheck className="h-3 w-3" />
+                    <CopyCheck className="h-3 w-3" aria-hidden="true" />
                   ) : (
-                    <Copy className="h-3 w-3" />
+                    <Copy className="h-3 w-3" aria-hidden="true" />
                   )}
                 </button>
               );
