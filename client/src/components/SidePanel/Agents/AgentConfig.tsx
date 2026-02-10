@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { Link, Copy, CopyCheck } from 'lucide-react';
 import { useToastContext } from '@librechat/client';
 import { Controller, useWatch, useFormContext } from 'react-hook-form';
 import { EModelEndpoint, getEndpointField } from 'librechat-data-provider';
@@ -44,6 +45,7 @@ export default function AgentConfig() {
   const methods = useFormContext<AgentForm>();
   const [showToolDialog, setShowToolDialog] = useState(false);
   const [showMCPToolDialog, setShowMCPToolDialog] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const {
     actions,
     setAction,
@@ -219,11 +221,48 @@ export default function AgentConfig() {
           <Controller
             name="id"
             control={control}
-            render={({ field }) => (
-              <p className="h-3 text-xs italic text-text-secondary" aria-live="polite">
-                {field.value}
-              </p>
-            )}
+            render={({ field }) => {
+              if (!field.value || isEphemeralAgent(field.value)) {
+                return (
+                  <p className="h-3 text-xs italic text-text-secondary" aria-live="polite">
+                    {field.value}
+                  </p>
+                );
+              }
+              const handleCopyLink = () => {
+                if (isCopied) {
+                  return;
+                }
+                const chatUrl = `${window.location.origin}/c/new?agent_id=${field.value}`;
+                navigator.clipboard
+                  .writeText(chatUrl)
+                  .then(() => {
+                    setIsCopied(true);
+                    showToast({ message: localize('com_agents_link_copied') });
+                    setTimeout(() => setIsCopied(false), 3000);
+                  })
+                  .catch(() => {
+                    showToast({ message: localize('com_agents_link_copy_failed') });
+                  });
+              };
+              return (
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="flex h-3 cursor-pointer items-center gap-1 text-xs italic text-text-secondary transition-colors hover:text-text-primary"
+                  title={localize('com_agents_copy_link')}
+                  aria-live="polite"
+                >
+                  <Link className="h-3 w-3" />
+                  {field.value}
+                  {isCopied ? (
+                    <CopyCheck className="h-3 w-3" />
+                  ) : (
+                    <Copy className="h-3 w-3" />
+                  )}
+                </button>
+              );
+            }}
           />
         </div>
         {/* Description */}
