@@ -233,9 +233,10 @@ export default function AgentConfig() {
                 if (isCopied) {
                   return;
                 }
-                const chatUrl = `${window.location.origin}/c/new?agent_id=${field.value}`;
+                const chatUrl = new URL('/c/new', window.location.origin);
+                chatUrl.searchParams.set('agent_id', String(field.value));
                 navigator.clipboard
-                  .writeText(chatUrl)
+                  .writeText(chatUrl.toString())
                   .then(() => {
                     setIsCopied(true);
                     showToast({ message: localize('com_agents_link_copied') });
