@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import copy from 'copy-to-clipboard';
 import { Link, Copy, CopyCheck } from 'lucide-react';
 import { useToastContext } from '@librechat/client';
 import { Controller, useWatch, useFormContext } from 'react-hook-form';
@@ -245,23 +246,17 @@ export default function AgentConfig() {
                 }
                 const chatUrl = new URL('/c/new', window.location.origin);
                 chatUrl.searchParams.set('agent_id', String(field.value));
-                if (!navigator.clipboard?.writeText) {
+                const success = copy(chatUrl.toString(), { format: 'text/plain' });
+                if (success) {
+                  setCopiedAgentId(field.value);
+                  showToast({ message: localize('com_agents_link_copied') });
+                  if (copyTimeoutRef.current) {
+                    clearTimeout(copyTimeoutRef.current);
+                  }
+                  copyTimeoutRef.current = setTimeout(() => setCopiedAgentId(null), 3000);
+                } else {
                   showToast({ message: localize('com_agents_link_copy_failed') });
-                  return;
                 }
-                navigator.clipboard
-                  .writeText(chatUrl.toString())
-                  .then(() => {
-                    setCopiedAgentId(field.value);
-                    showToast({ message: localize('com_agents_link_copied') });
-                    if (copyTimeoutRef.current) {
-                      clearTimeout(copyTimeoutRef.current);
-                    }
-                    copyTimeoutRef.current = setTimeout(() => setCopiedAgentId(null), 3000);
-                  })
-                  .catch(() => {
-                    showToast({ message: localize('com_agents_link_copy_failed') });
-                  });
               };
               return (
                 <button
