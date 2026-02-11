@@ -217,6 +217,14 @@ export default function useTextarea({
         return;
       }
 
+      // Prioritize plain text if available
+      const plainText = clipboardData.getData('text/plain');
+      if (plainText) {
+        // Let the browser handle text insertion naturally
+        return;
+      }
+
+      // Only process files if there's no plain text
       if (clipboardData.files.length > 0) {
         setFilesLoading(true);
         const timestampedFiles: File[] = [];
