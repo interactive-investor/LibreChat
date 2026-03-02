@@ -69,6 +69,8 @@ export default function FileContext({
     endpointType: EModelEndpoint.agents,
   });
   const isUploadDisabled = endpointFileConfig?.disabled ?? false;
+  const isTextUploadDisabled = endpointFileConfig?.disableTextUpload ?? false;
+
   const handleSharePointFilesSelected = async (sharePointFiles: any[]) => {
     try {
       await handleSharePointFiles(sharePointFiles);
@@ -77,7 +79,7 @@ export default function FileContext({
       console.error('SharePoint file processing error:', error);
     }
   };
-  if (isUploadDisabled) {
+  if (isUploadDisabled || isTextUploadDisabled) {
     return null;
   }
 
