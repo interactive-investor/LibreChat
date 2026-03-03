@@ -244,6 +244,16 @@ export const validateFiles = ({
     disableProviderUpload,
     disableTextUpload,
   } = endpointFileConfig;
+  console.log(
+    'Validating files with config:',
+    endpointFileConfig,
+    'and toolResource:',
+    toolResource,
+    'and disableTextUpload:',
+    disableTextUpload,
+    'and disableProviderUpload:',
+    disableProviderUpload,
+  );
   /** Block all uploads if the endpoint is explicitly disabled */
   if (disabled === true) {
     setError('com_ui_attach_error_disabled');
