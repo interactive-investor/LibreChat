@@ -45,10 +45,14 @@ export default function FileContext({
     select: (data) => mergeFileConfig(data),
   });
 
-  const { handleFileChange } = useFileHandling({
+  const { handleFileChange: handleFileChangeBase } = useFileHandling({
     additionalMetadata: { agent_id, tool_resource: EToolResources.context },
     fileSetter: setFiles,
   });
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileChangeBase(event, EToolResources.context);
+  };
   const { handleSharePointFiles, isProcessing, downloadProgress } = useSharePointFileHandling({
     additionalMetadata: { agent_id, tool_resource: EToolResources.file_search },
     fileSetter: setFiles,
