@@ -96,10 +96,6 @@ const useFileHandling = (params?: UseFileHandling) => {
       onSuccess: (data) => {
         clearUploadTimer(data.temp_file_id);
         console.log('upload success', data);
-        if (agent_id) {
-          queryClient.refetchQueries([QueryKeys.agent, agent_id]);
-          return;
-        }
         updateFileById(
           data.temp_file_id,
           {
@@ -127,6 +123,10 @@ const useFileHandling = (params?: UseFileHandling) => {
             assistant_id ? true : false,
           );
         }, 300);
+
+        if (agent_id) {
+          queryClient.refetchQueries([QueryKeys.agent, agent_id]);
+        }
       },
       onError: (_error, body) => {
         const error = _error as TError | undefined;
