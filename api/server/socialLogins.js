@@ -16,38 +16,6 @@ const {
 const { getLogStores } = require('~/cache');
 
 /**
- * Determines if secure cookies should be used.
- * Only use secure cookies in production when not on localhost.
- * @returns {boolean}
- */
-function shouldUseSecureCookie() {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const domainServer = process.env.DOMAIN_SERVER || '';
-
-  let hostname = '';
-  if (domainServer) {
-    try {
-      const normalized = /^https?:\/\//i.test(domainServer)
-        ? domainServer
-        : `http://${domainServer}`;
-      const url = new URL(normalized);
-      hostname = (url.hostname || '').toLowerCase();
-    } catch {
-      // Fallback: treat DOMAIN_SERVER directly as a hostname-like string
-      hostname = domainServer.toLowerCase();
-    }
-  }
-
-  const isLocalhost =
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    hostname === '::1' ||
-    hostname.endsWith('.localhost');
-
-  return isProduction && !isLocalhost;
-}
-
-/**
  * Configures OpenID Connect for the application.
  * @param {Express.Application} app - The Express application instance.
  * @returns {Promise<void>}
