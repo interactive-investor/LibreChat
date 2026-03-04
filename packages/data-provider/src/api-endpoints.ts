@@ -95,6 +95,12 @@ export const revokeUserKey = (name: string) => `${keysEndpoint}/${name}`;
 
 export const revokeAllUserKeys = () => `${keysEndpoint}?all=true`;
 
+const apiKeysEndpoint = `${BASE_URL}/api/api-keys`;
+
+export const apiKeys = () => apiKeysEndpoint;
+
+export const apiKeyById = (id: string) => `${apiKeysEndpoint}/${id}`;
+
 export const conversationsRoot = `${BASE_URL}/api/convos`;
 
 export const conversations = (params: q.ConversationListParams) => {
@@ -158,6 +164,25 @@ export const verifyEmail = () => `${BASE_URL}/api/user/verify`;
 export const loginPage = () => `${BASE_URL}/login`;
 export const registerPage = () => `${BASE_URL}/register`;
 
+const REDIRECT_PARAM = 'redirect_to';
+const LOGIN_PATH_RE = /(?:^|\/)login(?:\/|$)/;
+
+/**
+ * Builds a `/login?redirect_to=...` URL from the given or current location.
+ * Returns plain `/login` (no param) when already on a login route to prevent recursive nesting.
+ */
+export function buildLoginRedirectUrl(pathname?: string, search?: string, hash?: string): string {
+  const p = pathname ?? window.location.pathname;
+  if (LOGIN_PATH_RE.test(p)) {
+    return `${BASE_URL}/login`;
+  }
+  const s = search ?? window.location.search;
+  const h = hash ?? window.location.hash;
+  const currentPath = `${p}${s}${h}`;
+  const encoded = encodeURIComponent(currentPath || '/');
+  return `${BASE_URL}/login?${REDIRECT_PARAM}=${encoded}`;
+}
+
 export const resendVerificationEmail = () => `${BASE_URL}/api/user/verify/resend`;
 
 export const plugins = () => `${BASE_URL}/api/plugins`;
@@ -174,6 +199,11 @@ export const mcpAuthValues = (serverName: string) => {
 export const cancelMCPOAuth = (serverName: string) => {
   return `${BASE_URL}/api/mcp/oauth/cancel/${serverName}`;
 };
+
+export const mcpOAuthBind = (serverName: string) => `${BASE_URL}/api/mcp/${serverName}/oauth/bind`;
+
+export const actionOAuthBind = (actionId: string) =>
+  `${BASE_URL}/api/actions/${actionId}/oauth/bind`;
 
 export const config = () => `${BASE_URL}/api/config`;
 
@@ -329,6 +359,8 @@ export const updateAgentPermissions = (roleName: string) => `${getRole(roleName)
 export const updatePeoplePickerPermissions = (roleName: string) =>
   `${getRole(roleName)}/people-picker`;
 export const updateMCPServersPermissions = (roleName: string) => `${getRole(roleName)}/mcp-servers`;
+export const updateRemoteAgentsPermissions = (roleName: string) =>
+  `${getRole(roleName)}/remote-agents`;
 
 export const updateMarketplacePermissions = (roleName: string) =>
   `${getRole(roleName)}/marketplace`;
