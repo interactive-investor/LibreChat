@@ -277,7 +277,7 @@ export default function AgentConfig() {
               const isCopied = copiedAgentId === field.value;
               const isFavorite = isFavoriteAgent(field.value);
               return (
-                <div className="h-3 flex items-center gap-2" aria-live="polite">
+                <div className="flex h-3 items-center gap-2" aria-live="polite">
                   <button
                     type="button"
                     onClick={() => handleCopyLink(field.value)}
