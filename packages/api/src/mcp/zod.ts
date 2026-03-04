@@ -248,15 +248,6 @@ export function resolveJsonSchemaRefs<T extends Record<string, unknown>>(
   return result as T;
 }
 
-/**
- * Converts a JSON Schema to a Zod schema.
- *
- * @deprecated This function is deprecated in favor of using JSON schemas directly.
- * LangChain.js now supports JSON schemas natively, eliminating the need for Zod conversion.
- * Use `resolveJsonSchemaRefs` to handle $ref references and pass the JSON schema directly to tools.
- *
- * @see https://js.langchain.com/docs/how_to/custom_tools/
- */
 export function convertJsonSchemaToZod(
   schema: JsonSchemaType & Record<string, unknown>,
   options: ConvertJsonSchemaToZodOptions = {},
@@ -483,13 +474,8 @@ export function convertJsonSchemaToZod(
 }
 
 /**
- * Helper function that resolves refs before converting to Zod.
- *
- * @deprecated This function is deprecated in favor of using JSON schemas directly.
- * LangChain.js now supports JSON schemas natively, eliminating the need for Zod conversion.
- * Use `resolveJsonSchemaRefs` to handle $ref references and pass the JSON schema directly to tools.
- *
- * @see https://js.langchain.com/docs/how_to/custom_tools/
+ * Helper function for tests that automatically resolves refs before converting to Zod
+ * This ensures all tests use resolveJsonSchemaRefs even when not explicitly testing it
  */
 export function convertWithResolvedRefs(
   schema: JsonSchemaType & Record<string, unknown>,

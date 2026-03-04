@@ -18,7 +18,6 @@ import {
   usePeoplePickerPermissions,
   useResourcePermissionState,
   useCopyToClipboard,
-  useCanSharePublic,
   useLocalize,
 } from '~/hooks';
 import UnifiedPeopleSearch from './PeoplePicker/UnifiedPeopleSearch';
@@ -34,7 +33,6 @@ export default function GenericGrantAccessDialog({
   resourceType,
   onGrantAccess,
   disabled = false,
-  buttonClassName,
   children,
 }: {
   resourceDbId?: string | null;
@@ -43,19 +41,15 @@ export default function GenericGrantAccessDialog({
   resourceType: ResourceType;
   onGrantAccess?: (shares: TPrincipal[], isPublic: boolean, publicRole?: AccessRoleIds) => void;
   disabled?: boolean;
-  buttonClassName?: string;
   children?: React.ReactNode;
 }) {
   const localize = useLocalize();
   const { showToast } = useToastContext();
-  const [isCopying, setIsCopying] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const canSharePublic = useCanSharePublic(resourceType);
+  const [isCopying, setIsCopying] = useState(false);
+
+  // Use shared hooks
   const { hasPeoplePickerAccess, peoplePickerTypeFilter } = usePeoplePickerPermissions();
-
-  /** User can use the share dialog if they have people picker access OR can share publicly */
-  const canUseShareDialog = hasPeoplePickerAccess || canSharePublic;
-
   const {
     config,
     permissionsData,
@@ -71,7 +65,7 @@ export default function GenericGrantAccessDialog({
     setPublicRole,
   } = useResourcePermissionState(resourceType, resourceDbId, isModalOpen);
 
-  /** State for unified list of all shares (existing + newly added) */
+  // State for unified list of all shares (existing + newly added)
   const [allShares, setAllShares] = useState<TPrincipal[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [defaultPermissionId, setDefaultPermissionId] = useState<AccessRoleIds | undefined>(
@@ -91,11 +85,6 @@ export default function GenericGrantAccessDialog({
   const copyResourceUrl = useCopyToClipboard({ text: resourceUrl });
 
   if (!resourceDbId) {
-    return null;
-  }
-
-  // Don't render if user has no useful sharing permissions
-  if (!canUseShareDialog) {
     return null;
   }
 
@@ -249,11 +238,11 @@ export default function GenericGrantAccessDialog({
       })}
       type="button"
       disabled={disabled}
-      className={cn('h-9', buttonClassName)}
+      className="h-full"
     >
       <div className="flex min-w-[32px] items-center justify-center gap-2 text-blue-500">
         <span className="flex h-6 w-6 items-center justify-center">
-          <Share2Icon className="icon-md h-4 w-4" />
+          <Share2Icon className="icon-md h-4 w-4" aria-hidden="true" />
         </span>
         {totalCurrentShares > 0 && (
           <Label className="cursor-pointer text-sm font-medium text-text-secondary">
@@ -343,20 +332,16 @@ export default function GenericGrantAccessDialog({
             )}
           </div>
 
-          {canSharePublic && (
-            <>
-              <div className="flex border-t border-border-light" />
+          <div className="flex border-t border-border-light" />
 
-              {/* Public Access Section */}
-              <PublicSharingToggle
-                isPublic={isPublic}
-                publicRole={publicRole}
-                onPublicToggle={handlePublicToggle}
-                onPublicRoleChange={handlePublicRoleChange}
-                resourceType={resourceType}
-              />
-            </>
-          )}
+          {/* Public Access Section */}
+          <PublicSharingToggle
+            isPublic={isPublic}
+            publicRole={publicRole}
+            onPublicToggle={handlePublicToggle}
+            onPublicRoleChange={handlePublicRoleChange}
+            resourceType={resourceType}
+          />
 
           {/* Footer Actions */}
           <div className="flex justify-between pt-4">

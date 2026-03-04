@@ -26,10 +26,10 @@ describe('canAccessMCPServerResource middleware', () => {
     await Role.create({
       name: 'test-role',
       permissions: {
-        MCP_SERVERS: {
+        MCPSERVERS: {
           USE: true,
           CREATE: true,
-          SHARE: true,
+          SHARED_GLOBAL: false,
         },
       },
     });
@@ -545,7 +545,7 @@ describe('canAccessMCPServerResource middleware', () => {
 
   describe('error handling', () => {
     test('should handle server returning null gracefully (treated as not found)', async () => {
-      // When an MCP server is not found, findMCPServerByServerName returns null
+      // When an MCP server is not found, findMCPServerById returns null
       // which the middleware correctly handles as a 404
       req.params.serverName = 'definitely-non-existent-server';
 

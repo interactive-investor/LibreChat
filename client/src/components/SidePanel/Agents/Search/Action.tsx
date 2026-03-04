@@ -14,7 +14,6 @@ import type { AgentForm } from '~/common';
 import { useLocalize, useSearchApiKeyForm } from '~/hooks';
 import ApiKeyDialog from './ApiKeyDialog';
 import { ESide } from '~/common';
-import { cn } from '~/utils';
 
 export default function Action({
   authTypes = [],
@@ -82,10 +81,7 @@ export default function Action({
           <label
             id="web-search-label"
             htmlFor="web-search-checkbox"
-            className={cn(
-              'form-check-label text-token-text-primary',
-              (webSearchIsEnabled || isToolAuthenticated) && 'cursor-pointer',
-            )}
+            className="form-check-label text-token-text-primary cursor-pointer"
           >
             {localize('com_ui_web_search')}
           </label>

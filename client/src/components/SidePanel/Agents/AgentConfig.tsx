@@ -256,7 +256,6 @@ export default function AgentConfig() {
                     'mt-1 w-56 text-sm text-red-500',
                     errors.name ? 'visible h-auto' : 'invisible h-0',
                   )}
-                  role="alert"
                 >
                   {errors.name ? errors.name.message : ' '}
                 </div>

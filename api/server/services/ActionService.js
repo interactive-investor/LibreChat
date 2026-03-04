@@ -201,7 +201,7 @@ async function createActionTool({
                   async () => {
                     const eventData = { event: GraphEvents.ON_RUN_STEP_DELTA, data };
                     if (streamId) {
-                      await GenerationJobManager.emitChunk(streamId, eventData);
+                      GenerationJobManager.emitChunk(streamId, eventData);
                     } else {
                       sendEvent(res, eventData);
                     }
@@ -231,7 +231,7 @@ async function createActionTool({
                 data.delta.expires_at = undefined;
                 const successEventData = { event: GraphEvents.ON_RUN_STEP_DELTA, data };
                 if (streamId) {
-                  await GenerationJobManager.emitChunk(streamId, successEventData);
+                  GenerationJobManager.emitChunk(streamId, successEventData);
                 } else {
                   sendEvent(res, successEventData);
                 }

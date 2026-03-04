@@ -159,7 +159,7 @@ async function setupTestData() {
       case SystemRoles.USER:
         return { permissions: { PROMPTS: { USE: true, CREATE: true } } };
       case SystemRoles.ADMIN:
-        return { permissions: { PROMPTS: { USE: true, CREATE: true, SHARE: true } } };
+        return { permissions: { PROMPTS: { USE: true, CREATE: true, SHARED_GLOBAL: true } } };
       default:
         return null;
     }

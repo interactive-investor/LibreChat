@@ -25,7 +25,7 @@ const checkGlobalAgentShare = generateCheckAccess({
   permissionType: PermissionTypes.AGENTS,
   permissions: [Permissions.USE, Permissions.CREATE],
   bodyProps: {
-    [Permissions.SHARE]: ['projectIds', 'removeProjectIds'],
+    [Permissions.SHARED_GLOBAL]: ['projectIds', 'removeProjectIds'],
   },
   getRoleByName,
 });

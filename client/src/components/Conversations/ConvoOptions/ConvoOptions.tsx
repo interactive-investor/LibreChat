@@ -35,7 +35,7 @@ function ConvoOptions({
   retainView: () => void;
   renameHandler: (e: MouseEvent) => void;
   isPopoverActive: boolean;
-  setIsPopoverActive: (open: boolean) => void;
+  setIsPopoverActive: React.Dispatch<React.SetStateAction<boolean>>;
   isActiveConvo: boolean;
   isShiftHeld?: boolean;
 }) {
@@ -294,7 +294,6 @@ function ConvoOptions({
         portal={true}
         menuId={menuId}
         focusLoop={true}
-        className="z-[125]"
         unmountOnHide={true}
         isOpen={isPopoverActive}
         setIsOpen={setIsPopoverActive}
@@ -302,7 +301,7 @@ function ConvoOptions({
           <Ariakit.MenuButton
             id={`conversation-menu-${conversationId}`}
             aria-label={localize('com_nav_convo_menu_options')}
-            aria-expanded={isPopoverActive}
+            aria-readonly={undefined}
             className={cn(
               'inline-flex h-7 w-7 items-center justify-center gap-2 rounded-md border-none p-0 text-sm font-medium ring-ring-primary transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50',
               isActiveConvo === true || isPopoverActive
@@ -322,6 +321,7 @@ function ConvoOptions({
           </Ariakit.MenuButton>
         }
         items={dropdownItems}
+        className="z-30"
       />
       {showShareDialog && (
         <ShareButton

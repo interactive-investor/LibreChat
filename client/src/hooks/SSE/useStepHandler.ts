@@ -31,8 +31,6 @@ type TStepEvent = {
   event: string;
   data:
     | Agents.MessageDeltaEvent
-    | Agents.ReasoningDeltaEvent
-    | Agents.RunStepDeltaEvent
     | Agents.AgentUpdate
     | Agents.RunStep
     | Agents.ToolEndEvent
@@ -63,8 +61,6 @@ export default function useStepHandler({
   const toolCallIdMap = useRef(new Map<string, string | undefined>());
   const messageMap = useRef(new Map<string, TMessage>());
   const stepMap = useRef(new Map<string, Agents.RunStep>());
-  /** Buffer for deltas that arrive before their corresponding run step */
-  const pendingDeltaBuffer = useRef(new Map<string, TStepEvent[]>());
 
   /**
    * Calculate content index for a run step.
@@ -354,14 +350,6 @@ export default function useStepHandler({
 
           setMessages(updatedMessages);
         }
-
-        const bufferedDeltas = pendingDeltaBuffer.current.get(runStep.id);
-        if (bufferedDeltas && bufferedDeltas.length > 0) {
-          pendingDeltaBuffer.current.delete(runStep.id);
-          for (const bufferedDelta of bufferedDeltas) {
-            stepHandler({ event: bufferedDelta.event, data: bufferedDelta.data }, submission);
-          }
-        }
       } else if (event === 'on_agent_update') {
         const { agent_update } = data as Agents.AgentUpdate;
         let responseMessageId = agent_update.runId || '';
@@ -403,9 +391,7 @@ export default function useStepHandler({
         }
 
         if (!runStep || !responseMessageId) {
-          const buffer = pendingDeltaBuffer.current.get(messageDelta.id) ?? [];
-          buffer.push({ event: 'on_message_delta', data: messageDelta });
-          pendingDeltaBuffer.current.set(messageDelta.id, buffer);
+          console.warn('No run step or runId found for message delta event');
           return;
         }
 
@@ -446,9 +432,7 @@ export default function useStepHandler({
         }
 
         if (!runStep || !responseMessageId) {
-          const buffer = pendingDeltaBuffer.current.get(reasoningDelta.id) ?? [];
-          buffer.push({ event: 'on_reasoning_delta', data: reasoningDelta });
-          pendingDeltaBuffer.current.set(reasoningDelta.id, buffer);
+          console.warn('No run step or runId found for reasoning delta event');
           return;
         }
 
@@ -489,9 +473,7 @@ export default function useStepHandler({
         }
 
         if (!runStep || !responseMessageId) {
-          const buffer = pendingDeltaBuffer.current.get(runStepDelta.id) ?? [];
-          buffer.push({ event: 'on_run_step_delta', data: runStepDelta });
-          pendingDeltaBuffer.current.set(runStepDelta.id, buffer);
+          console.warn('No run step or runId found for run step delta event');
           return;
         }
 
@@ -596,7 +578,6 @@ export default function useStepHandler({
     toolCallIdMap.current.clear();
     messageMap.current.clear();
     stepMap.current.clear();
-    pendingDeltaBuffer.current.clear();
   }, []);
 
   /**

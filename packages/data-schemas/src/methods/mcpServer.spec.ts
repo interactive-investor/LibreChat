@@ -228,22 +228,22 @@ describe('MCPServer Model Tests', () => {
     });
   });
 
-  describe('findMCPServerByServerName', () => {
+  describe('findMCPServerById', () => {
     test('should find server by serverName', async () => {
       const created = await methods.createMCPServer({
-        config: createSSEConfig('Find By Name Test'),
+        config: createSSEConfig('Find By Id Test'),
         author: authorId,
       });
 
-      const found = await methods.findMCPServerByServerName(created.serverName);
+      const found = await methods.findMCPServerById(created.serverName);
 
       expect(found).toBeDefined();
-      expect(found?.serverName).toBe('find-by-name-test');
-      expect(found?.config.title).toBe('Find By Name Test');
+      expect(found?.serverName).toBe('find-by-id-test');
+      expect(found?.config.title).toBe('Find By Id Test');
     });
 
     test('should return null when server not found', async () => {
-      const found = await methods.findMCPServerByServerName('non-existent-server');
+      const found = await methods.findMCPServerById('non-existent-server');
 
       expect(found).toBeNull();
     });
@@ -254,7 +254,7 @@ describe('MCPServer Model Tests', () => {
         author: authorId,
       });
 
-      const found = await methods.findMCPServerByServerName('lean-test');
+      const found = await methods.findMCPServerById('lean-test');
 
       // Lean documents don't have mongoose methods
       expect(found).toBeDefined();
@@ -621,7 +621,7 @@ describe('MCPServer Model Tests', () => {
       expect(deleted?.serverName).toBe('delete-test');
 
       // Verify it's actually deleted
-      const found = await methods.findMCPServerByServerName('delete-test');
+      const found = await methods.findMCPServerById('delete-test');
       expect(found).toBeNull();
     });
 

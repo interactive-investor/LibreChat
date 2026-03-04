@@ -22,13 +22,6 @@ export interface GuardrailConfiguration {
 }
 
 /**
- * AWS Bedrock Inference Profile configuration
- * Maps model IDs to their inference profile ARNs
- * @see https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles.html
- */
-export type InferenceProfileConfig = Record<string, string>;
-
-/**
  * Configuration options for Bedrock LLM
  */
 export interface BedrockConfigOptions {
@@ -43,8 +36,6 @@ export interface BedrockConfigOptions {
   endpointHost?: string;
   /** Guardrail configuration for content filtering */
   guardrailConfig?: GuardrailConfiguration;
-  /** Inference profile ARNs keyed by model ID / friendly name */
-  inferenceProfiles?: InferenceProfileConfig;
 }
 
 /**
@@ -57,7 +48,6 @@ export interface BedrockLLMConfigResult {
     credentials?: BedrockCredentials;
     endpointHost?: string;
     guardrailConfig?: GuardrailConfiguration;
-    applicationInferenceProfile?: string;
   };
   configOptions: Record<string, unknown>;
 }
