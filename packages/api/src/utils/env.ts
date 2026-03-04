@@ -32,50 +32,6 @@ type AllowedUserField = (typeof ALLOWED_USER_FIELDS)[number];
 type SafeUser = Pick<IUser, AllowedUserField>;
 
 /**
- * Encodes a string value to be safe for HTTP headers.
- * HTTP headers are restricted to ASCII characters (0-255) per the Fetch API standard.
- * Non-ASCII characters with Unicode values > 255 are Base64 encoded with 'b64:' prefix.
- *
- * NOTE: This is a LibreChat-specific encoding scheme to work around Fetch API limitations.
- * MCP servers receiving headers with the 'b64:' prefix should:
- * 1. Detect the 'b64:' prefix in header values
- * 2. Remove the prefix and Base64-decode the remaining string
- * 3. Use the decoded UTF-8 string as the actual value
- *
- * Example decoding (Node.js):
- *   if (headerValue.startsWith('b64:')) {
- *     const decoded = Buffer.from(headerValue.slice(4), 'base64').toString('utf8');
- *   }
- *
- * @param value - The string value to encode
- * @returns ASCII-safe string (encoded if necessary)
- *
- * @example
- * encodeHeaderValue("José")   // Returns "José" (é = 233, safe)
- * encodeHeaderValue("Marić")  // Returns "b64:TWFyacSH" (ć = 263, needs encoding)
- */
-export function encodeHeaderValue(value: string): string {
-  // Handle non-string or empty values
-  if (!value || typeof value !== 'string') {
-    return '';
-  }
-
-  // Check if string contains extended Unicode characters (> 255)
-  // Characters 0-255 (ASCII + Latin-1) are safe and don't need encoding
-  // Characters > 255 (e.g., ć=263, đ=272, ł=322) need Base64 encoding
-  // eslint-disable-next-line no-control-regex
-  const hasExtendedUnicode = /[^\u0000-\u00FF]/.test(value);
-
-  if (!hasExtendedUnicode) {
-    return value; // Safe to pass through
-  }
-
-  // Encode to Base64 for extended Unicode characters
-  const base64 = Buffer.from(value, 'utf8').toString('base64');
-  return `b64:${base64}`;
-}
-
-/**
  * Creates a safe user object containing only allowed fields.
  * Preserves federatedTokens for OpenID token template variable resolution.
  *
@@ -110,19 +66,12 @@ export function createSafeUser(
 const ALLOWED_BODY_FIELDS = ['conversationId', 'parentMessageId', 'messageId'] as const;
 
 /**
- * Processes a string value to replace user field placeholders.
- * When isHeader is true, non-ASCII characters in certain fields are Base64 encoded.
- *
+ * Processes a string value to replace user field placeholders
  * @param value - The string value to process
  * @param user - The user object
- * @param isHeader - Whether this value will be used in an HTTP header
- * @returns The processed string with placeholders replaced (and encoded if necessary)
+ * @returns The processed string with placeholders replaced
  */
-function processUserPlaceholders(
-  value: string,
-  user?: Partial<IUser>,
-  isHeader: boolean = false,
-): string {
+function processUserPlaceholders(value: string, user?: IUser): string {
   if (!user || typeof value !== 'string') {
     return value;
   }
@@ -146,18 +95,7 @@ function processUserPlaceholders(
       continue;
     }
 
-    let replacementValue = fieldValue == null ? '' : String(fieldValue);
-
-    // Encode non-ASCII characters when used in headers
-    // Fields like name, username, email can contain non-ASCII characters
-    // that would cause ByteString conversion errors in the Fetch API
-    if (isHeader) {
-      const fieldsToEncode = ['name', 'username', 'email'];
-      if (fieldsToEncode.includes(field)) {
-        replacementValue = encodeHeaderValue(replacementValue);
-      }
-    }
-
+    const replacementValue = fieldValue == null ? '' : String(fieldValue);
     value = value.replace(new RegExp(placeholder, 'g'), replacementValue);
   }
 
@@ -195,12 +133,10 @@ function processBodyPlaceholders(value: string, body: RequestBody): string {
 
 /**
  * Processes a single string value by replacing various types of placeholders
- *
  * @param originalValue - The original string value to process
  * @param customUserVars - Optional custom user variables to replace placeholders
  * @param user - Optional user object for replacing user field placeholders
  * @param body - Optional request body object for replacing body field placeholders
- * @param isHeader - Whether this value will be used in an HTTP header (enables encoding)
  * @returns The processed string with all placeholders replaced
  */
 function processSingleValue({
@@ -208,13 +144,11 @@ function processSingleValue({
   customUserVars,
   user,
   body = undefined,
-  isHeader = false,
 }: {
   originalValue: string;
   customUserVars?: Record<string, string>;
-  user?: Partial<IUser>;
+  user?: IUser;
   body?: RequestBody;
-  isHeader?: boolean;
 }): string {
   // Type guard: ensure we're working with a string
   if (typeof originalValue !== 'string') {
@@ -232,7 +166,7 @@ function processSingleValue({
     }
   }
 
-  value = processUserPlaceholders(value, user, isHeader);
+  value = processUserPlaceholders(value, user);
 
   const openidTokenInfo = extractOpenIDTokenInfo(user);
   if (openidTokenInfo && isOpenIDTokenValid(openidTokenInfo)) {
@@ -259,7 +193,7 @@ function processSingleValue({
  */
 export function processMCPEnv(params: {
   options: Readonly<MCPOptions>;
-  user?: Partial<IUser>;
+  user?: IUser;
   customUserVars?: Record<string, string>;
   body?: RequestBody;
 }): MCPOptions {
@@ -324,13 +258,7 @@ export function processMCPEnv(params: {
   if ('headers' in newObj && newObj.headers) {
     const processedHeaders: Record<string, string> = {};
     for (const [key, originalValue] of Object.entries(newObj.headers)) {
-      processedHeaders[key] = processSingleValue({
-        originalValue,
-        customUserVars,
-        user,
-        body,
-        isHeader: true, // Important: Enable header encoding
-      });
+      processedHeaders[key] = processSingleValue({ originalValue, customUserVars, user, body });
     }
     newObj.headers = processedHeaders;
   }
@@ -428,14 +356,13 @@ export function resolveNestedObject<T = unknown>(options?: {
 
 /**
  * Resolves header values by replacing user placeholders, body variables, custom variables, and environment variables.
- * Automatically encodes non-ASCII characters for header safety.
  *
- * @param options - Optional configuration object
- * @param options.headers - The headers object to process
- * @param options.user - Optional user object for replacing user field placeholders (can be partial with just id)
- * @param options.body - Optional request body object for replacing body field placeholders
- * @param options.customUserVars - Optional custom user variables to replace placeholders
- * @returns The processed headers with all placeholders replaced
+ * @param options - Optional configuration object.
+ * @param options.headers - The headers object to process.
+ * @param options.user - Optional user object for replacing user field placeholders (can be partial with just id).
+ * @param options.body - Optional request body object for replacing body field placeholders.
+ * @param options.customUserVars - Optional custom user variables to replace placeholders.
+ * @returns The processed headers with all placeholders replaced.
  */
 export function resolveHeaders(options?: {
   headers: Record<string, string> | undefined;
@@ -455,7 +382,6 @@ export function resolveHeaders(options?: {
         customUserVars,
         user: user as IUser,
         body,
-        isHeader: true, // Important: Enable header encoding
       });
     });
   }

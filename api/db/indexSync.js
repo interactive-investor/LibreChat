@@ -13,11 +13,6 @@ const searchEnabled = isEnabled(process.env.SEARCH);
 const indexingDisabled = isEnabled(process.env.MEILI_NO_SYNC);
 let currentTimeout = null;
 
-const defaultSyncThreshold = 1000;
-const syncThreshold = process.env.MEILI_SYNC_THRESHOLD
-  ? parseInt(process.env.MEILI_SYNC_THRESHOLD, 10)
-  : defaultSyncThreshold;
-
 class MeiliSearchClient {
   static instance = null;
 
@@ -226,25 +221,25 @@ async function performSync(flowManager, flowId, flowType) {
     }
 
     // Check if we need to sync messages
-    logger.info('[indexSync] Requesting message sync progress...');
     const messageProgress = await Message.getSyncProgress();
     if (!messageProgress.isComplete || settingsUpdated) {
       logger.info(
         `[indexSync] Messages need syncing: ${messageProgress.totalProcessed}/${messageProgress.totalDocuments} indexed`,
       );
 
-      const messageCount = messageProgress.totalDocuments;
+      // Check if we should do a full sync or incremental
+      const messageCount = await Message.countDocuments();
       const messagesIndexed = messageProgress.totalProcessed;
-      const unindexedMessages = messageCount - messagesIndexed;
+      const syncThreshold = parseInt(process.env.MEILI_SYNC_THRESHOLD || '1000', 10);
 
-      if (settingsUpdated || unindexedMessages > syncThreshold) {
-        logger.info(`[indexSync] Starting message sync (${unindexedMessages} unindexed)`);
+      if (messageCount - messagesIndexed > syncThreshold) {
+        logger.info('[indexSync] Starting full message sync due to large difference');
         await Message.syncWithMeili();
         messagesSync = true;
-      } else if (unindexedMessages > 0) {
-        logger.info(
-          `[indexSync] ${unindexedMessages} messages unindexed (below threshold: ${syncThreshold}, skipping)`,
-        );
+      } else if (messageCount !== messagesIndexed) {
+        logger.warn('[indexSync] Messages out of sync, performing incremental sync');
+        await Message.syncWithMeili();
+        messagesSync = true;
       }
     } else {
       logger.info(
@@ -259,18 +254,18 @@ async function performSync(flowManager, flowId, flowType) {
         `[indexSync] Conversations need syncing: ${convoProgress.totalProcessed}/${convoProgress.totalDocuments} indexed`,
       );
 
-      const convoCount = convoProgress.totalDocuments;
+      const convoCount = await Conversation.countDocuments();
       const convosIndexed = convoProgress.totalProcessed;
+      const syncThreshold = parseInt(process.env.MEILI_SYNC_THRESHOLD || '1000', 10);
 
-      const unindexedConvos = convoCount - convosIndexed;
-      if (settingsUpdated || unindexedConvos > syncThreshold) {
-        logger.info(`[indexSync] Starting convos sync (${unindexedConvos} unindexed)`);
+      if (convoCount - convosIndexed > syncThreshold) {
+        logger.info('[indexSync] Starting full conversation sync due to large difference');
         await Conversation.syncWithMeili();
         convosSync = true;
-      } else if (unindexedConvos > 0) {
-        logger.info(
-          `[indexSync] ${unindexedConvos} convos unindexed (below threshold: ${syncThreshold}, skipping)`,
-        );
+      } else if (convoCount !== convosIndexed) {
+        logger.warn('[indexSync] Convos out of sync, performing incremental sync');
+        await Conversation.syncWithMeili();
+        convosSync = true;
       }
     } else {
       logger.info(

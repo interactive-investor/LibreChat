@@ -5,7 +5,6 @@
 const mongoose = require('mongoose');
 const { logger } = require('@librechat/data-schemas');
 const { ResourceType, PrincipalType, PermissionBits } = require('librechat-data-provider');
-const { enrichRemoteAgentPrincipals, backfillRemoteAgentPermissions } = require('@librechat/api');
 const {
   bulkUpdateResourcePermissions,
   ensureGroupPrincipalExists,
@@ -15,6 +14,7 @@ const {
   findAccessibleResources,
   getResourcePermissionsMap,
 } = require('~/server/services/PermissionService');
+const { AclEntry } = require('~/db/models');
 const {
   searchPrincipals: searchLocalPrincipals,
   sortPrincipalsByRelevance,
@@ -24,7 +24,6 @@ const {
   entraIdPrincipalFeatureEnabled,
   searchEntraIdPrincipals,
 } = require('~/server/services/GraphApiService');
-const { AclEntry, AccessRole } = require('~/db/models');
 
 /**
  * Generic controller for resource permission endpoints
@@ -235,7 +234,7 @@ const getResourcePermissions = async (req, res) => {
       },
     ]);
 
-    let principals = [];
+    const principals = [];
     let publicPermission = null;
 
     // Process aggregation results
@@ -279,13 +278,6 @@ const getResourcePermissions = async (req, res) => {
           accessRoleId: result.accessRoleId,
         });
       }
-    }
-
-    if (resourceType === ResourceType.REMOTE_AGENT) {
-      const enricherDeps = { AclEntry, AccessRole, logger };
-      const enrichResult = await enrichRemoteAgentPrincipals(enricherDeps, resourceId, principals);
-      principals = enrichResult.principals;
-      backfillRemoteAgentPermissions(enricherDeps, resourceId, enrichResult.entriesToBackfill);
     }
 
     // Return response in format expected by frontend

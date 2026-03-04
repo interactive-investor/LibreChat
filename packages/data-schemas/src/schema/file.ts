@@ -15,10 +15,6 @@ const file: Schema<IMongoFile> = new Schema(
       ref: 'Conversation',
       index: true,
     },
-    messageId: {
-      type: String,
-      index: true,
-    },
     file_id: {
       type: String,
       index: true,

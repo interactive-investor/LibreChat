@@ -53,7 +53,7 @@ jest.mock('@librechat/api', () => {
     },
     sendEvent: jest.fn(),
     normalizeServerName: jest.fn((name) => name),
-    resolveJsonSchemaRefs: jest.fn((params) => params),
+    convertWithResolvedRefs: jest.fn((params) => params),
     get isMCPDomainAllowed() {
       return mockIsMCPDomainAllowed;
     },
@@ -118,10 +118,6 @@ jest.mock('~/models', () => ({
 
 jest.mock('./Tools/mcp', () => ({
   reinitMCPServer: jest.fn(),
-}));
-
-jest.mock('./GraphTokenService', () => ({
-  getGraphApiToken: jest.fn(),
 }));
 
 describe('tests for the new helper functions used by the MCP connection status endpoints', () => {

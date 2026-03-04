@@ -1,5 +1,5 @@
 import debounce from 'lodash/debounce';
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useMemo } from 'react';
 import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
 import type * as t from 'librechat-data-provider';
 import type { Endpoint, SelectedValues } from '~/common';
@@ -8,9 +8,8 @@ import {
   useSelectorEffects,
   useKeyDialog,
   useEndpoints,
-  useLocalize,
 } from '~/hooks';
-import { useAgentsMapContext, useAssistantsMapContext, useLiveAnnouncer } from '~/Providers';
+import { useAgentsMapContext, useAssistantsMapContext } from '~/Providers';
 import { useGetEndpointsQuery, useListAgentsQuery } from '~/data-provider';
 import { useModelSelectorChatContext } from './ModelSelectorChatContext';
 import useSelectMention from '~/hooks/Input/useSelectMention';
@@ -60,8 +59,6 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
   const { data: endpointsConfig } = useGetEndpointsQuery();
   const { endpoint, model, spec, agent_id, assistant_id, conversation, newConversation } =
     useModelSelectorChatContext();
-  const localize = useLocalize();
-  const { announcePolite } = useLiveAnnouncer();
   const modelSpecs = useMemo(() => {
     const specs = startupConfig?.modelSpecs?.list ?? [];
     if (!agentsMap) {
@@ -95,21 +92,6 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     startupConfig,
     endpointsConfig,
   });
-
-  const getModelDisplayName = useCallback(
-    (endpoint: Endpoint, model: string): string => {
-      if (isAgentsEndpoint(endpoint.value)) {
-        return endpoint.agentNames?.[model] ?? agentsMap?.[model]?.name ?? model;
-      }
-
-      if (isAssistantsEndpoint(endpoint.value)) {
-        return endpoint.assistantNames?.[model] ?? model;
-      }
-
-      return model;
-    },
-    [agentsMap],
-  );
 
   const { onSelectEndpoint, onSelectSpec } = useSelectMention({
     // presets,
@@ -225,10 +207,6 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
       model,
       modelSpec: '',
     });
-
-    const modelDisplayName = getModelDisplayName(endpoint, model);
-    const announcement = localize('com_ui_model_selected', { 0: modelDisplayName });
-    announcePolite({ message: announcement, isStatus: true });
   };
 
   const value = {

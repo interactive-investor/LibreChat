@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { VisuallyHidden } from '@ariakit/react';
 import { Spinner, TooltipAnchor } from '@librechat/client';
 import { CheckCircle2, MousePointerClick, SettingsIcon } from 'lucide-react';
 import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
@@ -127,8 +126,6 @@ export function EndpointItem({ endpoint, endpointIndex }: EndpointItemProps) {
     </div>
   );
 
-  const isEndpointSelected = selectedEndpoint === endpoint.value;
-
   if (endpoint.hasModels) {
     const filteredModels = searchValue
       ? filterModels(
@@ -156,17 +153,9 @@ export function EndpointItem({ endpoint, endpointIndex }: EndpointItemProps) {
         label={
           <div className="group flex w-full min-w-0 items-center justify-between gap-1.5 py-1 text-sm">
             {renderIconLabel()}
-            <div className="flex shrink-0 items-center gap-1">
-              {isUserProvided && (
-                <SettingsButton endpoint={endpoint} handleOpenKeyDialog={handleOpenKeyDialog} />
-              )}
-              {isEndpointSelected && (
-                <>
-                  <CheckCircle2 className="size-4 shrink-0 text-text-primary" aria-hidden="true" />
-                  <VisuallyHidden>{localize('com_a11y_selected')}</VisuallyHidden>
-                </>
-              )}
-            </div>
+            {isUserProvided && (
+              <SettingsButton endpoint={endpoint} handleOpenKeyDialog={handleOpenKeyDialog} />
+            )}
           </div>
         }
       >
@@ -211,7 +200,6 @@ export function EndpointItem({ endpoint, endpointIndex }: EndpointItemProps) {
         id={`endpoint-${endpoint.value}-menu`}
         key={`endpoint-${endpoint.value}-item`}
         onClick={() => handleSelectEndpoint(endpoint)}
-        aria-selected={isEndpointSelected || undefined}
         className="group flex w-full cursor-pointer items-center justify-between gap-1.5 py-2 text-sm"
       >
         {renderIconLabel()}
@@ -230,11 +218,8 @@ export function EndpointItem({ endpoint, endpointIndex }: EndpointItemProps) {
               }
             />
           )}
-          {isEndpointSelected && !isAssistantsNotLoaded && (
-            <>
-              <CheckCircle2 className="size-4 shrink-0 text-text-primary" aria-hidden="true" />
-              <VisuallyHidden>{localize('com_a11y_selected')}</VisuallyHidden>
-            </>
+          {selectedEndpoint === endpoint.value && !isAssistantsNotLoaded && (
+            <CheckCircle2 className="size-4 shrink-0 text-text-primary" aria-hidden="true" />
           )}
         </div>
       </MenuItem>

@@ -1,4 +1,4 @@
-import type { ExtendedJsonSchema } from '../registry/definitions';
+import { z } from 'zod';
 
 /** Default description for Gemini image generation tool */
 const DEFAULT_GEMINI_IMAGE_GEN_DESCRIPTION =
@@ -46,35 +46,6 @@ const getGeminiImageIdsDescription = () => {
   return process.env.GEMINI_IMAGE_IDS_DESCRIPTION || DEFAULT_GEMINI_IMAGE_IDS_DESCRIPTION;
 };
 
-const geminiImageGenJsonSchema: ExtendedJsonSchema = {
-  type: 'object',
-  properties: {
-    prompt: {
-      type: 'string',
-      maxLength: 32000,
-      description: getGeminiImageGenPromptDescription(),
-    },
-    image_ids: {
-      type: 'array',
-      items: { type: 'string' },
-      description: getGeminiImageIdsDescription(),
-    },
-    aspectRatio: {
-      type: 'string',
-      enum: ['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9'],
-      description:
-        'The aspect ratio of the generated image. Use 16:9 or 3:2 for landscape, 9:16 or 2:3 for portrait, 21:9 for ultra-wide/cinematic, 1:1 for square. Defaults to 1:1 if not specified.',
-    },
-    imageSize: {
-      type: 'string',
-      enum: ['1K', '2K', '4K'],
-      description:
-        'The resolution of the generated image. Use 1K for standard, 2K for high, 4K for maximum quality. Defaults to 1K if not specified.',
-    },
-  },
-  required: ['prompt'],
-};
-
 export const geminiToolkit = {
   gemini_image_gen: {
     name: 'gemini_image_gen' as const,
@@ -106,7 +77,22 @@ export const geminiToolkit = {
 9. Use imageSize to control the resolution: 1K (standard), 2K (high), 4K (maximum quality).
 
 The prompt should be a detailed paragraph describing every part of the image in concrete, objective detail.`,
-    schema: geminiImageGenJsonSchema,
+    schema: z.object({
+      prompt: z.string().max(32000).describe(getGeminiImageGenPromptDescription()),
+      image_ids: z.array(z.string()).optional().describe(getGeminiImageIdsDescription()),
+      aspectRatio: z
+        .enum(['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9'])
+        .optional()
+        .describe(
+          'The aspect ratio of the generated image. Use 16:9 or 3:2 for landscape, 9:16 or 2:3 for portrait, 21:9 for ultra-wide/cinematic, 1:1 for square. Defaults to 1:1 if not specified.',
+        ),
+      imageSize: z
+        .enum(['1K', '2K', '4K'])
+        .optional()
+        .describe(
+          'The resolution of the generated image. Use 1K for standard, 2K for high, 4K for maximum quality. Defaults to 1K if not specified.',
+        ),
+    }),
     responseFormat: 'content_and_artifact' as const,
   },
 } as const;

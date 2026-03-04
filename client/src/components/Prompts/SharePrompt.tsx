@@ -16,10 +16,10 @@ const SharePrompt = React.memo(
   ({ group, disabled }: { group?: TPromptGroup; disabled: boolean }) => {
     const { user } = useAuthContext();
 
-    // Check if user has permission to share prompts
+    // Check if user has permission to share prompts globally
     const hasAccessToSharePrompts = useHasAccess({
       permissionType: PermissionTypes.PROMPTS,
-      permission: Permissions.SHARE,
+      permission: Permissions.SHARED_GLOBAL,
     });
 
     // Check user's permissions on this specific promptGroup

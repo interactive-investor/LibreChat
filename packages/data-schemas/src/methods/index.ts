@@ -10,8 +10,6 @@ import { createFileMethods, type FileMethods } from './file';
 import { createMemoryMethods, type MemoryMethods } from './memory';
 /* Agent Categories */
 import { createAgentCategoryMethods, type AgentCategoryMethods } from './agentCategory';
-/* Agent API Keys */
-import { createAgentApiKeyMethods, type AgentApiKeyMethods } from './agentApiKey';
 /* MCP Servers */
 import { createMCPServerMethods, type MCPServerMethods } from './mcpServer';
 /* Plugin Auth */
@@ -30,7 +28,6 @@ export type AllMethods = UserMethods &
   FileMethods &
   MemoryMethods &
   AgentCategoryMethods &
-  AgentApiKeyMethods &
   MCPServerMethods &
   UserGroupMethods &
   AclEntryMethods &
@@ -52,7 +49,6 @@ export function createMethods(mongoose: typeof import('mongoose')): AllMethods {
     ...createFileMethods(mongoose),
     ...createMemoryMethods(mongoose),
     ...createAgentCategoryMethods(mongoose),
-    ...createAgentApiKeyMethods(mongoose),
     ...createMCPServerMethods(mongoose),
     ...createAccessRoleMethods(mongoose),
     ...createUserGroupMethods(mongoose),
@@ -71,7 +67,6 @@ export type {
   FileMethods,
   MemoryMethods,
   AgentCategoryMethods,
-  AgentApiKeyMethods,
   MCPServerMethods,
   UserGroupMethods,
   AclEntryMethods,

@@ -23,7 +23,6 @@ import {
 import { createProviderOption, getDefaultAgentFormValues } from '~/utils';
 import { useResourcePermissions } from '~/hooks/useResourcePermissions';
 import { useSelectAgent, useLocalize, useAuthContext } from '~/hooks';
-import type { TranslationKeys } from '~/hooks/useLocalize';
 import { useAgentPanelContext } from '~/Providers/AgentPanelContext';
 import AgentPanelSkeleton from './AgentPanelSkeleton';
 import AdvancedPanel from './Advanced/AdvancedPanel';
@@ -37,8 +36,8 @@ import ModelPanel from './ModelPanel';
 function getUpdateToastMessage(
   noVersionChange: boolean,
   avatarActionState: AgentForm['avatar_action'],
-  name: string | null | undefined,
-  localize: (key: TranslationKeys, vars?: Record<string, unknown>) => string,
+  name: string | undefined,
+  localize: (key: string, vars?: Record<string, unknown> | Array<string | number>) => string,
 ): string | null {
   // If only avatar upload is pending (separate endpoint), suppress the no-changes toast.
   if (noVersionChange && avatarActionState === 'upload') {
@@ -73,7 +72,6 @@ export function composeAgentUpdatePayload(data: AgentForm, agent_id?: string | n
     recursion_limit,
     category,
     support_contact,
-    tool_options,
     avatar_action: avatarActionState,
   } = data;
 
@@ -99,7 +97,6 @@ export function composeAgentUpdatePayload(data: AgentForm, agent_id?: string | n
       recursion_limit,
       category,
       support_contact,
-      tool_options,
       ...(shouldResetAvatar ? { avatar: null } : {}),
     },
     provider,
@@ -220,7 +217,7 @@ export default function AgentPanel() {
 
   const { onSelect: onSelectAgent } = useSelectAgent();
 
-  const modelsQuery = useGetModelsQuery({ refetchOnMount: 'always' });
+  const modelsQuery = useGetModelsQuery();
   const basicAgentQuery = useGetAgentByIdQuery(current_agent_id);
 
   const { hasPermission, isLoading: permissionsLoading } = useResourcePermissions(
@@ -548,7 +545,7 @@ export default function AgentPanel() {
           <AgentFooter
             createMutation={create}
             updateMutation={update}
-            isAvatarUploading={isAvatarUploadInFlight || uploadAvatarMutation.isLoading}
+            isAvatarUploading={isAvatarUploadInFlight || uploadAvatarMutation.isPending}
             activePanel={activePanel}
             setActivePanel={setActivePanel}
             setCurrentAgentId={setCurrentAgentId}

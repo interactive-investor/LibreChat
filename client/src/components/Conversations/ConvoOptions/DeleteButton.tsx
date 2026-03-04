@@ -25,7 +25,7 @@ type DeleteButtonProps = {
   showDeleteDialog?: boolean;
   setShowDeleteDialog?: (value: boolean) => void;
   triggerRef?: React.RefObject<HTMLButtonElement>;
-  setMenuOpen?: (open: boolean) => void;
+  setMenuOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export function DeleteConversationDialog({
@@ -35,7 +35,7 @@ export function DeleteConversationDialog({
   retainView,
   title,
 }: {
-  setMenuOpen?: (open: boolean) => void;
+  setMenuOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   setShowDeleteDialog: (value: boolean) => void;
   conversationId: string;
   retainView: () => void;

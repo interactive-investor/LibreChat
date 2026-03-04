@@ -99,16 +99,6 @@ const BookmarkMenu: FC = () => {
 
   const newBookmarkRef = useRef<HTMLButtonElement>(null);
 
-  const tagsCount = tags?.length ?? 0;
-  const hasBookmarks = tagsCount > 0;
-
-  const buttonAriaLabel = useMemo(() => {
-    if (tagsCount > 0) {
-      return localize('com_ui_bookmarks_count_selected', { count: tagsCount });
-    }
-    return localize('com_ui_bookmarks_add');
-  }, [tagsCount, localize]);
-
   const dropdownItems: t.MenuItemProps[] = useMemo(() => {
     const items: t.MenuItemProps[] = [
       {
@@ -124,19 +114,19 @@ const BookmarkMenu: FC = () => {
 
     if (data) {
       for (const tag of data) {
-        const isSelected = tags?.includes(tag.tag) === true;
+        const isSelected = tags?.includes(tag.tag);
         items.push({
           id: tag.tag,
           label: tag.tag,
           hideOnClick: false,
-          icon: isSelected ? (
-            <BookmarkFilledIcon className="size-4" />
-          ) : (
-            <BookmarkIcon className="size-4" />
-          ),
+          icon:
+            isSelected === true ? (
+              <BookmarkFilledIcon className="size-4" />
+            ) : (
+              <BookmarkIcon className="size-4" />
+            ),
           onClick: () => handleSubmit(tag.tag),
           disabled: mutation.isLoading,
-          ariaChecked: isSelected,
         });
       }
     }
@@ -156,10 +146,10 @@ const BookmarkMenu: FC = () => {
     if (mutation.isLoading) {
       return <Spinner aria-label="Spinner" />;
     }
-    if (hasBookmarks) {
-      return <BookmarkFilledIcon className="icon-lg" aria-hidden="true" />;
+    if ((tags?.length ?? 0) > 0) {
+      return <BookmarkFilledIcon className="icon-lg" aria-label="Filled Bookmark" />;
     }
-    return <BookmarkIcon className="icon-lg" aria-hidden="true" />;
+    return <BookmarkIcon className="icon-lg" aria-label="Bookmark" />;
   };
 
   return (
@@ -178,8 +168,7 @@ const BookmarkMenu: FC = () => {
             render={
               <Ariakit.MenuButton
                 id="bookmark-menu-button"
-                aria-label={buttonAriaLabel}
-                aria-pressed={hasBookmarks}
+                aria-label={localize('com_ui_bookmarks_add')}
                 className={cn(
                   'mt-text-sm flex size-10 flex-shrink-0 items-center justify-center gap-2 rounded-xl border border-border-light bg-presentation text-sm transition-colors duration-200 hover:bg-surface-hover',
                   isMenuOpen ? 'bg-surface-hover' : '',

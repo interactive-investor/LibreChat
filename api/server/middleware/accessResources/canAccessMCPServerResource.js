@@ -1,16 +1,16 @@
 const { ResourceType } = require('librechat-data-provider');
 const { canAccessResource } = require('./canAccessResource');
-const { findMCPServerByServerName } = require('~/models');
+const { findMCPServerById } = require('~/models');
 
 /**
- * MCP Server name resolver function
- * Resolves MCP server name (e.g., "my-mcp-server") to MongoDB ObjectId
+ * MCP Server ID resolver function
+ * Resolves custom MCP server ID (e.g., "mcp_abc123") to MongoDB ObjectId
  *
- * @param {string} serverName - Server name from route parameter
+ * @param {string} mcpServerCustomId - Custom MCP server ID from route parameter
  * @returns {Promise<Object|null>} MCP server document with _id field, or null if not found
  */
-const resolveMCPServerName = async (serverName) => {
-  return await findMCPServerByServerName(serverName);
+const resolveMCPServerId = async (mcpServerCustomId) => {
+  return await findMCPServerById(mcpServerCustomId);
 };
 
 /**
@@ -52,7 +52,7 @@ const canAccessMCPServerResource = (options) => {
     resourceType: ResourceType.MCPSERVER,
     requiredPermission,
     resourceIdParam,
-    idResolver: resolveMCPServerName,
+    idResolver: resolveMCPServerId,
   });
 };
 

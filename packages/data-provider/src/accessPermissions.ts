@@ -46,7 +46,6 @@ export enum ResourceType {
   AGENT = 'agent',
   PROMPTGROUP = 'promptGroup',
   MCPSERVER = 'mcpServer',
-  REMOTE_AGENT = 'remoteAgent',
 }
 
 /**
@@ -76,9 +75,6 @@ export enum AccessRoleIds {
   MCPSERVER_VIEWER = 'mcpServer_viewer',
   MCPSERVER_EDITOR = 'mcpServer_editor',
   MCPSERVER_OWNER = 'mcpServer_owner',
-  REMOTE_AGENT_VIEWER = 'remoteAgent_viewer',
-  REMOTE_AGENT_EDITOR = 'remoteAgent_editor',
-  REMOTE_AGENT_OWNER = 'remoteAgent_owner',
 }
 
 // ===== ZOD SCHEMAS =====
@@ -314,22 +310,11 @@ export function permBitsToAccessLevel(permBits: number): TAccessLevel {
 export function accessRoleToPermBits(accessRoleId: string): number {
   switch (accessRoleId) {
     case AccessRoleIds.AGENT_VIEWER:
-    case AccessRoleIds.PROMPTGROUP_VIEWER:
-    case AccessRoleIds.MCPSERVER_VIEWER:
-    case AccessRoleIds.REMOTE_AGENT_VIEWER:
       return PermissionBits.VIEW;
     case AccessRoleIds.AGENT_EDITOR:
-    case AccessRoleIds.PROMPTGROUP_EDITOR:
-    case AccessRoleIds.MCPSERVER_EDITOR:
-    case AccessRoleIds.REMOTE_AGENT_EDITOR:
       return PermissionBits.VIEW | PermissionBits.EDIT;
     case AccessRoleIds.AGENT_OWNER:
-    case AccessRoleIds.PROMPTGROUP_OWNER:
-    case AccessRoleIds.MCPSERVER_OWNER:
-    case AccessRoleIds.REMOTE_AGENT_OWNER:
-      return (
-        PermissionBits.VIEW | PermissionBits.EDIT | PermissionBits.DELETE | PermissionBits.SHARE
-      );
+      return PermissionBits.VIEW | PermissionBits.EDIT | PermissionBits.DELETE;
     default:
       return PermissionBits.VIEW;
   }
