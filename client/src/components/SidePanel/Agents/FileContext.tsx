@@ -24,6 +24,7 @@ import { SharePointPickerDialog } from '~/components/SharePoint';
 import FileRow from '~/components/Chat/Input/Files/FileRow';
 import { ESide, isEphemeralAgent } from '~/common';
 import { useChatContext } from '~/Providers';
+import { logger } from '~/utils';
 
 export default function FileContext({
   agent_id,
@@ -73,10 +74,16 @@ export default function FileContext({
   const isUploadDisabled = endpointFileConfig?.disabled ?? false;
   const handleSharePointFilesSelected = async (sharePointFiles: any[]) => {
     try {
+      logger.info('files', 'FileContext SharePoint selection', {
+        count: sharePointFiles.length,
+        agent_id,
+        configured_tool_resource: EToolResources.file_search,
+      });
       await handleSharePointFiles(sharePointFiles);
       setIsSharePointDialogOpen(false);
     } catch (error) {
       console.error('SharePoint file processing error:', error);
+      logger.error('files', 'FileContext SharePoint upload failed', { error });
     }
   };
   if (isUploadDisabled) {
@@ -84,6 +91,11 @@ export default function FileContext({
   }
 
   const handleLocalFileClick = () => {
+    logger.info('files', 'FileContext local upload button clicked', {
+      agent_id,
+      configured_tool_resource: EToolResources.context,
+      isEphemeral: isEphemeralAgent(agent_id),
+    });
     // necessary to reset the input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -178,7 +190,15 @@ export default function FileContext({
             tabIndex={-1}
             ref={fileInputRef}
             disabled={isEphemeralAgent(agent_id)}
-            onChange={handleFileChange}
+            onChange={(event) => {
+              logger.info('files', 'FileContext input onChange fired', {
+                selectedCount: event.target.files?.length ?? 0,
+                selectedNames: Array.from(event.target.files ?? []).map((file) => file.name),
+                runtime_tool_resource: undefined,
+                configured_tool_resource: EToolResources.context,
+              });
+              handleFileChange(event);
+            }}
           />
         </div>
         {/* Disabled Message */}

@@ -104,6 +104,14 @@ const useFileHandling = (params?: UseFileHandling) => {
     {
       onSuccess: (data) => {
         clearUploadTimer(data.temp_file_id);
+        logger.info('files', 'Upload succeeded', {
+          temp_file_id: data.temp_file_id,
+          file_id: data.file_id,
+          type: data.type,
+          source: data.source,
+          agent_id,
+          assistant_id,
+        });
         console.log('upload success', data);
         if (agent_id) {
           queryClient.refetchQueries([QueryKeys.agent, agent_id]);
@@ -142,6 +150,15 @@ const useFileHandling = (params?: UseFileHandling) => {
         console.log('upload error', error);
         const file_id = body.get('file_id');
         const tool_resource = body.get('tool_resource');
+        logger.error('files', 'Upload failed', {
+          code: error?.code,
+          status: error?.response?.status,
+          message: error?.response?.data?.message,
+          file_id,
+          tool_resource,
+          endpoint,
+          endpointType,
+        });
         if (tool_resource === EToolResources.execute_code) {
           setEphemeralAgent((prev) => ({
             ...prev,
@@ -167,6 +184,18 @@ const useFileHandling = (params?: UseFileHandling) => {
   const startUpload = async (extendedFile: ExtendedFile) => {
     const filename = extendedFile.file?.name ?? 'File';
     startUploadTimer(extendedFile.file_id, filename, extendedFile.size);
+    logger.info('files', 'Preparing upload form data', {
+      file_id: extendedFile.file_id,
+      filename,
+      size: extendedFile.size,
+      type: extendedFile.type,
+      endpoint,
+      endpointType,
+      extended_tool_resource: extendedFile.tool_resource,
+      metadata_tool_resource: params?.additionalMetadata?.tool_resource,
+      metadata_agent_id: params?.additionalMetadata?.agent_id,
+      metadata_assistant_id: params?.additionalMetadata?.assistant_id,
+    });
 
     const formData = new FormData();
     formData.append('endpoint', endpoint);
@@ -204,6 +233,15 @@ const useFileHandling = (params?: UseFileHandling) => {
         formData.append('agent_id', conversation.agent_id);
       }
 
+      logger.debug('files', 'Submitting non-assistants upload', {
+        file_id: formData.get('file_id'),
+        endpoint: formData.get('endpoint'),
+        endpointType: formData.get('endpointType'),
+        tool_resource: formData.get('tool_resource'),
+        agent_id: formData.get('agent_id'),
+        message_file: formData.get('message_file'),
+      });
+
       uploadFile.mutate(formData);
       return;
     }
@@ -234,6 +272,16 @@ const useFileHandling = (params?: UseFileHandling) => {
       formData.append('model', convoModel);
     }
 
+    logger.debug('files', 'Submitting assistants upload', {
+      file_id: formData.get('file_id'),
+      endpoint: formData.get('endpoint'),
+      endpointType: formData.get('endpointType'),
+      assistant_id: formData.get('assistant_id'),
+      version: formData.get('version'),
+      model: formData.get('model'),
+      message_file: formData.get('message_file'),
+    });
+
     uploadFile.mutate(formData);
   };
 
@@ -257,6 +305,31 @@ const useFileHandling = (params?: UseFileHandling) => {
   const handleFiles = async (_files: FileList | File[], _toolResource?: string) => {
     abortControllerRef.current = new AbortController();
     const fileList = Array.from(_files);
+    const metadataToolResource = params?.additionalMetadata?.tool_resource;
+    const effectiveToolResource = _toolResource ?? metadataToolResource;
+    logger.info('files', 'handleFiles called', {
+      fileCount: fileList.length,
+      filenames: fileList.map((file) => file.name),
+      endpoint,
+      endpointType,
+      runtime_tool_resource: _toolResource,
+      metadata_tool_resource: metadataToolResource,
+      effective_tool_resource: effectiveToolResource,
+      metadata_agent_id: params?.additionalMetadata?.agent_id,
+      metadata_assistant_id: params?.additionalMetadata?.assistant_id,
+    });
+
+    if ((_toolResource == null || _toolResource === '') && metadataToolResource) {
+      logger.warn(
+        'files',
+        'Runtime tool_resource is empty while metadata tool_resource is present',
+        {
+          runtime_tool_resource: _toolResource,
+          metadata_tool_resource: metadataToolResource,
+        },
+      );
+    }
+
     /* Validate files */
     let filesAreValid: boolean;
     try {
@@ -264,6 +337,15 @@ const useFileHandling = (params?: UseFileHandling) => {
         endpoint,
         fileConfig,
         endpointType,
+      });
+
+      logger.debug('files', 'Resolved endpoint file config for validation', {
+        disabled: endpointFileConfig.disabled,
+        disableProviderUpload: endpointFileConfig.disableProviderUpload,
+        disableTextUpload: endpointFileConfig.disableTextUpload,
+        fileLimit: endpointFileConfig.fileLimit,
+        fileSizeLimit: endpointFileConfig.fileSizeLimit,
+        totalSizeLimit: endpointFileConfig.totalSizeLimit,
       });
 
       filesAreValid = validateFiles({
@@ -276,13 +358,29 @@ const useFileHandling = (params?: UseFileHandling) => {
       });
     } catch (error) {
       console.error('file validation error', error);
+      logger.error('files', 'File validation threw an exception', {
+        error,
+        endpoint,
+        endpointType,
+        runtime_tool_resource: _toolResource,
+        metadata_tool_resource: metadataToolResource,
+      });
       setError('com_error_files_validation');
       return;
     }
     if (!filesAreValid) {
+      logger.warn('files', 'File validation returned false', {
+        endpoint,
+        endpointType,
+        runtime_tool_resource: _toolResource,
+        metadata_tool_resource: metadataToolResource,
+        effective_tool_resource: effectiveToolResource,
+      });
       setFilesLoading(false);
       return;
     }
+
+    logger.debug('files', 'File validation passed');
 
     /* Process files */
     for (const originalFile of fileList) {
@@ -304,6 +402,15 @@ const useFileHandling = (params?: UseFileHandling) => {
         if (_toolResource != null && _toolResource !== '') {
           initialExtendedFile.tool_resource = _toolResource;
         }
+
+        logger.debug('files', 'Prepared initial extended file', {
+          file_id,
+          filename: originalFile.name,
+          type: originalFile.type,
+          runtime_tool_resource: _toolResource,
+          metadata_tool_resource: metadataToolResource,
+          applied_tool_resource: initialExtendedFile.tool_resource,
+        });
 
         // Add file immediately to show in UI
         addFile(initialExtendedFile);
@@ -407,6 +514,10 @@ const useFileHandling = (params?: UseFileHandling) => {
       } catch (error) {
         deleteFileById(file_id);
         console.log('file handling error', error);
+        logger.error('files', 'Error while processing file before upload', {
+          file_id,
+          error,
+        });
         if (error instanceof Error && error.message.includes('HEIC')) {
           setError('com_error_heic_conversion');
         } else {
@@ -419,6 +530,14 @@ const useFileHandling = (params?: UseFileHandling) => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, _toolResource?: string) => {
     event.stopPropagation();
     if (event.target.files) {
+      logger.info('files', 'handleFileChange received files', {
+        fileCount: event.target.files.length,
+        filenames: Array.from(event.target.files).map((file) => file.name),
+        endpoint,
+        endpointType,
+        runtime_tool_resource: _toolResource,
+        metadata_tool_resource: params?.additionalMetadata?.tool_resource,
+      });
       setFilesLoading(true);
       handleFiles(event.target.files, _toolResource);
       // reset the input

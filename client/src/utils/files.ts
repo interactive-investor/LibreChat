@@ -17,6 +17,7 @@ import {
 import type { TFile, EndpointFileConfig, FileConfig } from 'librechat-data-provider';
 import type { QueryClient } from '@tanstack/react-query';
 import type { ExtendedFile } from '~/common';
+import logger from './logger';
 
 export const partialTypes = ['text/x-'];
 
@@ -244,28 +245,57 @@ export const validateFiles = ({
     disableProviderUpload,
     disableTextUpload,
   } = endpointFileConfig;
+
+  logger.debug('files', 'validateFiles start', {
+    currentFileCount: files.size,
+    incomingFileCount: fileList.length,
+    incomingFilenames: fileList.map((file) => file.name),
+    toolResource,
+    disabled,
+    disableProviderUpload,
+    disableTextUpload,
+    fileLimit,
+    fileSizeLimit,
+    totalSizeLimit,
+  });
+
   /** Block all uploads if the endpoint is explicitly disabled */
   if (disabled === true) {
+    logger.warn('files', 'validateFiles blocked: endpoint uploads disabled');
     setError('com_ui_attach_error_disabled');
     return false;
   }
   if (disableProviderUpload === true && (toolResource == null || toolResource === '')) {
+    logger.warn(
+      'files',
+      'validateFiles blocked: provider uploads disabled with empty toolResource',
+      {
+        toolResource,
+      },
+    );
     setError('com_ui_attach_error_provider_disabled');
     return false;
   }
   if (disableTextUpload === true && toolResource === EToolResources.context) {
+    logger.warn('files', 'validateFiles blocked: text uploads disabled for context tool resource');
     setError('com_ui_attach_error_text_disabled');
     return false;
   }
   const existingFiles = Array.from(files.values());
   const incomingTotalSize = fileList.reduce((total, file) => total + file.size, 0);
   if (incomingTotalSize === 0) {
+    logger.warn('files', 'validateFiles blocked: incoming total file size is zero');
     setError('com_error_files_empty');
     return false;
   }
   const currentTotalSize = existingFiles.reduce((total, file) => total + file.size, 0);
 
   if (fileLimit && fileList.length + files.size > fileLimit) {
+    logger.warn('files', 'validateFiles blocked: file limit exceeded', {
+      fileLimit,
+      currentFileCount: files.size,
+      incomingFileCount: fileList.length,
+    });
     setError(`You can only upload up to ${fileLimit} files at a time.`);
     return false;
   }
@@ -276,6 +306,9 @@ export const validateFiles = ({
 
     // Check if the file type is still empty after the extension check
     if (!fileType) {
+      logger.warn('files', 'validateFiles blocked: unable to infer mime type', {
+        filename: originalFile.name,
+      });
       setError('Unable to determine file type for: ' + originalFile.name);
       return false;
     }
@@ -297,18 +330,32 @@ export const validateFiles = ({
     }
 
     if (!checkType(originalFile.type, mimeTypesToCheck)) {
-      console.log(originalFile);
+      logger.warn('files', 'validateFiles blocked: unsupported mime type', {
+        filename: originalFile.name,
+        type: originalFile.type,
+        toolResource,
+      });
       setError('Currently, unsupported file type: ' + originalFile.type);
       return false;
     }
 
     if (fileSizeLimit && originalFile.size >= fileSizeLimit) {
+      logger.warn('files', 'validateFiles blocked: per-file size limit exceeded', {
+        filename: originalFile.name,
+        size: originalFile.size,
+        fileSizeLimit,
+      });
       setError(`File size exceeds ${fileSizeLimit / megabyte} MB.`);
       return false;
     }
   }
 
   if (totalSizeLimit && currentTotalSize + incomingTotalSize > totalSizeLimit) {
+    logger.warn('files', 'validateFiles blocked: total size limit exceeded', {
+      currentTotalSize,
+      incomingTotalSize,
+      totalSizeLimit,
+    });
     setError(`The total size of the files cannot exceed ${totalSizeLimit / megabyte} MB.`);
     return false;
   }
@@ -327,9 +374,11 @@ export const validateFiles = ({
   const uniqueFilesSet = new Set(combinedFilesInfo);
 
   if (uniqueFilesSet.size !== combinedFilesInfo.length) {
+    logger.warn('files', 'validateFiles blocked: duplicate file detected');
     setError('com_error_files_dupe');
     return false;
   }
 
+  logger.debug('files', 'validateFiles passed');
   return true;
 };
