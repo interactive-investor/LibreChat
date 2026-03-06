@@ -354,7 +354,7 @@ const useFileHandling = (params?: UseFileHandling) => {
         setError,
         fileConfig,
         endpointFileConfig,
-        toolResource: _toolResource,
+        toolResource: effectiveToolResource,
       });
     } catch (error) {
       console.error('file validation error', error);
@@ -399,8 +399,8 @@ const useFileHandling = (params?: UseFileHandling) => {
           size: originalFile.size,
         };
 
-        if (_toolResource != null && _toolResource !== '') {
-          initialExtendedFile.tool_resource = _toolResource;
+        if (effectiveToolResource != null && effectiveToolResource !== '') {
+          initialExtendedFile.tool_resource = effectiveToolResource;
         }
 
         logger.debug('files', 'Prepared initial extended file', {
