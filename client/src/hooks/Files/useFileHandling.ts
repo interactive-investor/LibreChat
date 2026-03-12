@@ -257,6 +257,8 @@ const useFileHandling = (params?: UseFileHandling) => {
   const handleFiles = async (_files: FileList | File[], _toolResource?: string) => {
     abortControllerRef.current = new AbortController();
     const fileList = Array.from(_files);
+    const metadataToolResource = params?.additionalMetadata?.tool_resource;
+    const effectiveToolResource = _toolResource ?? metadataToolResource;
     /* Validate files */
     let filesAreValid: boolean;
     try {
@@ -272,7 +274,7 @@ const useFileHandling = (params?: UseFileHandling) => {
         setError,
         fileConfig,
         endpointFileConfig,
-        toolResource: _toolResource,
+        toolResource: effectiveToolResource,
       });
     } catch (error) {
       console.error('file validation error', error);
@@ -301,6 +303,14 @@ const useFileHandling = (params?: UseFileHandling) => {
           size: originalFile.size,
         };
 
+        /**
+         * Only set tool_resource on the extended file from the explicitly-passed
+         * runtime arg.  The metadata-based tool_resource is already appended to
+         * the FormData via the additionalMetadata loop in startUpload, so setting
+         * it here as well would cause the field to appear twice in the multipart
+         * body, which multer turns into an array — breaking the backend's strict
+         * string equality checks (e.g. `tool_resource === 'context'`).
+         */
         if (_toolResource != null && _toolResource !== '') {
           initialExtendedFile.tool_resource = _toolResource;
         }
@@ -428,7 +438,6 @@ const useFileHandling = (params?: UseFileHandling) => {
 
   const abortUpload = () => {
     if (abortControllerRef.current) {
-      logger.log('files', 'Aborting upload');
       abortControllerRef.current.abort('User aborted upload');
       abortControllerRef.current = null;
     }
