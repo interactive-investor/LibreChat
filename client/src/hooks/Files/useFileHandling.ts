@@ -437,6 +437,7 @@ const useFileHandling = (params?: UseFileHandling) => {
   };
 
   const abortUpload = () => {
+    logger.log('files', 'Aborting upload');
     if (abortControllerRef.current) {
       abortControllerRef.current.abort('User aborted upload');
       abortControllerRef.current = null;
