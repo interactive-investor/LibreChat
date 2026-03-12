@@ -52,6 +52,8 @@ export type TEndpointOption = Pick<
   | 'promptCache'
   | 'thinking'
   | 'thinkingBudget'
+  | 'thinkingLevel'
+  | 'effort'
   // Assistant/Agent fields
   | 'assistant_id'
   | 'agent_id'
@@ -98,6 +100,7 @@ export type TEphemeralAgent = {
   web_search?: boolean;
   file_search?: boolean;
   execute_code?: boolean;
+  artifacts?: string;
 };
 
 export type TPayload = Partial<TMessage> &

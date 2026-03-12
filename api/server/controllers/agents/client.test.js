@@ -267,6 +267,7 @@ describe('AgentClient - titleConvo', () => {
         transactions: {
           enabled: true,
         },
+        messageId: 'response-123',
       });
     });
 
