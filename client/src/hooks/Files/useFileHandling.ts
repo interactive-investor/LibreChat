@@ -275,6 +275,7 @@ const useFileHandlingCore = (params: UseFileHandling | undefined, fileState: Fil
   const handleFiles = async (_files: FileList | File[], _toolResource?: string) => {
     abortControllerRef.current = new AbortController();
     const fileList = Array.from(_files);
+    const effectiveToolResource = _toolResource ?? params?.additionalMetadata?.tool_resource;
     /* Validate files */
     let filesAreValid: boolean;
     try {
@@ -290,7 +291,7 @@ const useFileHandlingCore = (params: UseFileHandling | undefined, fileState: Fil
         setError,
         fileConfig,
         endpointFileConfig,
-        toolResource: _toolResource,
+        toolResource: effectiveToolResource,
       });
     } catch (error) {
       console.error('file validation error', error);
