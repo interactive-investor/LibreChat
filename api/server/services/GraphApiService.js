@@ -529,11 +529,33 @@ const mapContactToTPrincipalSearchResult = (contact) => {
   };
 };
 
+/**
+ * Fetches the current user's jobTitle and department from Microsoft Graph /me endpoint.
+ * Requires User.Read scope (granted by default with OIDC login).
+ * @param {string} accessToken - OpenID Connect access token from user
+ * @param {string} sub - Subject identifier from token claims
+ * @returns {Promise<{ jobTitle?: string, department?: string }>} Profile fields
+ */
+const getUserGraphProfile = async (accessToken, sub) => {
+  try {
+    const graphClient = await createGraphClient(accessToken, sub);
+    const profile = await graphClient.api('/me').select('jobTitle,department').get();
+    return {
+      jobTitle: profile.jobTitle || undefined,
+      department: profile.department || undefined,
+    };
+  } catch (error) {
+    logger.warn('[getUserGraphProfile] Failed to fetch Graph profile:', error.message || error);
+    return {};
+  }
+};
+
 module.exports = {
   getGroupMembers,
   getGroupOwners,
   createGraphClient,
   getUserEntraGroups,
+  getUserGraphProfile,
   getUserOwnedEntraGroups,
   testGraphApiAccess,
   searchEntraIdPrincipals,
