@@ -164,7 +164,7 @@ function processUserPlaceholders(
     // Fields like name, username, email can contain non-ASCII characters
     // that would cause ByteString conversion errors in the Fetch API
     if (isHeader) {
-      const fieldsToEncode = ['name', 'username', 'email'];
+        const fieldsToEncode = ['name', 'username', 'email', 'jobTitle', 'department'];
       if (fieldsToEncode.includes(field)) {
         replacementValue = encodeHeaderValue(replacementValue);
       }

@@ -615,7 +615,7 @@ async function processOpenIDAuth(tokenset, existingUsersOnly = false) {
         user.department = graphProfile.department;
       }
     } catch (graphError) {
-      logger.warn('[openidStrategy] Non-fatal: Could not fetch Graph profile:', graphError.message);
+      logger.warn('[openidStrategy] Non-fatal: Could not fetch Graph profile:', graphError?.message || graphError);
     }
   }
 
