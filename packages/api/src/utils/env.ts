@@ -130,13 +130,13 @@ function processUserPlaceholders(
   }
 
   const firstNamePlaceholder = '{{LIBRECHAT_USER_FIRSTNAME}}';
-  if (typeof value === 'string' && value.includes(firstNamePlaceholder)) {
+  if (value.includes(firstNamePlaceholder)) {
     const fullName = user.name ?? '';
     let firstName = fullName.split(/\s+/)[0] ?? '';
     if (isHeader) {
       firstName = encodeHeaderValue(firstName);
     }
-    value = value.replace(new RegExp(firstNamePlaceholder, 'g'), firstName);
+    value = value.replaceAll(firstNamePlaceholder, firstName);
   }
 
   for (const field of ALLOWED_USER_FIELDS) {
