@@ -531,7 +531,8 @@ const mapContactToTPrincipalSearchResult = (contact) => {
 
 /**
  * Fetches the current user's jobTitle and department from Microsoft Graph /me endpoint.
- * Requires User.Read scope (granted by default with OIDC login).
+ * Requires delegated Graph permissions configured for OBO token exchange
+ * (e.g. User.Read via OPENID_GRAPH_SCOPES and admin consent).
  * @param {string} accessToken - OpenID Connect access token from user
  * @param {string} sub - Subject identifier from token claims
  * @returns {Promise<{ jobTitle?: string, department?: string }>} Profile fields

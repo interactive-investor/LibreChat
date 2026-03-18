@@ -420,6 +420,8 @@ describe('resolveHeaders', () => {
       githubId: 'ghid',
       discordId: 'dcid',
       appleId: 'aid',
+      jobTitle: 'Senior Engineer',
+      department: 'Data & Analytics',
       emailVerified: true,
       twoFactorEnabled: false,
       termsAccepted: true,
@@ -428,10 +430,13 @@ describe('resolveHeaders', () => {
     const headers = {
       'X-User-ID': '{{LIBRECHAT_USER_ID}}',
       'X-User-Name': '{{LIBRECHAT_USER_NAME}}',
+      'X-User-FirstName': '{{LIBRECHAT_USER_FIRSTNAME}}',
       'X-User-Username': '{{LIBRECHAT_USER_USERNAME}}',
       'X-User-Email': '{{LIBRECHAT_USER_EMAIL}}',
       'X-User-Provider': '{{LIBRECHAT_USER_PROVIDER}}',
       'X-User-Role': '{{LIBRECHAT_USER_ROLE}}',
+      'X-User-JobTitle': '{{LIBRECHAT_USER_JOBTITLE}}',
+      'X-User-Department': '{{LIBRECHAT_USER_DEPARTMENT}}',
       'X-User-GoogleId': '{{LIBRECHAT_USER_GOOGLEID}}',
       'X-User-FacebookId': '{{LIBRECHAT_USER_FACEBOOKID}}',
       'X-User-OpenIdId': '{{LIBRECHAT_USER_OPENIDID}}',
@@ -449,10 +454,13 @@ describe('resolveHeaders', () => {
 
     expect(result['X-User-ID']).toBe('abc');
     expect(result['X-User-Name']).toBe('Test User');
+    expect(result['X-User-FirstName']).toBe('Test');
     expect(result['X-User-Username']).toBe('testuser');
     expect(result['X-User-Email']).toBe('me@example.com');
     expect(result['X-User-Provider']).toBe('google');
     expect(result['X-User-Role']).toBe('admin');
+    expect(result['X-User-JobTitle']).toBe('Senior Engineer');
+    expect(result['X-User-Department']).toBe('Data & Analytics');
     expect(result['X-User-GoogleId']).toBe('gid');
     expect(result['X-User-FacebookId']).toBe('fbid');
     expect(result['X-User-OpenIdId']).toBe('oid');
@@ -464,6 +472,32 @@ describe('resolveHeaders', () => {
     expect(result['X-User-EmailVerified']).toBe('true');
     expect(result['X-User-TwoFactorEnabled']).toBe('false');
     expect(result['X-User-TermsAccepted']).toBe('true');
+  });
+
+  it('should encode job title and department for header safety when needed', () => {
+    const user = {
+      id: 'abc',
+      name: '  Jane Doe',
+      jobTitle: 'Inżynier',
+      department: 'R&D Łódź',
+    };
+    const headers = {
+      'X-User-FirstName': '{{LIBRECHAT_USER_FIRSTNAME}}',
+      'X-User-JobTitle': '{{LIBRECHAT_USER_JOBTITLE}}',
+      'X-User-Department': '{{LIBRECHAT_USER_DEPARTMENT}}',
+    };
+
+    const result = resolveHeaders({ headers, user });
+
+    expect(result['X-User-FirstName']).toBe('Jane');
+    expect(result['X-User-JobTitle'].startsWith('b64:')).toBe(true);
+    expect(result['X-User-Department'].startsWith('b64:')).toBe(true);
+    expect(Buffer.from(result['X-User-JobTitle'].slice(4), 'base64').toString('utf8')).toBe(
+      'Inżynier',
+    );
+    expect(Buffer.from(result['X-User-Department'].slice(4), 'base64').toString('utf8')).toBe(
+      'R&D Łódź',
+    );
   });
 
   it('should handle multiple placeholders in one value', () => {

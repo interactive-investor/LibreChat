@@ -131,7 +131,7 @@ function processUserPlaceholders(
 
   const firstNamePlaceholder = '{{LIBRECHAT_USER_FIRSTNAME}}';
   if (value.includes(firstNamePlaceholder)) {
-    const fullName = user.name ?? '';
+    const fullName = (user.name ?? '').trim();
     let firstName = fullName.split(/\s+/)[0] ?? '';
     if (isHeader) {
       firstName = encodeHeaderValue(firstName);
@@ -164,13 +164,13 @@ function processUserPlaceholders(
     // Fields like name, username, email can contain non-ASCII characters
     // that would cause ByteString conversion errors in the Fetch API
     if (isHeader) {
-        const fieldsToEncode = ['name', 'username', 'email', 'jobTitle', 'department'];
+      const fieldsToEncode = ['name', 'username', 'email', 'jobTitle', 'department'];
       if (fieldsToEncode.includes(field)) {
         replacementValue = encodeHeaderValue(replacementValue);
       }
     }
 
-    value = value.replace(new RegExp(placeholder, 'g'), replacementValue);
+    value = value.replaceAll(placeholder, replacementValue);
   }
 
   return value;

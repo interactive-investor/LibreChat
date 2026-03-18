@@ -608,12 +608,10 @@ async function processOpenIDAuth(tokenset, existingUsersOnly = false) {
         tokenset.access_token,
         userinfo.sub || claims.sub,
       );
-      if (graphProfile.jobTitle) {
-        user.jobTitle = graphProfile.jobTitle;
-      }
-      if (graphProfile.department) {
-        user.department = graphProfile.department;
-      }
+
+      // Keep local fields in sync with Graph when lookup succeeds.
+      user.jobTitle = graphProfile.jobTitle ? graphProfile.jobTitle : null;
+      user.department = graphProfile.department ? graphProfile.department : null;
     } catch (graphError) {
       logger.warn('[openidStrategy] Non-fatal: Could not fetch Graph profile:', graphError?.message || graphError);
     }

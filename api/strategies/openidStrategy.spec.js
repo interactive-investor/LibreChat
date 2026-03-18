@@ -20,6 +20,9 @@ jest.mock('~/server/services/Files/strategies', () => ({
 jest.mock('~/server/services/Config', () => ({
   getAppConfig: jest.fn().mockResolvedValue({}),
 }));
+jest.mock('~/server/services/GraphApiService', () => ({
+  getUserGraphProfile: jest.fn(),
+}));
 jest.mock('@librechat/api', () => ({
   ...jest.requireActual('@librechat/api'),
   isEnabled: jest.fn(() => false),
@@ -172,6 +175,9 @@ describe('setupOpenId', () => {
       return { _id: id, ...userData };
     });
 
+    const { getUserGraphProfile } = require('~/server/services/GraphApiService');
+    getUserGraphProfile.mockResolvedValue({});
+
     // For image download, simulate a successful response
     const fakeBuffer = Buffer.from('fake image');
     const fakeResponse = {
@@ -322,6 +328,84 @@ describe('setupOpenId', () => {
         username: userinfo.preferred_username,
         name: `${userinfo.given_name} ${userinfo.family_name}`,
       }),
+    );
+  });
+
+  it('should enrich job title and department from Graph when reuse tokens is enabled', async () => {
+    const { isEnabled } = require('@librechat/api');
+    const { getUserGraphProfile } = require('~/server/services/GraphApiService');
+
+    process.env.OPENID_REUSE_TOKENS = 'true';
+    isEnabled.mockImplementation((value) => value === 'true');
+    getUserGraphProfile.mockResolvedValue({
+      jobTitle: 'Senior Engineer',
+      department: 'Data Platform',
+    });
+
+    const { user } = await validate(tokenset);
+
+    expect(getUserGraphProfile).toHaveBeenCalledWith('fake_access_token', '1234');
+    expect(user.jobTitle).toBe('Senior Engineer');
+    expect(user.department).toBe('Data Platform');
+  });
+
+  it('should clear stored profile fields when Graph returns empty values', async () => {
+    const { isEnabled } = require('@librechat/api');
+    const { getUserGraphProfile } = require('~/server/services/GraphApiService');
+
+    process.env.OPENID_REUSE_TOKENS = 'true';
+    isEnabled.mockImplementation((value) => value === 'true');
+
+    const existingUser = {
+      _id: 'existingUserId',
+      provider: 'openid',
+      email: tokenset.claims().email,
+      openidId: '1234',
+      username: 'testusername',
+      name: 'My Full',
+      jobTitle: 'Old Title',
+      department: 'Old Department',
+    };
+    findUser.mockImplementation(async (query) => {
+      if (query.openidId === tokenset.claims().sub || query.email === tokenset.claims().email) {
+        return existingUser;
+      }
+      return null;
+    });
+
+    getUserGraphProfile.mockResolvedValue({
+      jobTitle: undefined,
+      department: undefined,
+    });
+
+    const { user } = await validate(tokenset);
+
+    expect(user.jobTitle).toBeNull();
+    expect(user.department).toBeNull();
+    expect(updateUser).toHaveBeenCalledWith(
+      existingUser._id,
+      expect.objectContaining({
+        jobTitle: null,
+        department: null,
+      }),
+    );
+  });
+
+  it('should keep login non-fatal when Graph profile lookup fails', async () => {
+    const { isEnabled } = require('@librechat/api');
+    const { getUserGraphProfile } = require('~/server/services/GraphApiService');
+    const { logger } = require('@librechat/data-schemas');
+
+    process.env.OPENID_REUSE_TOKENS = 'true';
+    isEnabled.mockImplementation((value) => value === 'true');
+    getUserGraphProfile.mockRejectedValue(new Error('graph offline'));
+
+    const { user } = await validate(tokenset);
+
+    expect(user).toBeTruthy();
+    expect(logger.warn).toHaveBeenCalledWith(
+      '[openidStrategy] Non-fatal: Could not fetch Graph profile:',
+      'graph offline',
     );
   });
 
