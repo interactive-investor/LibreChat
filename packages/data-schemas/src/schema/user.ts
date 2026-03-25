@@ -152,6 +152,14 @@ const userSchema = new Schema<IUser>(
       ],
       default: [],
     },
+    /** Job title from Microsoft Graph /me profile */
+    jobTitle: {
+      type: String,
+    },
+    /** Department from Microsoft Graph /me profile */
+    department: {
+      type: String,
+    },
     /** Field for external source identification (for consistency with TPrincipal schema) */
     idOnTheSource: {
       type: String,

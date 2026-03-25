@@ -599,6 +599,24 @@ async function processOpenIDAuth(tokenset, existingUsersOnly = false) {
     }
   }
 
+  // Fetch jobTitle and department from Microsoft Graph /me if tokens are available
+  if (tokenset.access_token && isEnabled(process.env.OPENID_REUSE_TOKENS)) {
+    try {
+      // Lazy require to avoid circular dependency (GraphApiService imports from this module)
+      const { getUserGraphProfile } = require('~/server/services/GraphApiService');
+      const graphProfile = await getUserGraphProfile(
+        tokenset.access_token,
+        userinfo.sub || claims.sub,
+      );
+
+      // Keep local fields in sync with Graph when lookup succeeds.
+      user.jobTitle = graphProfile.jobTitle ? graphProfile.jobTitle : null;
+      user.department = graphProfile.department ? graphProfile.department : null;
+    } catch (graphError) {
+      logger.warn('[openidStrategy] Non-fatal: Could not fetch Graph profile:', graphError?.message || graphError);
+    }
+  }
+
   user = await updateUser(user._id, user);
 
   logger.info(

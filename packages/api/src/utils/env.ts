@@ -26,6 +26,8 @@ const ALLOWED_USER_FIELDS = [
   'emailVerified',
   'twoFactorEnabled',
   'termsAccepted',
+  'jobTitle',
+  'department',
 ] as const;
 
 type AllowedUserField = (typeof ALLOWED_USER_FIELDS)[number];
@@ -127,6 +129,16 @@ function processUserPlaceholders(
     return value;
   }
 
+  const firstNamePlaceholder = '{{LIBRECHAT_USER_FIRSTNAME}}';
+  if (value.includes(firstNamePlaceholder)) {
+    const fullName = (user.name ?? '').trim();
+    let firstName = fullName.split(/\s+/)[0] ?? '';
+    if (isHeader) {
+      firstName = encodeHeaderValue(firstName);
+    }
+    value = value.replaceAll(firstNamePlaceholder, firstName);
+  }
+
   for (const field of ALLOWED_USER_FIELDS) {
     const placeholder = `{{LIBRECHAT_USER_${field.toUpperCase()}}}`;
 
@@ -152,13 +164,13 @@ function processUserPlaceholders(
     // Fields like name, username, email can contain non-ASCII characters
     // that would cause ByteString conversion errors in the Fetch API
     if (isHeader) {
-      const fieldsToEncode = ['name', 'username', 'email'];
+      const fieldsToEncode = ['name', 'username', 'email', 'jobTitle', 'department'];
       if (fieldsToEncode.includes(field)) {
         replacementValue = encodeHeaderValue(replacementValue);
       }
     }
 
-    value = value.replace(new RegExp(placeholder, 'g'), replacementValue);
+    value = value.replaceAll(placeholder, replacementValue);
   }
 
   return value;

@@ -41,6 +41,10 @@ export interface IUser extends Document {
   }>;
   createdAt?: Date;
   updatedAt?: Date;
+  /** Job title from Microsoft Graph /me profile */
+  jobTitle?: string;
+  /** Department from Microsoft Graph /me profile */
+  department?: string;
   /** Field for external source identification (for consistency with TPrincipal schema) */
   idOnTheSource?: string;
 }
