@@ -331,6 +331,167 @@ describe('formatToolContent', () => {
     });
   });
 
+  describe('blob resource handling (BlobResourceContents)', () => {
+    it('should detect blob resources and add mcp_files to artifacts', () => {
+      const result: t.MCPToolCallResponse = {
+        content: [
+          { type: 'text', text: 'Generated your document' },
+          {
+            type: 'resource',
+            resource: {
+              uri: 'file:///report.pdf',
+              mimeType: 'application/pdf',
+              blob: 'JVBERi0xLjQK',
+            },
+          },
+        ],
+      };
+
+      const [content, artifacts] = formatToolContent(result, 'openai');
+      expect(Array.isArray(content)).toBe(true);
+      const textContent = Array.isArray(content) ? content[0] : { text: '' };
+      expect(textContent).toMatchObject({ type: 'text' });
+      expect(textContent.text).toContain('Generated your document');
+      expect(textContent.text).toContain('Binary Resource: report.pdf');
+      expect(textContent.text).toContain('application/pdf');
+
+      expect(artifacts).toBeDefined();
+      expect(artifacts?.mcp_files).toHaveLength(1);
+      expect(artifacts?.mcp_files?.[0]).toEqual({
+        blob: 'JVBERi0xLjQK',
+        mimeType: 'application/pdf',
+        uri: 'file:///report.pdf',
+        filename: 'report.pdf',
+      });
+    });
+
+    it('should extract filename from URI path', () => {
+      const result: t.MCPToolCallResponse = {
+        content: [
+          {
+            type: 'resource',
+            resource: {
+              uri: 'file:///my-spreadsheet.xlsx',
+              mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+              blob: 'UEsDBBQ=',
+            },
+          },
+        ],
+      };
+
+      const [, artifacts] = formatToolContent(result, 'openai');
+      expect(artifacts?.mcp_files?.[0]?.filename).toBe('my-spreadsheet.xlsx');
+    });
+
+    it('should fall back to extension from mimeType when URI has no filename', () => {
+      const result: t.MCPToolCallResponse = {
+        content: [
+          {
+            type: 'resource',
+            resource: {
+              uri: 'file:///',
+              mimeType: 'application/pdf',
+              blob: 'JVBERi0=',
+            },
+          },
+        ],
+      };
+
+      const [, artifacts] = formatToolContent(result, 'openai');
+      expect(artifacts?.mcp_files?.[0]?.filename).toBe('attachment.pdf');
+    });
+
+    it('should handle multiple blob resources', () => {
+      const result: t.MCPToolCallResponse = {
+        content: [
+          { type: 'text', text: 'Here are your files' },
+          {
+            type: 'resource',
+            resource: {
+              uri: 'file:///doc1.pdf',
+              mimeType: 'application/pdf',
+              blob: 'blob1',
+            },
+          },
+          {
+            type: 'resource',
+            resource: {
+              uri: 'file:///doc2.docx',
+              mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+              blob: 'blob2',
+            },
+          },
+        ],
+      };
+
+      const [, artifacts] = formatToolContent(result, 'anthropic');
+      expect(artifacts?.mcp_files).toHaveLength(2);
+      expect(artifacts?.mcp_files?.[0]?.filename).toBe('doc1.pdf');
+      expect(artifacts?.mcp_files?.[1]?.filename).toBe('doc2.docx');
+    });
+
+    it('should handle blob resources alongside images in artifacts', () => {
+      const result: t.MCPToolCallResponse = {
+        content: [
+          { type: 'text', text: 'Mixed content' },
+          { type: 'image', data: 'base64img', mimeType: 'image/png' },
+          {
+            type: 'resource',
+            resource: {
+              uri: 'file:///data.csv',
+              mimeType: 'text/csv',
+              blob: 'aGVhZGVyMSxoZWFkZXIy',
+            },
+          },
+        ],
+      };
+
+      const [, artifacts] = formatToolContent(result, 'openai');
+      expect(artifacts?.content).toHaveLength(1);
+      expect(artifacts?.content?.[0]).toMatchObject({ type: 'image_url' });
+      expect(artifacts?.mcp_files).toHaveLength(1);
+      expect(artifacts?.mcp_files?.[0]?.filename).toBe('data.csv');
+    });
+
+    it('should default mimeType to application/octet-stream when missing', () => {
+      const result: t.MCPToolCallResponse = {
+        content: [
+          {
+            type: 'resource',
+            resource: {
+              uri: 'file:///unknown-file',
+              blob: 'AAAA',
+            },
+          },
+        ],
+      };
+
+      const [, artifacts] = formatToolContent(result, 'openai');
+      expect(artifacts?.mcp_files?.[0]?.mimeType).toBe('application/octet-stream');
+    });
+
+    it('should handle string providers with blob resources', () => {
+      const result: t.MCPToolCallResponse = {
+        content: [
+          { type: 'text', text: 'Document ready' },
+          {
+            type: 'resource',
+            resource: {
+              uri: 'file:///report.pdf',
+              mimeType: 'application/pdf',
+              blob: 'JVBERi0=',
+            },
+          },
+        ],
+      };
+
+      const [content, artifacts] = formatToolContent(result, 'openrouter');
+      expect(typeof content).toBe('string');
+      expect(content).toContain('Document ready');
+      expect(artifacts?.mcp_files).toHaveLength(1);
+    });
+  });
+
   describe('unknown content types', () => {
     it('should stringify unknown content types', () => {
       const result: t.MCPToolCallResponse = {

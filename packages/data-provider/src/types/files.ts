@@ -26,6 +26,7 @@ export enum FileContext {
   assistants = 'assistants',
   execute_code = 'execute_code',
   image_generation = 'image_generation',
+  mcp_tool_output = 'mcp_tool_output',
   assistants_output = 'assistants_output',
   message_attachment = 'message_attachment',
   filename = 'filename',

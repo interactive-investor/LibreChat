@@ -969,6 +969,47 @@ async function saveBase64Image(
 }
 
 /**
+ * Saves a base64-encoded binary file (non-image) to storage.
+ * Unlike saveBase64Image, this does not attempt image resizing.
+ *
+ * @param {string} base64Data - Raw base64-encoded binary data (not a data URI)
+ * @param {object} options
+ * @param {object} options.req - Express request object
+ * @param {string} [options.file_id] - Optional file ID (generated if omitted)
+ * @param {string} options.filename - Desired filename (including extension)
+ * @param {string} options.mimeType - MIME type of the file
+ * @param {string} options.context - FileContext value
+ * @returns {Promise<object>} Created file record
+ */
+async function saveBase64File(base64Data, { req, file_id: _file_id, filename: _filename, mimeType, context }) {
+  const appConfig = req.config;
+  const file_id = _file_id ?? v4();
+  const filename = `${file_id}-${_filename}`;
+  const buffer = Buffer.from(base64Data, 'base64');
+  const isImage = mimeType.startsWith('image/');
+  const source = getFileStrategy(appConfig, { isImage });
+  const { saveBuffer } = getStrategyFunctions(source);
+  const filepath = await saveBuffer({
+    userId: req.user.id,
+    fileName: filename,
+    buffer,
+  });
+  return await createFile(
+    {
+      type: mimeType,
+      source,
+      context,
+      file_id,
+      filepath,
+      filename,
+      user: req.user.id,
+      bytes: buffer.length,
+    },
+    true,
+  );
+}
+
+/**
  * Filters a file based on its size and the endpoint origin.
  *
  * @param {Object} params - The parameters for the function.
@@ -1061,6 +1102,7 @@ function filterFile({ req, image, isAvatar }) {
 module.exports = {
   filterFile,
   processFileURL,
+  saveBase64File,
   saveBase64Image,
   processImageFile,
   uploadImageBuffer,
