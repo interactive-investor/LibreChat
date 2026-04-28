@@ -282,7 +282,7 @@ process.on('unhandledRejection', (reason) => {
 
   logger.error(`Unhandled promise rejection (${name}): ${message}`, { stack });
 
-  if (!isEnabled(process.env.CONTINUE_ON_UNCAUGHT_EXCEPTION)) {
+  if (!isEnabled(process.env.CONTINUE_ON_UNHANDLED_REJECTION)) {
     process.exit(1);
   }
 });
