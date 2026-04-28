@@ -276,7 +276,15 @@ process.on('uncaughtException', (err) => {
 });
 
 process.on('unhandledRejection', (reason) => {
-  logger.error('Unhandled promise rejection:', reason);
+  const name = reason instanceof Error ? reason.name : 'UnhandledRejection';
+  const message = reason instanceof Error ? reason.message : String(reason);
+  const stack = reason instanceof Error ? reason.stack : undefined;
+
+  logger.error(`Unhandled promise rejection (${name}): ${message}`, { stack });
+
+  if (!isEnabled(process.env.CONTINUE_ON_UNCAUGHT_EXCEPTION)) {
+    process.exit(1);
+  }
 });
 
 /** Export app for easier testing purposes */
