@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { imageExtRegex } from 'librechat-data-provider';
 import type { TFile, TAttachment, TAttachmentMetadata } from 'librechat-data-provider';
 import Image from '~/components/Chat/Messages/Content/Image';
+import { getDisplayFilename } from '~/utils';
 import { useLocalize } from '~/hooks';
 import LogLink from './LogLink';
 
@@ -51,13 +52,13 @@ const LogContent: React.FC<LogContentProps> = ({ output = '', renderImages, atta
     const expiresAt =
       'expiresAt' in file && typeof file.expiresAt === 'number' ? new Date(file.expiresAt) : null;
     const isExpired = expiresAt ? isAfter(now, expiresAt) : false;
-    const filename = file.filename || '';
+    const fileData = file as TFile & TAttachmentMetadata;
+    const filename = getDisplayFilename(file.filename, fileData.file_id) || file.filename || '';
 
     if (isExpired) {
       return `${filename} ${localize('com_download_expired')}`;
     }
 
-    const fileData = file as TFile & TAttachmentMetadata;
     const filepath = file.filepath || '';
 
     // const expirationText = expiresAt

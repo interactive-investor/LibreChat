@@ -333,3 +333,18 @@ export const validateFiles = ({
 
   return true;
 };
+
+const uuidV4Re = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/i;
+
+export function getDisplayFilename(
+  filename?: string,
+  fileId?: string,
+): string {
+  if (!filename) {
+    return '';
+  }
+  if (fileId && filename.startsWith(`${fileId}-`)) {
+    return filename.slice(fileId.length + 1);
+  }
+  return filename.replace(uuidV4Re, '');
+}

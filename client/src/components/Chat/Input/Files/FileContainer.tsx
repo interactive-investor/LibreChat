@@ -1,6 +1,6 @@
 import type { TFile } from 'librechat-data-provider';
 import type { ExtendedFile } from '~/common';
-import { getFileType, cn } from '~/utils';
+import { getFileType, getDisplayFilename, cn } from '~/utils';
 import FilePreview from './FilePreview';
 import RemoveFile from './RemoveFile';
 
@@ -20,6 +20,10 @@ const FileContainer = ({
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }) => {
   const fileType = getFileType(overrideType ?? file.type);
+  const displayName = getDisplayFilename(
+    file.filename,
+    'file_id' in file ? (file as TFile).file_id : undefined,
+  );
 
   return (
     <div
@@ -28,7 +32,7 @@ const FileContainer = ({
       <button
         type="button"
         onClick={onClick}
-        aria-label={file.filename}
+        aria-label={displayName}
         className={cn(
           'relative overflow-hidden rounded-2xl border border-border-light bg-surface-hover-alt',
           buttonClassName,
@@ -38,8 +42,8 @@ const FileContainer = ({
           <div className="flex flex-row items-center gap-2">
             <FilePreview file={file} fileType={fileType} className="relative" />
             <div className="overflow-hidden">
-              <div className="truncate font-medium" title={file.filename}>
-                {file.filename}
+              <div className="truncate font-medium" title={displayName}>
+                {displayName}
               </div>
               <div className="truncate text-text-secondary" title={fileType.title}>
                 {fileType.title}
