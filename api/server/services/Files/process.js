@@ -984,8 +984,25 @@ async function saveBase64Image(
 async function saveBase64File(base64Data, { req, file_id: _file_id, filename: _filename, mimeType, context }) {
   const appConfig = req.config;
   const file_id = _file_id ?? v4();
-  const filename = `${file_id}-${_filename}`;
+
+  // Sanitize the filename to prevent path traversal or special characters
+  const safeName = sanitizeFilename(path.basename(_filename));
+  const filename = `${file_id}-${safeName}`;
+
   const buffer = Buffer.from(base64Data, 'base64');
+
+  // Enforce server file size limit
+  const fileConfig = mergeFileConfig(appConfig.fileConfig);
+  const fileSizeLimit = fileConfig.serverFileSizeLimit;
+  if (buffer.length === 0) {
+    throw new Error('Empty file from MCP tool output');
+  }
+  if (fileSizeLimit && buffer.length > fileSizeLimit) {
+    throw new Error(
+      `MCP file size of ${(buffer.length / megabyte).toFixed(1)} MB exceeds the ${(fileSizeLimit / megabyte).toFixed(0)} MB server limit`,
+    );
+  }
+
   const isImage = mimeType.startsWith('image/');
   const source = getFileStrategy(appConfig, { isImage });
   const { saveBuffer } = getStrategyFunctions(source);
