@@ -56,7 +56,13 @@ function extractFilename(uri: string, mimeType?: string | null): string {
   if (basename && path.extname(basename)) {
     return basename;
   }
-  const ext = mimeType ? mime.getExtension(mimeType) : null;
+  // Strip MIME parameters (e.g. "text/csv; charset=utf-8" -> "text/csv") before extension lookup
+  const cleanMime = mimeType?.split(';')[0].trim() ?? null;
+  const ext = cleanMime ? mime.getExtension(cleanMime) : null;
+  // Preserve the basename from the URI even if it has no extension
+  if (basename) {
+    return ext ? `${basename}.${ext}` : basename;
+  }
   return ext ? `attachment.${ext}` : 'attachment';
 }
 
