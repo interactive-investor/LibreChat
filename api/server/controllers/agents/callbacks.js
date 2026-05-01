@@ -11,7 +11,7 @@ const {
 const { processFileCitations } = require('~/server/services/Files/Citations');
 const { processCodeOutput } = require('~/server/services/Files/Code/process');
 const { loadAuthValues } = require('~/server/services/Tools/credentials');
-const { saveBase64Image } = require('~/server/services/Files/process');
+const { saveBase64Image, saveBase64File } = require('~/server/services/Files/process');
 
 class ModelEndHandler {
   /**
@@ -356,6 +356,39 @@ function createToolEndCallback({ req, res, artifactPromises, streamId = null }) 
       );
     }
 
+    if (output.artifact.mcp_files) {
+      for (const mcpFile of output.artifact.mcp_files) {
+        artifactPromises.push(
+          (async () => {
+            const file = await saveBase64File(mcpFile.blob, {
+              req,
+              filename: mcpFile.filename,
+              mimeType: mcpFile.mimeType,
+              context: FileContext.mcp_tool_output,
+            });
+            const fileMetadata = Object.assign(file, {
+              messageId: metadata.run_id,
+              toolCallId: output.tool_call_id,
+              conversationId: metadata.thread_id,
+            });
+            if (!streamId && !res.headersSent) {
+              return fileMetadata;
+            }
+
+            if (!fileMetadata) {
+              return null;
+            }
+
+            writeAttachment(res, streamId, fileMetadata);
+            return fileMetadata;
+          })().catch((error) => {
+            logger.error('Error processing MCP file attachment:', error);
+            return null;
+          }),
+        );
+      }
+    }
+
     if (output.artifact.content) {
       /** @type {FormattedContent[]} */
       const content = output.artifact.content;
@@ -554,6 +587,44 @@ function createResponsesToolEndCallback({ req, res, tracker, artifactPromises })
           return null;
         }),
       );
+    }
+
+    if (output.artifact.mcp_files) {
+      for (const mcpFile of output.artifact.mcp_files) {
+        artifactPromises.push(
+          (async () => {
+            const file = await saveBase64File(mcpFile.blob, {
+              req,
+              filename: mcpFile.filename,
+              mimeType: mcpFile.mimeType,
+              context: FileContext.mcp_tool_output,
+            });
+            const fileMetadata = Object.assign(file, {
+              toolCallId: output.tool_call_id,
+            });
+
+            if (!fileMetadata) {
+              return null;
+            }
+
+            if (res.headersSent && !res.writableEnded) {
+              const attachment = {
+                file_id: fileMetadata.file_id,
+                filename: fileMetadata.filename,
+                type: fileMetadata.type,
+                url: fileMetadata.filepath,
+                tool_call_id: output.tool_call_id,
+              };
+              writeResponsesAttachment(res, tracker, attachment, metadata);
+            }
+
+            return fileMetadata;
+          })().catch((error) => {
+            logger.error('Error processing MCP file attachment:', error);
+            return null;
+          }),
+        );
+      }
     }
 
     if (output.artifact.content) {

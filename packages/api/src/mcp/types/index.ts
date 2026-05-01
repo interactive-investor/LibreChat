@@ -121,6 +121,13 @@ export type FileSearchSource = {
   [key: string]: unknown;
 };
 
+export type McpFileAttachment = {
+  blob: string;
+  mimeType: string;
+  uri: string;
+  filename: string;
+};
+
 export type Artifacts =
   | {
       content?: FormattedContent[];
@@ -133,6 +140,7 @@ export type Artifacts =
       };
       [Tools.web_search]?: SearchResultData;
       files?: Array<{ id: string; name: string }>;
+      mcp_files?: McpFileAttachment[];
       session_id?: string;
       file_ids?: string[];
     }

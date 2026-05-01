@@ -1139,6 +1139,7 @@
   "com_ui_mcp_servers_allow_use": "Allow users to use MCP servers",
   "com_ui_mcp_title_invalid": "Title can only contain letters, numbers, and spaces",
   "com_ui_mcp_tool_options": "Tool Options",
+  "com_ui_mcp_tool_output": "MCP Tool Output",
   "com_ui_mcp_transport": "Transport",
   "com_ui_mcp_type_sse": "SSE",
   "com_ui_mcp_type_streamable_http": "Streamable HTTPS",

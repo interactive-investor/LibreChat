@@ -1,4 +1,6 @@
 import crypto from 'node:crypto';
+import path from 'node:path';
+import mime from 'mime';
 import { Tools } from 'librechat-data-provider';
 import type { UIResource } from 'librechat-data-provider';
 import type * as t from './types';
@@ -46,6 +48,22 @@ const imageFormatters: Record<string, undefined | t.ImageFormatter> = {
 
 function isImageContent(item: t.ToolContentPart): item is t.ImageContent {
   return item.type === 'image';
+}
+
+function extractFilename(uri: string, mimeType?: string | null): string {
+  const uriPath = uri.replace(/^file:\/\/\/?/, '');
+  const basename = path.basename(uriPath);
+  if (basename && path.extname(basename)) {
+    return basename;
+  }
+  // Strip MIME parameters (e.g. "text/csv; charset=utf-8" -> "text/csv") before extension lookup
+  const cleanMime = mimeType?.split(';')[0].trim() ?? null;
+  const ext = cleanMime ? mime.getExtension(cleanMime) : null;
+  // Preserve the basename from the URI even if it has no extension
+  if (basename) {
+    return ext ? `${basename}.${ext}` : basename;
+  }
+  return ext ? `attachment.${ext}` : 'attachment';
 }
 
 function parseAsString(result: t.MCPToolCallResponse): string {
@@ -104,6 +122,7 @@ export function formatToolContent(
 
   const formattedContent: t.FormattedContent[] = [];
   const imageUrls: t.FormattedContent[] = [];
+  const mcpFiles: t.McpFileAttachment[] = [];
   let currentTextBlock = '';
   const uiResources: UIResource[] = [];
 
@@ -153,6 +172,15 @@ export function formatToolContent(
         uiResources.push(uiResource);
         resourceText.push(`UI Resource ID: ${resourceId}`);
         resourceText.push(`UI Resource Marker: \\ui{${resourceId}}`);
+      } else if ('blob' in item.resource && item.resource.blob) {
+        const filename = extractFilename(item.resource.uri, item.resource.mimeType);
+        mcpFiles.push({
+          blob: item.resource.blob as string,
+          mimeType: item.resource.mimeType || 'application/octet-stream',
+          uri: item.resource.uri,
+          filename,
+        });
+        resourceText.push(`Binary Resource: ${filename} (${item.resource.mimeType || 'unknown type'})`);
       } else if ('text' in item.resource && item.resource.text != null && item.resource.text) {
         resourceText.push(`Resource Text: ${item.resource.text}`);
       }
@@ -202,6 +230,13 @@ UI Resource Markers Available:
   let artifacts: t.Artifacts = undefined;
   if (imageUrls.length) {
     artifacts = { content: imageUrls };
+  }
+
+  if (mcpFiles.length) {
+    artifacts = {
+      ...artifacts,
+      mcp_files: mcpFiles,
+    };
   }
 
   if (uiResources.length) {

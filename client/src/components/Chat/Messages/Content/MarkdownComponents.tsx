@@ -9,6 +9,7 @@ import useHasAccess from '~/hooks/Roles/useHasAccess';
 import { useFileDownload } from '~/data-provider';
 import { useCodeBlockContext } from '~/Providers';
 import { handleDoubleClick } from '~/utils';
+import { getDisplayFilename } from '~/utils/files';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 
@@ -143,7 +144,7 @@ export const a: React.ElementType = memo(function MarkdownAnchor({ href, childre
       }
       const link = document.createElement('a');
       link.href = stream.data;
-      link.setAttribute('download', filename);
+      link.setAttribute('download', getDisplayFilename(filename, file_id));
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

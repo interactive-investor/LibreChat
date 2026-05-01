@@ -969,6 +969,81 @@ async function saveBase64Image(
 }
 
 /**
+ * Saves a base64-encoded binary file (non-image) to storage.
+ * Unlike saveBase64Image, this does not attempt image resizing.
+ *
+ * @param {string} base64Data - Raw base64-encoded binary data (not a data URI)
+ * @param {object} options
+ * @param {object} options.req - Express request object
+ * @param {string} [options.file_id] - Optional file ID (generated if omitted)
+ * @param {string} options.filename - Desired filename (including extension)
+ * @param {string} options.mimeType - MIME type of the file
+ * @param {string} options.context - FileContext value
+ * @returns {Promise<object>} Created file record
+ */
+async function saveBase64File(base64Data, { req, file_id: _file_id, filename: _filename, mimeType, context }) {
+  const appConfig = req.config;
+  const file_id = _file_id ?? v4();
+
+  // Sanitize the filename to prevent path traversal or special characters
+  const safeName = sanitizeFilename(path.basename(_filename));
+  const filename = `${file_id}-${safeName}`;
+
+  // Strip optional data-URI prefix and validate base64 input
+  const fileConfig = mergeFileConfig(appConfig.fileConfig);
+  const rawBase64 = base64Data.replace(/^data:[^;]+;base64,/, '');
+  if (!rawBase64) {
+    throw new Error('Invalid base64 input from MCP tool output');
+  }
+
+  // Enforce server file size limit before decoding to prevent memory pressure
+  const fileSizeLimit = fileConfig.serverFileSizeLimit;
+  const estimatedSize = Math.ceil((rawBase64.length * 3) / 4);
+  if (fileSizeLimit && estimatedSize > fileSizeLimit) {
+    throw new Error(
+      `MCP file size of ~${(estimatedSize / megabyte).toFixed(1)} MB exceeds the ${(fileSizeLimit / megabyte).toFixed(0)} MB server limit`,
+    );
+  }
+
+  const buffer = Buffer.from(rawBase64, 'base64');
+  if (buffer.length === 0) {
+    throw new Error('Empty file from MCP tool output after base64 decode');
+  }
+
+  // Validate MIME type against configured supported types
+  // Normalize MIME type by stripping parameters (e.g. "text/csv; charset=utf-8" -> "text/csv")
+  const baseMimeType = mimeType.split(';')[0].trim();
+  const isSupportedMimeType = fileConfig.checkType(baseMimeType);
+  if (!isSupportedMimeType) {
+    logger.warn(
+      `[saveBase64File] File "${safeName}" has unsupported MIME type "${baseMimeType}", proceeding with storage but may not be usable as tool resource`,
+    );
+  }
+
+  const isImage = baseMimeType.startsWith('image/');
+  const source = getFileStrategy(appConfig, { isImage });
+  const { saveBuffer } = getStrategyFunctions(source);
+  const filepath = await saveBuffer({
+    userId: req.user.id,
+    fileName: filename,
+    buffer,
+  });
+  return await createFile(
+    {
+      type: baseMimeType,
+      source,
+      context,
+      file_id,
+      filepath,
+      filename,
+      user: req.user.id,
+      bytes: buffer.length,
+    },
+    true,
+  );
+}
+
+/**
  * Filters a file based on its size and the endpoint origin.
  *
  * @param {Object} params - The parameters for the function.
@@ -1061,6 +1136,7 @@ function filterFile({ req, image, isAvatar }) {
 module.exports = {
   filterFile,
   processFileURL,
+  saveBase64File,
   saveBase64Image,
   processImageFile,
   uploadImageBuffer,
