@@ -989,17 +989,26 @@ async function saveBase64File(base64Data, { req, file_id: _file_id, filename: _f
   const safeName = sanitizeFilename(path.basename(_filename));
   const filename = `${file_id}-${safeName}`;
 
-  const buffer = Buffer.from(base64Data, 'base64');
-
-  // Enforce server file size limit
+  // Enforce server file size limit before decoding to prevent memory pressure
   const fileConfig = mergeFileConfig(appConfig.fileConfig);
   const fileSizeLimit = fileConfig.serverFileSizeLimit;
-  if (buffer.length === 0) {
+  const estimatedSize = Math.ceil((base64Data.length * 3) / 4);
+  if (estimatedSize === 0) {
     throw new Error('Empty file from MCP tool output');
   }
-  if (fileSizeLimit && buffer.length > fileSizeLimit) {
+  if (fileSizeLimit && estimatedSize > fileSizeLimit) {
     throw new Error(
-      `MCP file size of ${(buffer.length / megabyte).toFixed(1)} MB exceeds the ${(fileSizeLimit / megabyte).toFixed(0)} MB server limit`,
+      `MCP file size of ~${(estimatedSize / megabyte).toFixed(1)} MB exceeds the ${(fileSizeLimit / megabyte).toFixed(0)} MB server limit`,
+    );
+  }
+
+  const buffer = Buffer.from(base64Data, 'base64');
+
+  // Validate MIME type against configured supported types
+  const isSupportedMimeType = fileConfig.checkType(mimeType);
+  if (!isSupportedMimeType) {
+    logger.warn(
+      `[saveBase64File] File "${safeName}" has unsupported MIME type "${mimeType}", proceeding with storage but may not be usable as tool resource`,
     );
   }
 
