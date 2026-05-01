@@ -77,7 +77,7 @@ const { EToolResources, FileSources, AgentCapabilities } = require('librechat-da
 const { mergeFileConfig } = require('librechat-data-provider');
 const { checkCapability } = require('~/server/services/Config');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
-const { processAgentFileUpload } = require('./process');
+const { processAgentFileUpload, saveBase64File } = require('./process');
 
 const PDF_MIME = 'application/pdf';
 const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -343,5 +343,104 @@ describe('processAgentFileUpload', () => {
         processAgentFileUpload({ req, res: mockRes, metadata: makeMetadata() }),
       ).resolves.not.toThrow();
     });
+  });
+});
+
+describe('saveBase64File', () => {
+  const makeReqForSave = () => ({
+    user: { id: 'user-123' },
+    config: { fileConfig: {} },
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mergeFileConfig.mockReturnValue({
+      serverFileSizeLimit: 10 * 1024 * 1024,
+      checkType: () => true,
+    });
+    getStrategyFunctions.mockReturnValue({
+      saveBuffer: jest.fn().mockResolvedValue('/uploads/mock-file'),
+    });
+  });
+
+  test('rejects empty base64 input', async () => {
+    await expect(
+      saveBase64File('', {
+        req: makeReqForSave(),
+        filename: 'test.pdf',
+        mimeType: 'application/pdf',
+        context: 'mcp_tool_output',
+      }),
+    ).rejects.toThrow('Invalid base64 input');
+  });
+
+  test('strips data-URI prefix before decoding', async () => {
+    const raw = Buffer.from('hello').toString('base64');
+    const dataUri = `data:application/pdf;base64,${raw}`;
+
+    await saveBase64File(dataUri, {
+      req: makeReqForSave(),
+      filename: 'test.pdf',
+      mimeType: 'application/pdf',
+      context: 'mcp_tool_output',
+    });
+
+    const { saveBuffer } = getStrategyFunctions();
+    expect(saveBuffer).toHaveBeenCalledWith(
+      expect.objectContaining({ buffer: Buffer.from('hello') }),
+    );
+  });
+
+  test('rejects files exceeding serverFileSizeLimit', async () => {
+    mergeFileConfig.mockReturnValue({
+      serverFileSizeLimit: 10,
+      checkType: () => true,
+    });
+
+    const largeBase64 = Buffer.from('x'.repeat(100)).toString('base64');
+
+    await expect(
+      saveBase64File(largeBase64, {
+        req: makeReqForSave(),
+        filename: 'big.bin',
+        mimeType: 'application/octet-stream',
+        context: 'mcp_tool_output',
+      }),
+    ).rejects.toThrow('exceeds the');
+  });
+
+  test('normalizes MIME parameters before storing', async () => {
+    const raw = Buffer.from('data').toString('base64');
+    const { createFile } = require('~/models');
+
+    await saveBase64File(raw, {
+      req: makeReqForSave(),
+      filename: 'data.csv',
+      mimeType: 'text/csv; charset=utf-8',
+      context: 'mcp_tool_output',
+    });
+
+    expect(createFile).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'text/csv' }),
+      true,
+    );
+  });
+
+  test('warns on unsupported MIME type but still saves', async () => {
+    const { logger } = require('@librechat/data-schemas');
+    mergeFileConfig.mockReturnValue({
+      serverFileSizeLimit: 10 * 1024 * 1024,
+      checkType: () => false,
+    });
+    const raw = Buffer.from('data').toString('base64');
+
+    await saveBase64File(raw, {
+      req: makeReqForSave(),
+      filename: 'file.xyz',
+      mimeType: 'application/x-unknown',
+      context: 'mcp_tool_output',
+    });
+
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('unsupported MIME type'));
   });
 });

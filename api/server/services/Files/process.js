@@ -1011,14 +1011,16 @@ async function saveBase64File(base64Data, { req, file_id: _file_id, filename: _f
   }
 
   // Validate MIME type against configured supported types
-  const isSupportedMimeType = fileConfig.checkType(mimeType);
+  // Normalize MIME type by stripping parameters (e.g. "text/csv; charset=utf-8" -> "text/csv")
+  const baseMimeType = mimeType.split(';')[0].trim();
+  const isSupportedMimeType = fileConfig.checkType(baseMimeType);
   if (!isSupportedMimeType) {
     logger.warn(
-      `[saveBase64File] File "${safeName}" has unsupported MIME type "${mimeType}", proceeding with storage but may not be usable as tool resource`,
+      `[saveBase64File] File "${safeName}" has unsupported MIME type "${baseMimeType}", proceeding with storage but may not be usable as tool resource`,
     );
   }
 
-  const isImage = mimeType.startsWith('image/');
+  const isImage = baseMimeType.startsWith('image/');
   const source = getFileStrategy(appConfig, { isImage });
   const { saveBuffer } = getStrategyFunctions(source);
   const filepath = await saveBuffer({
@@ -1028,7 +1030,7 @@ async function saveBase64File(base64Data, { req, file_id: _file_id, filename: _f
   });
   return await createFile(
     {
-      type: mimeType,
+      type: baseMimeType,
       source,
       context,
       file_id,
