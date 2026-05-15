@@ -1158,7 +1158,7 @@ async function saveBase64File(base64Data, { req, file_id: _file_id, filename: _f
     fileName: filename,
     buffer,
   });
-  return await createFile(
+  return await db.createFile(
     {
       type: baseMimeType,
       source,

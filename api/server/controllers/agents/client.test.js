@@ -18,6 +18,7 @@ jest.mock('@librechat/api', () => {
     initializeAgent: jest.fn(),
     applyContextToAgent: jest.fn(async (params) => actual.applyContextToAgent(params)),
     createMemoryProcessor: jest.fn(),
+    loadAgent: jest.fn(),
     isMemoryAgentEnabled: jest.fn((config) => {
       if (!config || config.disabled === true) return false;
       const agent = config.agent;
@@ -26,10 +27,6 @@ jest.mock('@librechat/api', () => {
     }),
   };
 });
-
-jest.mock('~/models/Agent', () => ({
-  loadAgent: jest.fn(),
-}));
 
 jest.mock('~/server/services/Config', () => ({
   getMCPServerTools: jest.fn(),
