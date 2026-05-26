@@ -15,7 +15,7 @@ import {
 import type * as t from 'librechat-data-provider';
 import type { AgentForm, AgentModelPanelProps, StringOption } from '~/common';
 import { useGetEndpointsQuery } from '~/data-provider';
-import { useLiveAnnouncer } from '~/Providers';
+import { useLiveAnnouncer, useAgentPanelContext } from '~/Providers';
 import { useLocalize } from '~/hooks';
 import { Panel } from '~/common';
 import { cn } from '~/utils';
@@ -27,6 +27,7 @@ export default function ModelPanel({
 }: Pick<AgentModelPanelProps, 'models' | 'providers' | 'setActivePanel'>) {
   const localize = useLocalize();
   const { announcePolite } = useLiveAnnouncer();
+  const { agentsConfig } = useAgentPanelContext();
 
   const { control, setValue } = useFormContext<AgentForm>();
 
@@ -74,6 +75,11 @@ export default function ModelPanel({
     [provider, endpointsConfig],
   );
 
+  const hiddenModelParams = useMemo(
+    () => new Set(agentsConfig?.hiddenModelParams ?? []),
+    [agentsConfig?.hiddenModelParams],
+  );
+
   const parameters = useMemo((): SettingDefinition[] => {
     const customParams = endpointsConfig[provider]?.customParams ?? {};
     const [combinedKey, endpointKey] = getSettingsKeys(endpointType ?? provider, model ?? '');
@@ -83,9 +89,9 @@ export default function ModelPanel({
     const overriddenParams = endpointsConfig[provider]?.customParams?.paramDefinitions ?? [];
     const overriddenParamsMap = keyBy(overriddenParams, 'key');
     return defaultParams
-      .filter((param) => param != null)
+      .filter((param) => param != null && !hiddenModelParams.has(param.key))
       .map((param) => (overriddenParamsMap[param.key] as SettingDefinition) ?? param);
-  }, [endpointType, endpointsConfig, model, provider]);
+  }, [endpointType, endpointsConfig, hiddenModelParams, model, provider]);
 
   const setOption = (optionKey: keyof t.AgentModelParameters) => (value: t.AgentParameterValue) => {
     setValue(`model_parameters.${optionKey}`, value);

@@ -144,6 +144,16 @@ const isSubagentsCapabilityEnabled = (req) => {
   return capabilities.includes(AgentCapabilities.subagents);
 };
 
+const stripHiddenModelParams = (modelParameters, req) => {
+  const hiddenParams = req.config?.endpoints?.[EModelEndpoint.agents]?.hiddenModelParams;
+  if (!hiddenParams?.length || !modelParameters) return modelParameters;
+  const result = { ...modelParameters };
+  for (const key of hiddenParams) {
+    delete result[key];
+  }
+  return result;
+};
+
 /**
  * Filters tools to only include those the user is authorized to use.
  * MCP tools must match the exact format `{toolName}_mcp_{serverName}` (exactly 2 segments).
@@ -282,6 +292,7 @@ const createAgentHandler = async (req, res) => {
 
     if (agentData.model_parameters && typeof agentData.model_parameters === 'object') {
       agentData.model_parameters = removeNullishValues(agentData.model_parameters, true);
+      agentData.model_parameters = stripHiddenModelParams(agentData.model_parameters, req);
     }
 
     const { id: userId, role: userRole } = req.user;
@@ -498,6 +509,7 @@ const updateAgentHandler = async (req, res) => {
 
     if (updateData.model_parameters && typeof updateData.model_parameters === 'object') {
       updateData.model_parameters = removeNullishValues(updateData.model_parameters, true);
+      updateData.model_parameters = stripHiddenModelParams(updateData.model_parameters, req);
     }
 
     if (avatarField === null) {
