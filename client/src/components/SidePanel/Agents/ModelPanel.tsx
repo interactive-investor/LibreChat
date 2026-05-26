@@ -81,6 +81,7 @@ export default function ModelPanel({
   );
 
   const parameters = useMemo((): SettingDefinition[] => {
+    if (agentsConfig?.hideModelParams) return [];
     const customParams = endpointsConfig[provider]?.customParams ?? {};
     const [combinedKey, endpointKey] = getSettingsKeys(endpointType ?? provider, model ?? '');
     const overriddenEndpointKey = customParams.defaultParamsEndpoint ?? endpointKey;
@@ -91,7 +92,14 @@ export default function ModelPanel({
     return defaultParams
       .filter((param) => param != null && !hiddenModelParams.has(param.key))
       .map((param) => (overriddenParamsMap[param.key] as SettingDefinition) ?? param);
-  }, [endpointType, endpointsConfig, hiddenModelParams, model, provider]);
+  }, [
+    agentsConfig?.hideModelParams,
+    endpointType,
+    endpointsConfig,
+    hiddenModelParams,
+    model,
+    provider,
+  ]);
 
   const setOption = (optionKey: keyof t.AgentModelParameters) => (value: t.AgentParameterValue) => {
     setValue(`model_parameters.${optionKey}`, value);
@@ -253,15 +261,16 @@ export default function ModelPanel({
           </div>
         </div>
       )}
-      {/* Reset Parameters Button */}
-      <button
-        type="button"
-        onClick={handleResetParameters}
-        className="btn btn-neutral my-1 flex w-full items-center justify-center gap-2 px-4 py-2 text-sm"
-      >
-        <RotateCcw className="h-4 w-4" aria-hidden="true" />
-        {localize('com_ui_reset_var', { 0: localize('com_ui_model_parameters') })}
-      </button>
+      {parameters.length > 0 && (
+        <button
+          type="button"
+          onClick={handleResetParameters}
+          className="btn btn-neutral my-1 flex w-full items-center justify-center gap-2 px-4 py-2 text-sm"
+        >
+          <RotateCcw className="h-4 w-4" aria-hidden="true" />
+          {localize('com_ui_reset_var', { 0: localize('com_ui_model_parameters') })}
+        </button>
+      )}
     </div>
   );
 }
