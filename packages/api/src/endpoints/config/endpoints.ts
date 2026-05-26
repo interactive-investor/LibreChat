@@ -65,13 +65,15 @@ export function createEndpointsConfigService(deps: EndpointsConfigDeps) {
     }
 
     if (mergedConfig[EModelEndpoint.agents] && appConfig?.endpoints?.[EModelEndpoint.agents]) {
-      const { disableBuilder, capabilities, allowedProviders } =
+      const { disableBuilder, capabilities, allowedProviders, hideModelParams, hiddenModelParams } =
         appConfig.endpoints[EModelEndpoint.agents];
       mergedConfig[EModelEndpoint.agents] = {
         ...mergedConfig[EModelEndpoint.agents],
         allowedProviders,
         disableBuilder,
         capabilities,
+        hideModelParams,
+        hiddenModelParams,
       };
     }
 
