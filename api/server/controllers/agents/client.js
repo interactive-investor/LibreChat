@@ -518,10 +518,12 @@ class AgentClient extends BaseClient {
     const sharedRunContextParts = [];
 
     /** File context from the latest message (attachments) - goes to system tail when configured */
-    if (orderedMessages[orderedMessages.length - 1]?.fileContext && latestAttachmentsAsSystemMessage) {
+    if (
+      orderedMessages[orderedMessages.length - 1]?.fileContext &&
+      latestAttachmentsAsSystemMessage
+    ) {
       sharedRunContextParts.push(orderedMessages[orderedMessages.length - 1].fileContext);
     }
-
 
     /** Augmented prompt from RAG/context handlers */
     if (this.contextHandlers) {

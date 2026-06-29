@@ -1122,10 +1122,7 @@ describe('saveBase64File', () => {
       context: 'mcp_tool_output',
     });
 
-    expect(createFile).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'text/csv' }),
-      true,
-    );
+    expect(createFile).toHaveBeenCalledWith(expect.objectContaining({ type: 'text/csv' }), true);
   });
 
   test('warns on unsupported MIME type but still saves', async () => {
