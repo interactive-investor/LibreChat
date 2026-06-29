@@ -49,6 +49,14 @@ function UnifiedSidebar() {
 
   const links = useUnifiedSidebarLinks();
 
+  // Honour aii_sidebar=collapsed URL param (set by the Chrome extension side panel)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('aii_sidebar') === 'collapsed') {
+      setExpanded(false);
+    }
+  }, []); 
+
   const handleCollapse = useCallback(() => {
     startTransition(() => {
       setExpanded(false);
