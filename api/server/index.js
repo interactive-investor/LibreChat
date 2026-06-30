@@ -51,6 +51,11 @@ const host = HOST || 'localhost';
 const trusted_proxy = Number(TRUST_PROXY) || 1; /* trust first proxy by default */
 
 const app = express();
+const allowedOrigins = [
+  'http://localhost:8501',
+  'https://app.localtest.me',
+  'chrome-extension://ndmhlcbepfncpajagikmlneeoccooioa',
+];
 
 const startServer = async () => {
   if (typeof Bun !== 'undefined') {
@@ -126,7 +131,22 @@ const startServer = async () => {
   });
 
   app.use(mongoSanitize());
-  app.use(cors());
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin) {
+          return callback(null, true);
+        }
+
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+
+        return callback(new Error(`CORS origin not allowed: ${origin}`));
+      },
+      credentials: true,
+    }),
+  );
   app.use(cookieParser());
 
   if (!isEnabled(DISABLE_COMPRESSION)) {
