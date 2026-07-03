@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useSetRecoilState } from 'recoil';
-import { aiiPageContext } from '~/store/aiiPageContext';
+import { aiiPageContext, aiiContextRequested } from '~/store/aiiPageContext';
 import type { AiiPageContextPayload } from '~/store/aiiPageContext';
 
 /**
@@ -15,6 +15,7 @@ import type { AiiPageContextPayload } from '~/store/aiiPageContext';
  */
 export function useAiiExtensionBridge() {
   const setPageContext = useSetRecoilState(aiiPageContext);
+  const setContextRequested = useSetRecoilState(aiiContextRequested);
 
   useEffect(() => {
     if (window === window.parent) return; // top-level browser tab — skip
@@ -26,11 +27,23 @@ export function useAiiExtensionBridge() {
       if (!data?.type) return;
 
       if (data.type === 'AII_PAGE_CONTEXT') {
+        // When the extension delivers context, mark the toggle as ready.
+        // A null payload (explicit clear from the extension) turns the toggle off.
         setPageContext(data.payload ?? null);
+        if (data.payload) setContextRequested(true);
       }
     }
 
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, [setPageContext]);
+  }, [setPageContext, setContextRequested]);
+}
+
+/**
+ * Sends a REQUEST_PAGE_CONTEXT message to the extension parent frame.
+ * Only works when running inside the extension sidepanel iframe.
+ */
+export function requestPageContext() {
+  if (window === window.parent) return;
+  window.parent.postMessage({ type: 'REQUEST_PAGE_CONTEXT' }, '*');
 }

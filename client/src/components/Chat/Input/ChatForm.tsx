@@ -23,6 +23,7 @@ import {
 } from '~/hooks';
 import { mainTextareaId, BadgeItem } from '~/common';
 import AttachFileChat from './Files/AttachFileChat';
+import AiiContextButton from './AiiContextButton';
 import FileFormChat from './Files/FileFormChat';
 import { cn, removeFocusRings } from '~/utils';
 import TextareaHeader from './TextareaHeader';
@@ -353,6 +354,7 @@ const ChatForm = memo(function ChatForm({
                   setFilesLoading={setFilesLoading}
                 />
               </div>
+              <AiiContextButton />
               <BadgeRow
                 showEphemeralBadges={
                   !!endpoint && !isAgentsEndpoint(endpoint) && !isAssistantsEndpoint(endpoint)
