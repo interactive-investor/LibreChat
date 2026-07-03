@@ -21,6 +21,7 @@ import { useUserTermsQuery, useGetStartupConfig } from '~/data-provider';
 import { UnifiedSidebar } from '~/components/UnifiedSidebar';
 import { TermsAndConditionsModal } from '~/components/ui';
 import { useHealthCheck } from '~/data-provider';
+import { useAiiExtensionBridge } from '~/hooks';
 import { Banner } from '~/components/Banners';
 
 export default function Root() {
@@ -32,6 +33,7 @@ export default function Root() {
   const { isAuthenticated, logout } = useAuthContext();
 
   useHealthCheck(isAuthenticated);
+  useAiiExtensionBridge();
 
   const assistantsMap = useAssistantsMap({ isAuthenticated });
   const agentsMap = useAgentsMap({ isAuthenticated });

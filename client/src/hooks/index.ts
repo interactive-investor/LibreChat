@@ -21,6 +21,7 @@ export * from './AuthContext';
 export * from './ScreenshotContext';
 export * from './ApiErrorBoundaryContext';
 export * from './Endpoint';
+export { useAiiExtensionBridge } from './useAiiExtensionBridge';
 
 export type { TranslationKeys } from './useLocalize';
 
