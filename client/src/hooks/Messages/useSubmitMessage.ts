@@ -37,11 +37,15 @@ export default function useSubmitMessage() {
       // Inject page context when the user has the "read page" toggle enabled.
       if (contextRequested && pageCtx) {
         const domain = (() => { try { return new URL(pageCtx.url).hostname; } catch { return pageCtx.url; } })();
+        const label = pageCtx.title ? `${pageCtx.title} (${domain})` : domain;
+        // Build a clean block: human-readable header + full markdown body.
+        // The <page-context> wrapper tells the LLM the content comes from the
+        // user's browser tab — no need for it to fetch the URL via MCP tools.
         const contextBlock = [
-          `<page-context url="${pageCtx.url}" title="${pageCtx.title ?? domain}" captured="${pageCtx.capturedAt}">`,
-          pageCtx.excerpt ?? '',
+          `<page-context source="${pageCtx.url}" title="${label}" captured="${pageCtx.capturedAt}">`,
+          pageCtx.markdown.trim(),
           '</page-context>',
-        ].filter(Boolean).join('\n');
+        ].join('\n');
         text = `${contextBlock}\n\n${text}`;
         // Reset toggle and clear context after use
         setContextRequested(false);

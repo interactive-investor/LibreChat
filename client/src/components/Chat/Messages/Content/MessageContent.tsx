@@ -91,6 +91,17 @@ export const ErrorMessage = ({
   );
 };
 
+/** Strip the aii page-context block from a user message before display.
+ *  Returns the clean visible text and the page title for the badge, if present. */
+function stripPageContext(text: string): { displayText: string; pageTitle: string | null } {
+  const match = text.match(/<page-context[^>]*\btitle="([^"]*)"[^>]*>[\s\S]*?<\/page-context>\n*/);
+  if (!match) return { displayText: text, pageTitle: null };
+  return {
+    displayText: text.replace(/<page-context[\s\S]*?<\/page-context>\n*/, '').trimStart(),
+    pageTitle: match[1] ?? null,
+  };
+}
+
 const DisplayMessage = ({ text, isCreatedByUser, message, showCursor }: TDisplayProps) => {
   const { isSubmitting = false, isLatestMessage = false } = useMessageContext();
   const enableUserMsgMarkdown = useRecoilValue(store.enableUserMsgMarkdown);
@@ -100,23 +111,35 @@ const DisplayMessage = ({ text, isCreatedByUser, message, showCursor }: TDisplay
     [showCursor, isSubmitting],
   );
 
+  // For user messages, strip the hidden page-context block from the visible text
+  const { displayText, pageTitle } = useMemo(() => {
+    if (!isCreatedByUser) return { displayText: text, pageTitle: null };
+    return stripPageContext(text);
+  }, [isCreatedByUser, text]);
+
   const content = useMemo(() => {
     if (!isCreatedByUser) {
-      return <Markdown content={text} isLatestMessage={isLatestMessage} />;
+      return <Markdown content={displayText} isLatestMessage={isLatestMessage} />;
     }
     if (enableUserMsgMarkdown) {
-      return <MarkdownLite content={text} />;
+      return <MarkdownLite content={displayText} />;
     }
-    return <>{text}</>;
-  }, [isCreatedByUser, enableUserMsgMarkdown, text, isLatestMessage]);
+    return <>{displayText}</>;
+  }, [isCreatedByUser, enableUserMsgMarkdown, displayText, isLatestMessage]);
 
   return (
     <Container message={message}>
+      {pageTitle != null && (
+        <div className="mb-1.5 flex items-center gap-1.5 rounded-full border border-border-light bg-surface-tertiary px-2.5 py-1 text-xs text-text-secondary w-fit">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+          <span className="max-w-[220px] truncate">{pageTitle}</span>
+        </div>
+      )}
       <div
         className={cn(
           'markdown prose message-content dark:prose-invert light w-full break-words',
           isSubmitting && 'submitting',
-          showCursorState && text.length > 0 && 'result-streaming',
+          showCursorState && displayText.length > 0 && 'result-streaming',
           isCreatedByUser && !enableUserMsgMarkdown && 'whitespace-pre-wrap',
           isCreatedByUser ? 'dark:text-gray-20' : 'dark:text-gray-100',
         )}
