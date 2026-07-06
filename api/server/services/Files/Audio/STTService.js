@@ -3,7 +3,8 @@ const fs = require('fs').promises;
 const FormData = require('form-data');
 const { Readable } = require('stream');
 const { logger } = require('@librechat/data-schemas');
-const { genAzureEndpoint, logAxiosError, applyAxiosProxyConfig } = require('@librechat/api');
+const { HttpsProxyAgent } = require('https-proxy-agent');
+const { genAzureEndpoint, logAxiosError } = require('@librechat/api');
 const { extractEnvVariable, STTProviders } = require('librechat-data-provider');
 const { getAppConfig } = require('~/server/services/Config');
 
@@ -141,7 +142,6 @@ class STTService {
       req.config ??
       (await getAppConfig({
         role: req?.user?.role,
-        userId: req?.user?.id,
         tenantId: req?.user?.tenantId,
       }));
     const sttSchema = appConfig?.speech?.stt;
@@ -302,7 +302,9 @@ class STTService {
 
     const options = { headers };
 
-    applyAxiosProxyConfig(options, url);
+    if (process.env.PROXY) {
+      options.httpsAgent = new HttpsProxyAgent(process.env.PROXY);
+    }
 
     try {
       const response = await axios.post(url, data, options);

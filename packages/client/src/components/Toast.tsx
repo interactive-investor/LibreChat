@@ -1,9 +1,8 @@
-import { JSX } from 'react/jsx-runtime';
 import * as RadixToast from '@radix-ui/react-toast';
 import { NotificationSeverity } from '~/common';
 import { useToast } from '~/hooks';
 
-export function Toast(): JSX.Element {
+export function Toast() {
   const { toast, onOpenChange } = useToast();
   const severityClassName = {
     /* Going up by 100 units in terms of darkness (eg bg-green-500 to bg-green-600) for

@@ -32,6 +32,7 @@ const useNavigateToConvo = (index = 0) => {
   const clearAllConversations = store.useClearConvoState();
   const applyModelSpecEffects = useApplyModelSpecEffects();
   const setSubmission = useSetRecoilState(store.submissionByIndex(index));
+  const clearAllLatestMessages = store.useClearLatestMessages(`useNavigateToConvo ${index}`);
   const { hasSetConversation, setConversation: setConvo } = store.useCreateConversationAtom(index);
 
   const setConversation = useCallback(
@@ -78,6 +79,7 @@ const useNavigateToConvo = (index = 0) => {
   const navigateToConvo = (
     conversation?: TConversation | null,
     options?: {
+      resetLatestMessage?: boolean;
       currentConvoId?: string;
     },
   ) => {
@@ -85,10 +87,14 @@ const useNavigateToConvo = (index = 0) => {
       logger.warn('conversation', 'Conversation not provided to `navigateToConvo`');
       return;
     }
-    const { currentConvoId } = options || {};
+    const { resetLatestMessage = true, currentConvoId } = options || {};
     logger.log('conversation', 'Navigating to conversation', conversation);
     hasSetConversation.current = true;
     setSubmission(null);
+    if (resetLatestMessage) {
+      logger.log('latest_message', 'Clearing all latest messages');
+      clearAllLatestMessages();
+    }
 
     let convo = { ...conversation };
     const endpointsConfig = queryClient.getQueryData<TEndpointsConfig>([QueryKeys.endpoints]);
@@ -119,14 +125,6 @@ const useNavigateToConvo = (index = 0) => {
     clearAllConversations(true);
     clearMessagesCache(queryClient, currentConvoId);
     if (convo.conversationId !== Constants.NEW_CONVO && convo.conversationId) {
-      /**
-       * Remove (not just invalidate) the target's messages so a freshly-mounted
-       * ChatView refetches them. A prior `clearMessagesCache` can leave this
-       * conversation cached as `[]`, which the messages query's `refetchOnMount: false`
-       * would treat as valid — leaving the chat stuck on an empty cache with no
-       * request when navigating in from a non-chat route (e.g. /projects).
-       */
-      queryClient.removeQueries([QueryKeys.messages, convo.conversationId]);
       queryClient.invalidateQueries([QueryKeys.conversation, convo.conversationId]);
       fetchFreshData(convo);
     } else {

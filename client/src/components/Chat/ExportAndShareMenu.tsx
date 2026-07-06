@@ -2,12 +2,11 @@ import { useState, useId, useRef } from 'react';
 import { useRecoilValue } from 'recoil';
 import * as Ariakit from '@ariakit/react';
 import { Upload, Share2 } from 'lucide-react';
-import { PermissionTypes, Permissions } from 'librechat-data-provider';
 import { DropdownPopup, TooltipAnchor, useMediaQuery } from '@librechat/client';
 import type * as t from '~/common';
 import ExportModal from '~/components/Nav/ExportConversation/ExportModal';
 import { ShareButton } from '~/components/Conversations/ConvoOptions';
-import { useHasAccess, useLocalize } from '~/hooks';
+import { useLocalize } from '~/hooks';
 import store from '~/store';
 
 export default function ExportAndShareMenu({
@@ -23,10 +22,6 @@ export default function ExportAndShareMenu({
   const menuId = useId();
   const shareButtonRef = useRef<HTMLButtonElement>(null);
   const exportButtonRef = useRef<HTMLButtonElement>(null);
-  const canCreateSharedLinks = useHasAccess({
-    permissionType: PermissionTypes.SHARED_LINKS,
-    permission: Permissions.CREATE,
-  });
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
   const conversation = useRecoilValue(store.conversationByIndex(0));
 
@@ -53,11 +48,11 @@ export default function ExportAndShareMenu({
       label: localize('com_ui_share'),
       onClick: shareHandler,
       icon: <Share2 className="icon-md mr-2 text-text-secondary" />,
-      show: isSharedButtonEnabled && canCreateSharedLinks,
+      show: isSharedButtonEnabled,
       /** NOTE: THE FOLLOWING PROPS ARE REQUIRED FOR MENU ITEMS THAT OPEN DIALOGS */
       hideOnClick: false,
       ref: shareButtonRef,
-      render: (props) => <button {...props} data-testid="share-conversation-menu-item" />,
+      render: (props) => <button {...props} />,
     },
     {
       label: localize('com_endpoint_export'),

@@ -1,69 +1,9 @@
 import * as React from 'react';
+import { OTPInput, OTPInputContext } from 'input-otp';
 import { Minus } from 'lucide-react';
-import { OTPInput, OTPInputContext, RenderProps } from 'input-otp';
 import { cn } from '~/utils';
 
-const InputOTP: React.ForwardRefExoticComponent<
-  (
-    | Omit<
-        Omit<
-          React.InputHTMLAttributes<HTMLInputElement>,
-          | 'value'
-          | 'onChange'
-          | 'maxLength'
-          | 'containerClassName'
-          | 'textAlign'
-          | 'onComplete'
-          | 'pushPasswordManagerStrategy'
-          | 'pasteTransformer'
-          | 'noScriptCSSFallback'
-        > & {
-          value?: string;
-          onChange?: (newValue: string) => unknown;
-          maxLength: number;
-          textAlign?: 'left' | 'center' | 'right';
-          onComplete?: (...args: unknown[]) => unknown;
-          pushPasswordManagerStrategy?: 'increase-width' | 'none';
-          pasteTransformer?: (pasted: string) => string;
-          containerClassName?: string;
-          noScriptCSSFallback?: string | null;
-        } & {
-          render: (props: RenderProps) => React.ReactNode;
-          children?: never;
-        } & React.RefAttributes<HTMLInputElement>,
-        'ref'
-      >
-    | Omit<
-        Omit<
-          React.InputHTMLAttributes<HTMLInputElement>,
-          | 'value'
-          | 'onChange'
-          | 'maxLength'
-          | 'containerClassName'
-          | 'textAlign'
-          | 'onComplete'
-          | 'pushPasswordManagerStrategy'
-          | 'pasteTransformer'
-          | 'noScriptCSSFallback'
-        > & {
-          value?: string;
-          onChange?: (newValue: string) => unknown;
-          maxLength: number;
-          textAlign?: 'left' | 'center' | 'right';
-          onComplete?: (...args: unknown[]) => unknown;
-          pushPasswordManagerStrategy?: 'increase-width' | 'none';
-          pasteTransformer?: (pasted: string) => string;
-          containerClassName?: string;
-          noScriptCSSFallback?: string | null;
-        } & {
-          render?: never;
-          children: React.ReactNode;
-        } & React.RefAttributes<HTMLInputElement>,
-        'ref'
-      >
-  ) &
-    React.RefAttributes<HTMLInputElement>
-> = React.forwardRef<
+const InputOTP = React.forwardRef<
   React.ElementRef<typeof OTPInput>,
   React.ComponentPropsWithoutRef<typeof OTPInput>
 >(({ className, containerClassName, ...props }, ref) => (
@@ -79,21 +19,15 @@ const InputOTP: React.ForwardRefExoticComponent<
 ));
 InputOTP.displayName = 'InputOTP';
 
-const InputOTPGroup: React.ForwardRefExoticComponent<
-  Omit<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>, 'ref'> &
-    React.RefAttributes<HTMLDivElement>
-> = React.forwardRef<React.ElementRef<'div'>, React.ComponentPropsWithoutRef<'div'>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('flex items-center', className)} {...props} />
-  ),
-);
+const InputOTPGroup = React.forwardRef<
+  React.ElementRef<'div'>,
+  React.ComponentPropsWithoutRef<'div'>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn('flex items-center', className)} {...props} />
+));
 InputOTPGroup.displayName = 'InputOTPGroup';
 
-const InputOTPSlot: React.ForwardRefExoticComponent<
-  Omit<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>, 'ref'> & {
-    index: number;
-  } & React.RefAttributes<HTMLDivElement>
-> = React.forwardRef<
+const InputOTPSlot = React.forwardRef<
   React.ElementRef<'div'>,
   React.ComponentPropsWithoutRef<'div'> & { index: number }
 >(({ index, className, ...props }, ref) => {
@@ -126,16 +60,14 @@ const InputOTPSlot: React.ForwardRefExoticComponent<
 });
 InputOTPSlot.displayName = 'InputOTPSlot';
 
-const InputOTPSeparator: React.ForwardRefExoticComponent<
-  Omit<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>, 'ref'> &
-    React.RefAttributes<HTMLDivElement>
-> = React.forwardRef<React.ElementRef<'div'>, React.ComponentPropsWithoutRef<'div'>>(
-  ({ ...props }, ref) => (
-    <div ref={ref} role="separator" {...props}>
-      <Minus />
-    </div>
-  ),
-);
+const InputOTPSeparator = React.forwardRef<
+  React.ElementRef<'div'>,
+  React.ComponentPropsWithoutRef<'div'>
+>(({ ...props }, ref) => (
+  <div ref={ref} role="separator" {...props}>
+    <Minus />
+  </div>
+));
 InputOTPSeparator.displayName = 'InputOTPSeparator';
 
 export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator };

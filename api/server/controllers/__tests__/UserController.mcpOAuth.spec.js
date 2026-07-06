@@ -10,7 +10,6 @@ const mockGetMCPServersRegistry = jest.fn();
 
 jest.mock('@librechat/data-schemas', () => ({
   logger: { error: jest.fn(), info: jest.fn(), warn: jest.fn() },
-  getTenantId: jest.fn(),
   webSearchKeys: [],
 }));
 
@@ -23,14 +22,7 @@ jest.mock('librechat-data-provider', () => ({
 
 jest.mock('@librechat/api', () => ({
   MCPOAuthHandler: {
-    generateFlowId: jest.fn((userId, serverName, tenantId) => {
-      const flowId = `${userId}:${serverName}`;
-      return tenantId ? `tenant:${encodeURIComponent(tenantId)}:${flowId}` : flowId;
-    }),
-    generateTokenFlowId: jest.fn((userId, serverName, tenantId) => {
-      const flowId = `${userId}:${serverName}`;
-      return tenantId ? `tenant:${encodeURIComponent(tenantId)}:${flowId}` : flowId;
-    }),
+    generateFlowId: jest.fn(() => 'user-1:test-server'),
     revokeOAuthToken: jest.fn(),
   },
   MCPTokenStorage: {
@@ -75,7 +67,7 @@ jest.mock('~/server/services/Config/getCachedTools', () => ({
 }));
 
 jest.mock('~/server/services/Files/process', () => ({
-  processDeleteRequest: jest.fn().mockResolvedValue({ deletedFileIds: [], failedFileIds: [] }),
+  processDeleteRequest: jest.fn(),
 }));
 
 jest.mock('~/server/services/Config', () => ({
@@ -86,7 +78,7 @@ jest.mock('~/cache', () => ({
   getLogStores: (...args) => mockGetLogStores(...args),
 }));
 
-const { logger, getTenantId } = require('@librechat/data-schemas');
+const { logger } = require('@librechat/data-schemas');
 const { MCPTokenStorage, MCPOAuthHandler } = require('@librechat/api');
 const { updateUserPluginsController } = require('~/server/controllers/UserController');
 
@@ -132,10 +124,7 @@ function setupMCPMocks() {
     getAllowedAddresses: jest.fn().mockReturnValue(null),
   };
 
-  // Revocation reads the merged config's mcpSettings allowlists (not the registry getters).
-  mockGetAppConfig.mockResolvedValue({
-    mcpSettings: { allowedDomains: [], allowedAddresses: null },
-  });
+  mockGetAppConfig.mockResolvedValue({});
   mockUpdateUserPlugins.mockResolvedValue();
   mockDeleteUserPluginAuth.mockResolvedValue();
   mockInvalidateCachedTools.mockResolvedValue();
@@ -149,7 +138,6 @@ function setupMCPMocks() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  getTenantId.mockReturnValue(undefined);
 });
 
 describe('updateUserPluginsController MCP OAuth cleanup', () => {
@@ -241,27 +229,6 @@ describe('updateUserPluginsController MCP OAuth cleanup', () => {
     expect(flowManager.deleteFlow).toHaveBeenCalledWith('user-1:test-server', 'mcp_oauth');
     expect(MCPTokenStorage.getTokens).not.toHaveBeenCalled();
     expect(MCPOAuthHandler.revokeOAuthToken).not.toHaveBeenCalled();
-  });
-
-  it('clears tenant-scoped and legacy OAuth flow state when tenant context exists', async () => {
-    const { flowManager } = setupMCPMocks();
-    getTenantId.mockReturnValue('tenant-a');
-    MCPTokenStorage.getClientInfoAndMetadata.mockResolvedValue(null);
-
-    const res = createResponse();
-    await updateUserPluginsController(createRequest(), res);
-
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(flowManager.deleteFlow).toHaveBeenCalledWith(
-      'tenant:tenant-a:user-1:test-server',
-      'mcp_get_tokens',
-    );
-    expect(flowManager.deleteFlow).toHaveBeenCalledWith(
-      'tenant:tenant-a:user-1:test-server',
-      'mcp_oauth',
-    );
-    expect(flowManager.deleteFlow).toHaveBeenCalledWith('user-1:test-server', 'mcp_get_tokens');
-    expect(flowManager.deleteFlow).toHaveBeenCalledWith('user-1:test-server', 'mcp_oauth');
   });
 
   it('clears stored OAuth token state when server config is missing', async () => {

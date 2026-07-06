@@ -16,7 +16,6 @@ const HANDLED_RESOURCE_TYPES = {
   [ResourceType.PROMPTGROUP]: 'deleteUserPrompts',
   [ResourceType.MCPSERVER]: 'deleteUserMcpServers',
   [ResourceType.SKILL]: 'deleteUserSkills',
-  [ResourceType.SHARED_LINK]: 'deleteAllSharedLinksWithCleanup',
 };
 
 /**

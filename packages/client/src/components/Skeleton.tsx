@@ -1,7 +1,6 @@
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils';
 
-function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>): JSX.Element {
+function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(

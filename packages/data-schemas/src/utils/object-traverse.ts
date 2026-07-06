@@ -3,28 +3,6 @@
  * Simplified implementation focused on the forEach use case
  */
 
-/**
- * Defensive bounds for traversal. Cycles are detected via the ancestor chain,
- * but a shared (non-circular) reference reachable through many paths can still
- * fan out super-linearly on a DAG. These caps keep traversal off the event loop
- * floor for pathological inputs (e.g. logging a deeply shared object) without
- * affecting normal use. Tune via the options argument to `traverse`.
- */
-export interface TraverseOptions {
-  /** Maximum number of nodes visited before traversal stops. */
-  maxNodes?: number;
-  /** Maximum depth descended; deeper nodes are visited as leaves, not expanded. */
-  maxDepth?: number;
-}
-
-// Tuned for the sole consumer, the debug logger. Measured cost is ~140ns/node
-// with the formatter callback, so ~2.5k nodes keeps one log under ~1ms even on
-// slower prod hardware, while real log objects are ~25-30 nodes at depth 3-4 —
-// ample headroom. maxNodes bounds fan-out (the cost lever); maxDepth bounds
-// recursion/readability. Callers needing more override via the options argument.
-const DEFAULT_MAX_NODES = 2_500;
-const DEFAULT_MAX_DEPTH = 5;
-
 export interface TraverseContext {
   node: unknown;
   path: (string | number)[];
@@ -109,60 +87,37 @@ function deleteProperty(obj: TraversableObject, key: string | number): void {
   }
 }
 
-function hasOwnEnumerable(node: TraversableObject): boolean {
-  for (const key in node) {
-    if (Object.prototype.hasOwnProperty.call(node, key)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function forEach(obj: unknown, callback: ForEachCallback, options?: TraverseOptions): void {
-  const maxNodes = options?.maxNodes ?? DEFAULT_MAX_NODES;
-  const maxDepth = options?.maxDepth ?? DEFAULT_MAX_DEPTH;
-  let visitedCount = 0;
-  // Original (never-mutated) node references for the current DFS path, paired
-  // with their contexts. Cycle detection compares against these rather than
-  // context.node, which a callback's update() can reassign.
-  const ancestors: { node: TraversableObject; context: TraverseContext }[] = [];
-
-  function findAncestorCycle(node: TraversableObject): TraverseContext | null {
-    for (let i = ancestors.length - 1; i >= 0; i--) {
-      if (ancestors[i].node === node) {
-        return ancestors[i].context;
-      }
-    }
-    return null;
-  }
+function forEach(obj: unknown, callback: ForEachCallback): void {
+  const visited = new WeakSet<object>();
 
   function walk(node: unknown, path: (string | number)[] = [], parent?: TraverseContext): void {
-    if (visitedCount >= maxNodes) {
-      return; // Bound total work; stop once the node budget is exhausted.
-    }
-
-    // Detect cycles via the current DFS path's original node refs. A shared
-    // (non-circular) reference appearing in multiple branches is traversed
-    // independently; the node/depth caps keep a DAG of shared references from
-    // fanning out unboundedly.
+    // Check for circular references
     let circular: TraverseContext | null = null;
     if (isObject(node)) {
-      circular = findAncestorCycle(node);
-      if (circular) {
-        return; // Skip true cycles to avoid infinite recursion.
+      if (visited.has(node)) {
+        // Find the circular reference in the parent chain
+        let p = parent;
+        while (p) {
+          if (p.node === node) {
+            circular = p;
+            break;
+          }
+          p = p.parent;
+        }
+        return; // Skip circular references
       }
+      visited.add(node);
     }
 
     const key = path.length > 0 ? path[path.length - 1] : undefined;
     const isRoot = path.length === 0;
     const level = path.length;
-    const tooDeep = level >= maxDepth;
 
     // Determine if this is a leaf node
     const isLeaf =
-      tooDeep ||
       !isObject(node) ||
-      (Array.isArray(node) ? node.length === 0 : !hasOwnEnumerable(node));
+      (Array.isArray(node) && node.length === 0) ||
+      Object.keys(node).length === 0;
 
     // Create context
     const context: TraverseContext = {
@@ -194,32 +149,19 @@ function forEach(obj: unknown, callback: ForEachCallback, options?: TraverseOpti
     };
 
     // Call the callback with the context
-    visitedCount++;
     callback.call(context, node);
 
-    // Traverse children within bounds, breaking as soon as the budget is spent
-    // so a wide array/object can't incur O(n) work after the cap is reached.
-    if (isObject(node) && !isLeaf) {
-      ancestors.push({ node, context });
+    // Traverse children if not circular and is an object
+    if (!circular && isObject(node) && !isLeaf) {
       if (Array.isArray(node)) {
         for (let i = 0; i < node.length; i++) {
-          if (visitedCount >= maxNodes) {
-            break;
-          }
           walk(node[i], [...path, i], context);
         }
       } else {
-        for (const childKey in node) {
-          if (!Object.prototype.hasOwnProperty.call(node, childKey)) {
-            continue;
-          }
-          if (visitedCount >= maxNodes) {
-            break;
-          }
-          walk(node[childKey], [...path, childKey], context);
+        for (const [childKey, childValue] of Object.entries(node)) {
+          walk(childValue, [...path, childKey], context);
         }
       }
-      ancestors.pop();
     }
   }
 
@@ -227,10 +169,10 @@ function forEach(obj: unknown, callback: ForEachCallback, options?: TraverseOpti
 }
 
 // Main traverse function that returns an object with forEach method
-export default function traverse(obj: unknown, options?: TraverseOptions) {
+export default function traverse(obj: unknown) {
   return {
     forEach(callback: ForEachCallback): void {
-      forEach(obj, callback, options);
+      forEach(obj, callback);
     },
   };
 }

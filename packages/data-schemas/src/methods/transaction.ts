@@ -1,7 +1,7 @@
+import logger from '~/config/winston';
 import type { FilterQuery, Model, Types } from 'mongoose';
 import type { IBalance, IBalanceUpdate, TransactionData } from '~/types';
 import type { ITransaction } from '~/schema/transaction';
-import logger from '~/config/winston';
 
 const cancelRate = 1.15;
 
@@ -70,36 +70,7 @@ export function createTransactionMethods(
     getMultiplier: (params: MultiplierParams) => number;
     getCacheMultiplier: (params: CacheMultiplierParams) => number | null;
   },
-): {
-  updateBalance: ({
-    user,
-    incrementValue,
-    setValues,
-  }: {
-    user: string;
-    incrementValue: number;
-    setValues?: IBalanceUpdate;
-  }) => Promise<IBalance>;
-  bulkInsertTransactions: (docs: TransactionData[]) => Promise<void>;
-  findBalanceByUser: (user: string) => Promise<IBalance | null>;
-  upsertBalanceFields: (user: string, fields: IBalanceUpdate) => Promise<IBalance | null>;
-  getTransactions: (filter: FilterQuery<ITransaction>) => Promise<ITransaction[]>;
-  deleteTransactions: (
-    filter: FilterQuery<ITransaction>,
-  ) => Promise<import('mongodb').DeleteResult>;
-  deleteBalances: (filter: FilterQuery<IBalance>) => Promise<import('mongodb').DeleteResult>;
-  createTransaction: (_txData: TxData) => Promise<TransactionResult | undefined>;
-  createAutoRefillTransaction: (txData: TxData) => Promise<
-    | {
-        rate: number;
-        user: string;
-        balance: number;
-        transaction: ITransaction;
-      }
-    | undefined
-  >;
-  createStructuredTransaction: (_txData: TxData) => Promise<TransactionResult | undefined>;
-} {
+) {
   /** Calculate and set the tokenValue for a transaction */
   function calculateTokenValue(txn: InternalTxDoc) {
     const { valueKey, tokenType, model, endpointTokenConfig, inputTokenCount } = txn;
@@ -294,15 +265,7 @@ export function createTransactionMethods(
   /**
    * Creates an auto-refill transaction that also updates balance.
    */
-  async function createAutoRefillTransaction(txData: TxData): Promise<
-    | {
-        rate: number;
-        user: string;
-        balance: number;
-        transaction: ITransaction;
-      }
-    | undefined
-  > {
+  async function createAutoRefillTransaction(txData: TxData) {
     if (txData.rawAmount != null && isNaN(txData.rawAmount)) {
       return;
     }
@@ -408,10 +371,10 @@ export function createTransactionMethods(
   /**
    * Queries and retrieves transactions based on a given filter.
    */
-  async function getTransactions(filter: FilterQuery<ITransaction>): Promise<ITransaction[]> {
+  async function getTransactions(filter: FilterQuery<ITransaction>) {
     try {
       const Transaction = mongoose.models.Transaction;
-      return await Transaction.find(filter).lean<ITransaction[]>();
+      return await Transaction.find(filter).lean();
     } catch (error) {
       logger.error('Error querying transactions:', error);
       throw error;
@@ -438,17 +401,13 @@ export function createTransactionMethods(
   }
 
   /** Deletes transactions matching a filter. */
-  async function deleteTransactions(
-    filter: FilterQuery<ITransaction>,
-  ): Promise<import('mongodb').DeleteResult> {
+  async function deleteTransactions(filter: FilterQuery<ITransaction>) {
     const Transaction = mongoose.models.Transaction;
     return Transaction.deleteMany(filter);
   }
 
   /** Deletes balance records matching a filter. */
-  async function deleteBalances(
-    filter: FilterQuery<IBalance>,
-  ): Promise<import('mongodb').DeleteResult> {
+  async function deleteBalances(filter: FilterQuery<IBalance>) {
     const Balance = mongoose.models.Balance as Model<IBalance>;
     return Balance.deleteMany(filter);
   }

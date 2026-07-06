@@ -73,19 +73,8 @@ export default function MCPServerStatusIcon({
 
   const { connectionState } = serverStatus;
 
-  // Connecting: show spinner, with cancel when an OAuth flow is pending.
+  // Connecting: show spinner only (no action available)
   if (connectionState === 'connecting') {
-    if (canCancel) {
-      return (
-        <LoadingStatusIcon
-          serverName={serverName}
-          onConfigClick={onConfigClick}
-          onCancel={onCancel}
-          canCancel={canCancel}
-        />
-      );
-    }
-
     return <ConnectingSpinner serverName={serverName} />;
   }
 

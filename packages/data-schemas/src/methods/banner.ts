@@ -1,10 +1,8 @@
 import type { Model } from 'mongoose';
-import type { IBanner, IUser } from '~/types';
 import logger from '~/config/winston';
+import type { IBanner, IUser } from '~/types';
 
-export function createBannerMethods(mongoose: typeof import('mongoose')): {
-  getBanner: (user?: IUser | null) => Promise<IBanner | null>;
-} {
+export function createBannerMethods(mongoose: typeof import('mongoose')) {
   /**
    * Retrieves the current active banner.
    */

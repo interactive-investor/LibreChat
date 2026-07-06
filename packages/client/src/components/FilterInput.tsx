@@ -23,9 +23,7 @@ export interface FilterInputProps
  *   onChange={(e) => setSearchQuery(e.target.value)}
  * />
  */
-const FilterInput: React.ForwardRefExoticComponent<
-  FilterInputProps & React.RefAttributes<HTMLInputElement>
-> = React.forwardRef<HTMLInputElement, FilterInputProps>(
+const FilterInput = React.forwardRef<HTMLInputElement, FilterInputProps>(
   ({ className, label, inputId, containerClassName, ...props }, ref) => {
     return (
       <div className={cn('relative', containerClassName)}>

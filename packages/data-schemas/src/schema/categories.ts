@@ -6,7 +6,7 @@ export interface ICategory extends Document {
   tenantId?: string;
 }
 
-const categoriesSchema: Schema<ICategory> = new Schema<ICategory>({
+const categoriesSchema = new Schema<ICategory>({
   label: {
     type: String,
     required: true,

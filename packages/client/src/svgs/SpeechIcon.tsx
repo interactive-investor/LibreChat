@@ -1,11 +1,10 @@
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils/';
 
 type SpeechIconProps = {
   className?: string;
 };
 
-export default function SpeechIcon({ className }: SpeechIconProps): JSX.Element {
+export default function SpeechIcon({ className }: SpeechIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

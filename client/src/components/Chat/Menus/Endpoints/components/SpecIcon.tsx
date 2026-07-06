@@ -5,7 +5,6 @@ import type { IconMapProps } from '~/common';
 import { getModelSpecIconURL, getIconKey } from '~/utils';
 import { URLIcon } from '~/components/Endpoints/URLIcon';
 import { icons } from '~/hooks/Endpoint/Icons';
-import { isImageURL } from '~/utils/icons';
 
 interface SpecIconProps {
   currentSpec: TModelSpec;
@@ -16,15 +15,14 @@ type IconType = (props: IconMapProps) => React.JSX.Element;
 
 const SpecIcon: React.FC<SpecIconProps> = ({ currentSpec, endpointsConfig }) => {
   const iconURL = getModelSpecIconURL(currentSpec);
-  const endpoint = currentSpec.preset?.endpoint;
+  const { endpoint } = currentSpec.preset;
   const endpointIconURL = getEndpointField(endpointsConfig, endpoint, 'iconURL');
   const iconKey = getIconKey({ endpoint, endpointsConfig, endpointIconURL });
-  const shouldRenderURLIcon = isImageURL(iconURL);
   let Icon: IconType;
 
-  if (!shouldRenderURLIcon) {
+  if (!iconURL.includes('http')) {
     Icon = (icons[iconURL] ?? icons[iconKey] ?? icons.unknown) as IconType;
-  } else {
+  } else if (iconURL) {
     return (
       <URLIcon
         iconURL={iconURL}
@@ -34,6 +32,8 @@ const SpecIcon: React.FC<SpecIconProps> = ({ currentSpec, endpointsConfig }) => 
         endpoint={endpoint || undefined}
       />
     );
+  } else {
+    Icon = (icons[endpoint ?? ''] ?? icons[iconKey] ?? icons.unknown) as IconType;
   }
 
   return (

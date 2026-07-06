@@ -5,7 +5,7 @@ import {
   PermissionBits,
   AccessRoleIds,
 } from 'librechat-data-provider';
-import { SYSTEM_TENANT_ID, getTenantId, permissionBitSupersets } from '@librechat/data-schemas';
+import { permissionBitSupersets } from '@librechat/data-schemas';
 import type { PipelineStage, AnyBulkWriteOperation } from 'mongoose';
 
 export interface Principal {
@@ -37,13 +37,6 @@ export interface EnrichResult {
   entriesToBackfill: Types.ObjectId[];
 }
 
-function matchesCurrentTenant(principal: Record<string, unknown>, tenantId?: string): boolean {
-  if (!tenantId || tenantId === SYSTEM_TENANT_ID) {
-    return true;
-  }
-  return principal.tenantId === tenantId;
-}
-
 /** Enriches REMOTE_AGENT principals with implicit AGENT owners */
 export async function enrichRemoteAgentPrincipals(
   deps: EnricherDependencies,
@@ -54,7 +47,6 @@ export async function enrichRemoteAgentPrincipals(
     typeof resourceId === 'string' && /^[a-f\d]{24}$/i.test(resourceId)
       ? Types.ObjectId.createFromHexString(resourceId)
       : resourceId;
-  const tenantId = getTenantId();
 
   /**
    * Filter `permBits` with `$in: permissionBitSupersets(SHARE)` instead of
@@ -95,10 +87,6 @@ export async function enrichRemoteAgentPrincipals(
     }
 
     const userInfo = entry.userInfo as Record<string, unknown>;
-    if (!matchesCurrentTenant(userInfo, tenantId)) {
-      continue;
-    }
-
     const principalId = entry.principalId as Types.ObjectId;
 
     const alreadyIncluded = enrichedPrincipals.some(

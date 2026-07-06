@@ -1,11 +1,9 @@
-import { JSX } from 'react/jsx-runtime';
-
 type SwitchIconProps = {
   size?: string | number;
   className?: string;
 };
 
-export default function SwitchIcon({ size = '1em', className }: SwitchIconProps): JSX.Element {
+export default function SwitchIcon({ size = '1em', className }: SwitchIconProps) {
   return (
     <svg
       viewBox="64 64 896 896"

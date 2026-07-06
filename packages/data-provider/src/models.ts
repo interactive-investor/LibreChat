@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { AgentSubagentsConfig } from './types/assistants';
 import type { TModelSpecPreset } from './schemas';
 import {
   EModelEndpoint,
@@ -8,7 +7,6 @@ import {
   AuthType,
   authTypeSchema,
 } from './schemas';
-import { MAX_SUBAGENTS } from './limits';
 
 export type TModelSpec = {
   name: string;
@@ -16,7 +14,6 @@ export type TModelSpec = {
   preset: TModelSpecPreset;
   order?: number;
   default?: boolean;
-  softDefault?: boolean;
   description?: string;
   /**
    * Optional group name for organizing specs in the UI selector.
@@ -33,28 +30,14 @@ export type TModelSpec = {
   groupIcon?: string | EModelEndpoint;
   showIconInMenu?: boolean;
   showIconInHeader?: boolean;
-  /** Show this spec's label and description on the chat landing in place of the greeting. */
-  showOnLanding?: boolean;
-  /** Conversation starter prompts shown on the chat landing while this spec is active. */
-  conversation_starters?: string[];
   iconURL?: string | EModelEndpoint; // Allow using project-included icons
   authType?: AuthType;
-  /** Hide the chat input tool badge row while this model spec is active. */
-  hideBadgeRow?: boolean;
   webSearch?: boolean;
   fileSearch?: boolean;
   executeCode?: boolean;
   artifacts?: string | boolean;
   mcpServers?: string[];
-  skills?: boolean | string[];
-  subagents?: AgentSubagentsConfig;
 };
-
-export const modelSpecSubagentsSchema = z.object({
-  enabled: z.boolean().optional(),
-  allowSelf: z.boolean().optional(),
-  agent_ids: z.array(z.string()).max(MAX_SUBAGENTS).optional(),
-});
 
 export const tModelSpecSchema = z.object({
   name: z.string(),
@@ -62,24 +45,18 @@ export const tModelSpecSchema = z.object({
   preset: tModelSpecPresetSchema,
   order: z.number().optional(),
   default: z.boolean().optional(),
-  softDefault: z.boolean().optional(),
   description: z.string().optional(),
   group: z.string().optional(),
   groupIcon: z.union([z.string(), eModelEndpointSchema]).optional(),
   showIconInMenu: z.boolean().optional(),
   showIconInHeader: z.boolean().optional(),
-  showOnLanding: z.boolean().optional(),
-  conversation_starters: z.array(z.string()).optional(),
   iconURL: z.union([z.string(), eModelEndpointSchema]).optional(),
   authType: authTypeSchema.optional(),
-  hideBadgeRow: z.boolean().optional(),
   webSearch: z.boolean().optional(),
   fileSearch: z.boolean().optional(),
   executeCode: z.boolean().optional(),
   artifacts: z.union([z.string(), z.boolean()]).optional(),
   mcpServers: z.array(z.string()).optional(),
-  skills: z.union([z.boolean(), z.array(z.string())]).optional(),
-  subagents: modelSpecSubagentsSchema.optional(),
 });
 
 export const specsConfigSchema = z.object({

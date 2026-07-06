@@ -10,8 +10,6 @@ export interface Endpoint {
   agentNames?: Record<string, string>;
   assistantNames?: Record<string, string>;
   modelIcons?: Record<string, string | undefined>;
-  showMarketplace?: boolean;
-  searchAliases?: string[];
 }
 
 export interface SelectedValues {

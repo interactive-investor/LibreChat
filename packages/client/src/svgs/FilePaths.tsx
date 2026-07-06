@@ -1,6 +1,4 @@
-import { JSX } from 'react/jsx-runtime';
-
-export default function FilePaths(): JSX.Element {
+export default function FilePaths() {
   return (
     <>
       <path

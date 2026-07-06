@@ -1,14 +1,4 @@
-import { JSX } from 'react/jsx-runtime';
-
-export default function ThumbUpIcon({
-  className = '',
-  size = '1em',
-  bold = false,
-}: {
-  className?: string | undefined;
-  size?: string | undefined;
-  bold?: boolean | undefined;
-}): JSX.Element {
+export default function ThumbUpIcon({ className = '', size = '1em', bold = false }) {
   return bold ? (
     <svg
       xmlns="http://www.w3.org/2000/svg"

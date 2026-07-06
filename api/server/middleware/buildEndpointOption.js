@@ -1,10 +1,4 @@
-const {
-  handleError,
-  applyModelSpecPreset,
-  findModelSpecByName,
-  isModelSpecEndpointMatch,
-  resolveModelSpecPromptPrefixVariables,
-} = require('@librechat/api');
+const { handleError } = require('@librechat/api');
 const { logger } = require('@librechat/data-schemas');
 const {
   EndpointURLs,
@@ -27,8 +21,6 @@ const buildFunction = {
 
 async function buildEndpointOption(req, res, next) {
   const { endpoint, endpointType } = req.body;
-  const isAgents =
-    isAgentsEndpoint(endpoint) || req.baseUrl.startsWith(EndpointURLs[EModelEndpoint.agents]);
 
   let endpointsConfig;
   try {
@@ -56,80 +48,50 @@ async function buildEndpointOption(req, res, next) {
   }
 
   const appConfig = req.config;
-  let appliedModelSpecPrivateFields = new Set();
   if (appConfig.modelSpecs?.list?.length && appConfig.modelSpecs?.enforce) {
     /** @type {{ list: TModelSpec[] }}*/
     const { list } = appConfig.modelSpecs;
-    const rawSpec = req.body.spec;
-    const spec = parsedBody.spec ?? (typeof rawSpec === 'string' ? rawSpec : undefined);
-    const rawChatProjectId = req.body.chatProjectId;
-    const parsedBodyForModelSpec =
-      parsedBody.chatProjectId === undefined &&
-      (typeof rawChatProjectId === 'string' || rawChatProjectId === null)
-        ? { ...parsedBody, chatProjectId: rawChatProjectId }
-        : parsedBody;
+    const { spec } = parsedBody;
 
     if (!spec) {
       return handleError(res, { text: 'No model spec selected' });
     }
 
-    const currentModelSpec = findModelSpecByName({ list }, spec);
+    const currentModelSpec = list.find((s) => s.name === spec);
     if (!currentModelSpec) {
       return handleError(res, { text: 'Invalid model spec' });
     }
 
-    if (!isModelSpecEndpointMatch(currentModelSpec, endpoint)) {
+    if (endpoint !== currentModelSpec.preset.endpoint) {
       return handleError(res, { text: 'Model spec mismatch' });
     }
 
     try {
-      const result = applyModelSpecPreset({
-        modelSpec: currentModelSpec,
-        parsedBody: parsedBodyForModelSpec,
+      currentModelSpec.preset.spec = spec;
+      parsedBody = parseCompactConvo({
         endpoint,
         endpointType,
+        conversation: currentModelSpec.preset,
         defaultParamsEndpoint,
-        includePresetDefaults: true,
       });
-      parsedBody = result.parsedBody;
-      appliedModelSpecPrivateFields = result.appliedPrivateFields;
+      if (currentModelSpec.iconURL != null && currentModelSpec.iconURL !== '') {
+        parsedBody.iconURL = currentModelSpec.iconURL;
+      }
     } catch (error) {
       logger.error(`Error parsing model spec for endpoint ${endpoint}`, error);
       return handleError(res, { text: 'Error parsing model spec' });
     }
   } else if (parsedBody.spec && appConfig.modelSpecs?.list) {
-    const modelSpec = findModelSpecByName(appConfig.modelSpecs, parsedBody.spec);
-    if (modelSpec) {
-      if (!isModelSpecEndpointMatch(modelSpec, endpoint)) {
-        return handleError(res, { text: 'Model spec mismatch' });
-      }
-
-      try {
-        const result = applyModelSpecPreset({
-          modelSpec,
-          parsedBody,
-          endpoint,
-          endpointType,
-          defaultParamsEndpoint,
-        });
-        parsedBody = result.parsedBody;
-        appliedModelSpecPrivateFields = result.appliedPrivateFields;
-      } catch (error) {
-        logger.error(`Error parsing model spec for endpoint ${endpoint}`, error);
-        return handleError(res, { text: 'Error parsing model spec' });
-      }
+    // Non-enforced mode: if spec is selected, derive iconURL from model spec
+    const modelSpec = appConfig.modelSpecs.list.find((s) => s.name === parsedBody.spec);
+    if (modelSpec?.iconURL) {
+      parsedBody.iconURL = modelSpec.iconURL;
     }
   }
 
-  if (!isAgents && appliedModelSpecPrivateFields.has('promptPrefix')) {
-    parsedBody = resolveModelSpecPromptPrefixVariables(
-      parsedBody,
-      req.user,
-      req.body.clientTimestamp,
-    );
-  }
-
   try {
+    const isAgents =
+      isAgentsEndpoint(endpoint) || req.baseUrl.startsWith(EndpointURLs[EModelEndpoint.agents]);
     const builder = isAgents
       ? (...args) => buildFunction[EModelEndpoint.agents](req, ...args)
       : buildFunction[endpointType ?? endpoint];
@@ -139,10 +101,7 @@ async function buildEndpointOption(req, res, next) {
     req.body.endpointOption = await builder(endpoint, parsedBody, endpointType);
 
     if (req.body.files && !isAgents) {
-      req.body.endpointOption.attachments = updateFilesUsage(req.body.files, undefined, {
-        user: req.user.id,
-        tenantId: req.user.tenantId,
-      });
+      req.body.endpointOption.attachments = updateFilesUsage(req.body.files);
     }
 
     next();

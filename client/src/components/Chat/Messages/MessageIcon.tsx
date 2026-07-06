@@ -5,7 +5,6 @@ import type { TMessageIcon } from '~/common';
 import ConvoIconURL from '~/components/Endpoints/ConvoIconURL';
 import { useGetEndpointsQuery } from '~/data-provider';
 import { getIconEndpoint } from '~/utils';
-import { isImageURL } from '~/utils/icons';
 import Icon from '~/components/Endpoints/Icon';
 
 type MessageIconProps = {
@@ -65,7 +64,7 @@ const MessageIcon = memo(({ iconData, assistant, agent }: MessageIconProps) => {
     [endpointsConfig, endpoint],
   );
 
-  if (iconData?.isCreatedByUser !== true && isImageURL(iconURL)) {
+  if (iconData?.isCreatedByUser !== true && iconURL != null && iconURL.includes('http')) {
     return (
       <ConvoIconURL
         iconURL={iconURL}

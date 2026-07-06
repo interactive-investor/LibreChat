@@ -25,6 +25,7 @@ const compat = new FlatCompat({
 export default [
   {
     ignores: [
+      'client/vite.config.ts',
       'client/dist/**/*',
       'client/public/**/*',
       'client/coverage/**/*',
@@ -120,7 +121,7 @@ export default [
       'jsx-a11y/img-redundant-alt': 'off',
       'jsx-a11y/no-noninteractive-tabindex': 'off',
       // common rules
-      'no-nested-ternary': 'error',
+      'no-nested-ternary': 'warn',
       'no-constant-binary-expression': 'warn',
       'no-unused-vars': [
         'warn',
@@ -169,14 +170,11 @@ export default [
     },
   },
   {
-    files: ['**/rollup.config.js', '**/.eslintrc.js', '**/jest.config.js', 'client/vite.config.ts'],
+    files: ['**/rollup.config.js', '**/.eslintrc.js', '**/jest.config.js'],
     languageOptions: {
       globals: {
         ...globals.node,
       },
-    },
-    rules: {
-      'import/no-cycle': 'off',
     },
   },
   {
@@ -219,10 +217,7 @@ export default [
     })),
   {
     files: ['**/*.ts', '**/*.tsx'],
-    // e2e specs are not part of `client/tsconfig.json`'s program, so typed
-    // linting them errors with "file not found in project"; they still get
-    // the non-type-checked recommended rules from the block above.
-    ignores: ['packages/**/*', 'client/vite.config.ts', 'e2e/**/*'],
+    ignores: ['packages/**/*'],
     plugins: {
       '@typescript-eslint': typescriptEslintEslintPlugin,
       jest: fixupPluginRules(jest),

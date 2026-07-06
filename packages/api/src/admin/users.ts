@@ -42,11 +42,7 @@ export interface AdminUsersDeps {
   }) => Promise<void>;
 }
 
-export function createAdminUsersHandlers(deps: AdminUsersDeps): {
-  listUsers: (req: ServerRequest, res: Response) => Promise<Response>;
-  searchUsers: (req: ServerRequest, res: Response) => Promise<Response>;
-  deleteUser: (req: ServerRequest, res: Response) => Promise<Response>;
-} {
+export function createAdminUsersHandlers(deps: AdminUsersDeps) {
   const { findUsers, countUsers, deleteUserById, deleteConfig, deleteAclEntries } = deps;
 
   async function listUsersHandler(req: ServerRequest, res: Response) {

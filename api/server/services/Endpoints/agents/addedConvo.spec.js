@@ -1,9 +1,6 @@
 const mockInitializeAgent = jest.fn();
 const mockValidateAgentModel = jest.fn();
 const mockLoadAddedAgent = jest.fn();
-const mockResolveAgentScopedSkillIds = jest.fn();
-const mockResolveModelSpecSkillIds = jest.fn();
-const mockCanAuthorSkillFiles = jest.fn();
 const mockGetAgent = jest.fn();
 const mockGetMCPServerTools = jest.fn();
 
@@ -21,8 +18,6 @@ jest.mock('@librechat/api', () => ({
   initializeAgent: (...args) => mockInitializeAgent(...args),
   validateAgentModel: (...args) => mockValidateAgentModel(...args),
   loadAddedAgent: (params) => mockLoadAddedAgent(params),
-  resolveAgentScopedSkillIds: (...args) => mockResolveAgentScopedSkillIds(...args),
-  resolveModelSpecSkillIds: (...args) => mockResolveModelSpecSkillIds(...args),
 }));
 
 jest.mock('~/server/services/Files/permissions', () => ({
@@ -33,20 +28,11 @@ jest.mock('~/server/services/Config', () => ({
   getMCPServerTools: (...args) => mockGetMCPServerTools(...args),
 }));
 
-jest.mock('./skillDeps', () => ({
-  canAuthorSkillFiles: (...args) => mockCanAuthorSkillFiles(...args),
-}));
-
 jest.mock('~/models', () => ({
   getAgent: (...args) => mockGetAgent(...args),
-  getSkillByName: jest.fn(),
-  listSkillsByAccess: jest.fn(),
-  listAlwaysApplySkills: jest.fn(),
 }));
 
 const { processAddedConvo } = require('./addedConvo');
-const db = require('~/models');
-const { Constants } = require('librechat-data-provider');
 
 const makeReq = () => ({ user: { id: 'u1', role: 'USER' } });
 
@@ -58,7 +44,7 @@ const makeReq = () => ({ user: { id: 'u1', role: 'USER' } });
  * `CodeExecutionToolDefinition` landed in their `toolDefinitions` via the
  * registry regardless of any explicit flag.
  */
-describe('processAddedConvo', () => {
+describe('processAddedConvo — codeEnvAvailable passthrough', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockValidateAgentModel.mockResolvedValue({ isValid: true });
@@ -67,11 +53,6 @@ describe('processAddedConvo', () => {
       userMCPAuthMap: undefined,
     });
     mockLoadAddedAgent.mockResolvedValue({ id: 'added-agent', provider: 'openai' });
-    mockResolveAgentScopedSkillIds.mockImplementation(
-      ({ accessibleSkillIds }) => accessibleSkillIds,
-    );
-    mockResolveModelSpecSkillIds.mockResolvedValue([]);
-    mockCanAuthorSkillFiles.mockReturnValue(false);
   });
 
   const baseParams = (overrides = {}) => ({
@@ -122,110 +103,6 @@ describe('processAddedConvo', () => {
     expect(mockInitializeAgent).toHaveBeenCalledWith(
       expect.objectContaining({ codeEnvAvailable: undefined }),
       expect.anything(),
-    );
-  });
-
-  it('resolves and forwards model-spec skill scope for added ephemeral agents', async () => {
-    const accessibleSkillId = { toString: () => 'accessible-skill' };
-    const editableSkillId = { toString: () => 'editable-skill' };
-    const resolvedSkillId = { toString: () => 'resolved-skill' };
-    const scopedSkillId = { toString: () => 'scoped-skill' };
-    const scopedEditableSkillId = { toString: () => 'scoped-editable-skill' };
-    const skillStates = { 'scoped-skill': true };
-
-    mockLoadAddedAgent.mockResolvedValue({
-      id: Constants.EPHEMERAL_AGENT_ID,
-      provider: 'openai',
-      skills_enabled: true,
-      skills: [],
-    });
-    mockResolveModelSpecSkillIds.mockResolvedValue([resolvedSkillId]);
-    mockResolveAgentScopedSkillIds
-      .mockReturnValueOnce([scopedSkillId])
-      .mockReturnValueOnce([scopedEditableSkillId]);
-    mockCanAuthorSkillFiles.mockReturnValue(true);
-
-    await processAddedConvo(
-      baseParams({
-        req: {
-          user: { id: 'u1', role: 'USER' },
-          config: {
-            modelSpecs: {
-              list: [
-                {
-                  name: 'added-spec',
-                  skills: ['finance-analyst'],
-                },
-              ],
-            },
-          },
-        },
-        endpointOption: {
-          spec: 'primary-spec',
-          addedConvo: {
-            endpoint: 'openai',
-            model: 'gpt-4o',
-            spec: 'added-spec',
-          },
-        },
-        accessibleSkillIds: [accessibleSkillId],
-        editableSkillIds: [editableSkillId],
-        skillsCapabilityEnabled: true,
-        ephemeralSkillsToggle: false,
-        skillCreateAllowed: true,
-        skillStates,
-        defaultActiveOnShare: true,
-      }),
-    );
-
-    expect(mockResolveModelSpecSkillIds).toHaveBeenCalledWith({
-      names: ['finance-analyst'],
-      accessibleSkillIds: [accessibleSkillId],
-      getSkillByName: db.getSkillByName,
-    });
-    expect(mockResolveAgentScopedSkillIds).toHaveBeenNthCalledWith(1, {
-      agent: expect.objectContaining({
-        id: Constants.EPHEMERAL_AGENT_ID,
-        skills_enabled: true,
-        skills: ['resolved-skill'],
-      }),
-      accessibleSkillIds: [accessibleSkillId],
-      skillsCapabilityEnabled: true,
-      ephemeralSkillsToggle: false,
-    });
-    expect(mockResolveAgentScopedSkillIds).toHaveBeenNthCalledWith(2, {
-      agent: expect.objectContaining({
-        id: Constants.EPHEMERAL_AGENT_ID,
-        skills_enabled: true,
-        skills: ['resolved-skill'],
-      }),
-      accessibleSkillIds: [editableSkillId],
-      skillsCapabilityEnabled: true,
-      ephemeralSkillsToggle: false,
-    });
-    expect(mockCanAuthorSkillFiles).toHaveBeenCalledWith({
-      agent: expect.objectContaining({
-        id: Constants.EPHEMERAL_AGENT_ID,
-        skills_enabled: true,
-        skills: ['resolved-skill'],
-      }),
-      scopedEditableSkillIds: [scopedEditableSkillId],
-      skillCreateAllowed: true,
-      skillsCapabilityEnabled: true,
-      ephemeralSkillsToggle: false,
-    });
-    expect(mockInitializeAgent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        accessibleSkillIds: [scopedSkillId],
-        skillAuthoringAvailable: true,
-        skillStates,
-        defaultActiveOnShare: true,
-      }),
-      expect.objectContaining({
-        listSkillsByAccess: db.listSkillsByAccess,
-        listAlwaysApplySkills: db.listAlwaysApplySkills,
-        getSkillByName: db.getSkillByName,
-      }),
     );
   });
 });

@@ -1,11 +1,9 @@
-import { JSX } from 'react/jsx-runtime';
-
 type SaveIconProps = {
   size?: string | number;
   className?: string;
 };
 
-export default function SaveIcon({ size = '1em', className }: SaveIconProps): JSX.Element {
+export default function SaveIcon({ size = '1em', className }: SaveIconProps) {
   return (
     <svg
       viewBox="64 64 896 896"

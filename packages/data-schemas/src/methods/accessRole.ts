@@ -3,27 +3,7 @@ import type { Model, Types, DeleteResult } from 'mongoose';
 import type { IAccessRole } from '~/types';
 import { RoleBits } from '~/common';
 
-export function createAccessRoleMethods(mongoose: typeof import('mongoose')): {
-  createRole: (roleData: Partial<IAccessRole>) => Promise<IAccessRole>;
-  updateRole: (
-    accessRoleId: string | Types.ObjectId,
-    updateData: Partial<IAccessRole>,
-  ) => Promise<IAccessRole | null>;
-  deleteRole: (accessRoleId: string | Types.ObjectId) => Promise<DeleteResult>;
-  getAllRoles: () => Promise<IAccessRole[]>;
-  findRoleById: (roleId: string | Types.ObjectId) => Promise<IAccessRole | null>;
-  seedDefaultRoles: () => Promise<Record<string, IAccessRole>>;
-  findRoleByIdentifier: (accessRoleId: string | Types.ObjectId) => Promise<IAccessRole | null>;
-  getRoleForPermissions: (
-    resourceType: string,
-    permBits: PermissionBits | RoleBits,
-  ) => Promise<IAccessRole | null>;
-  findRoleByPermissions: (
-    resourceType: string,
-    permBits: PermissionBits | RoleBits,
-  ) => Promise<IAccessRole | null>;
-  findRolesByResourceType: (resourceType: string) => Promise<IAccessRole[]>;
-} {
+export function createAccessRoleMethods(mongoose: typeof import('mongoose')) {
   /**
    * Find an access role by its ID
    * @param roleId - The role ID
@@ -121,7 +101,7 @@ export function createAccessRoleMethods(mongoose: typeof import('mongoose')): {
    * Seed default roles if they don't exist
    * @returns Object containing created roles
    */
-  async function seedDefaultRoles(): Promise<Record<string, IAccessRole>> {
+  async function seedDefaultRoles() {
     const AccessRole = mongoose.models.AccessRole as Model<IAccessRole>;
     const defaultRoles = [
       {
@@ -227,20 +207,6 @@ export function createAccessRoleMethods(mongoose: typeof import('mongoose')): {
         name: 'com_ui_role_owner',
         description: 'com_ui_role_owner_desc',
         resourceType: ResourceType.SKILL,
-        permBits: RoleBits.OWNER,
-      },
-      {
-        accessRoleId: AccessRoleIds.SHARED_LINK_VIEWER,
-        name: 'com_ui_role_viewer',
-        description: 'com_ui_role_viewer_desc',
-        resourceType: ResourceType.SHARED_LINK,
-        permBits: RoleBits.VIEWER,
-      },
-      {
-        accessRoleId: AccessRoleIds.SHARED_LINK_OWNER,
-        name: 'com_ui_role_owner',
-        description: 'com_ui_role_owner_desc',
-        resourceType: ResourceType.SHARED_LINK,
         permBits: RoleBits.OWNER,
       },
     ];

@@ -1,7 +1,6 @@
 import React from 'react';
-import { JSX } from 'react/jsx-runtime';
 
-export default function LightModeIcon(): JSX.Element {
+export default function LightModeIcon() {
   return (
     <svg
       stroke="currentColor"

@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { X } from 'lucide-react';
-import { JSX } from 'react/jsx-runtime';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { X } from 'lucide-react';
 import { cn } from '~/utils';
 
 const DialogDepthContext = React.createContext(0);
@@ -11,55 +10,47 @@ interface OGDialogProps extends DialogPrimitive.DialogProps {
   triggerRefs?: React.RefObject<HTMLButtonElement | HTMLInputElement | HTMLDivElement | null>[];
 }
 
-const Dialog: React.ForwardRefExoticComponent<OGDialogProps & React.RefAttributes<HTMLDivElement>> =
-  React.forwardRef<HTMLDivElement, OGDialogProps>(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ({ children, triggerRef, triggerRefs, onOpenChange, ...props }, ref) => {
-      const parentDepth = React.useContext(DialogDepthContext);
-      const currentDepth = parentDepth + 1;
+const Dialog = React.forwardRef<HTMLDivElement, OGDialogProps>(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  ({ children, triggerRef, triggerRefs, onOpenChange, ...props }, ref) => {
+    const parentDepth = React.useContext(DialogDepthContext);
+    const currentDepth = parentDepth + 1;
 
-      const handleOpenChange = (open: boolean) => {
-        if (!open && triggerRef?.current) {
-          setTimeout(() => {
-            triggerRef.current?.focus();
-          }, 0);
-        }
-        if (triggerRefs?.length) {
-          triggerRefs.forEach((ref) => {
-            if (ref?.current) {
-              setTimeout(() => {
-                ref.current?.focus();
-              }, 0);
-            }
-          });
-        }
-        onOpenChange?.(open);
-      };
+    const handleOpenChange = (open: boolean) => {
+      if (!open && triggerRef?.current) {
+        setTimeout(() => {
+          triggerRef.current?.focus();
+        }, 0);
+      }
+      if (triggerRefs?.length) {
+        triggerRefs.forEach((ref) => {
+          if (ref?.current) {
+            setTimeout(() => {
+              ref.current?.focus();
+            }, 0);
+          }
+        });
+      }
+      onOpenChange?.(open);
+    };
 
-      return (
-        <DialogDepthContext.Provider value={currentDepth}>
-          <DialogPrimitive.Root {...props} onOpenChange={handleOpenChange}>
-            {children}
-          </DialogPrimitive.Root>
-        </DialogDepthContext.Provider>
-      );
-    },
-  );
+    return (
+      <DialogDepthContext.Provider value={currentDepth}>
+        <DialogPrimitive.Root {...props} onOpenChange={handleOpenChange}>
+          {children}
+        </DialogPrimitive.Root>
+      </DialogDepthContext.Provider>
+    );
+  },
+);
 
-const DialogTrigger: React.ForwardRefExoticComponent<
-  DialogPrimitive.DialogTriggerProps & React.RefAttributes<HTMLButtonElement>
-> = DialogPrimitive.Trigger;
+const DialogTrigger = DialogPrimitive.Trigger;
 
-const DialogPortal: React.FC<DialogPrimitive.DialogPortalProps> = DialogPrimitive.Portal;
+const DialogPortal = DialogPrimitive.Portal;
 
-const DialogClose: React.ForwardRefExoticComponent<
-  DialogPrimitive.DialogCloseProps & React.RefAttributes<HTMLButtonElement>
-> = DialogPrimitive.Close;
+const DialogClose = DialogPrimitive.Close;
 
-export const DialogOverlay: React.ForwardRefExoticComponent<
-  Omit<DialogPrimitive.DialogOverlayProps & React.RefAttributes<HTMLDivElement>, 'ref'> &
-    React.RefAttributes<HTMLDivElement>
-> = React.forwardRef<
+export const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, style, ...props }, ref) => {
@@ -86,13 +77,10 @@ type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.
   overlayClassName?: string;
 };
 
-const DialogContent: React.ForwardRefExoticComponent<
-  Omit<DialogPrimitive.DialogContentProps & React.RefAttributes<HTMLDivElement>, 'ref'> & {
-    showCloseButton?: boolean;
-    disableScroll?: boolean;
-    overlayClassName?: string;
-  } & React.RefAttributes<HTMLDivElement>
-> = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, DialogContentProps>(
+const DialogContent = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Content>,
+  DialogContentProps
+>(
   (
     {
       className,
@@ -173,18 +161,12 @@ const DialogContent: React.ForwardRefExoticComponent<
 );
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
-const DialogHeader: {
-  ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>): JSX.Element;
-  displayName: string;
-} = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>): JSX.Element => (
+const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn('flex flex-col space-y-1.5 text-center sm:text-left', className)} {...props} />
 );
 DialogHeader.displayName = 'DialogHeader';
 
-const DialogFooter: {
-  ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>): JSX.Element;
-  displayName: string;
-} = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>): JSX.Element => (
+const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2', className)}
     {...props}
@@ -192,10 +174,7 @@ const DialogFooter: {
 );
 DialogFooter.displayName = 'DialogFooter';
 
-const DialogTitle: React.ForwardRefExoticComponent<
-  Omit<DialogPrimitive.DialogTitleProps & React.RefAttributes<HTMLHeadingElement>, 'ref'> &
-    React.RefAttributes<HTMLHeadingElement>
-> = React.forwardRef<
+const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
@@ -207,10 +186,7 @@ const DialogTitle: React.ForwardRefExoticComponent<
 ));
 DialogTitle.displayName = DialogPrimitive.Title.displayName;
 
-const DialogDescription: React.ForwardRefExoticComponent<
-  Omit<DialogPrimitive.DialogDescriptionProps & React.RefAttributes<HTMLParagraphElement>, 'ref'> &
-    React.RefAttributes<HTMLParagraphElement>
-> = React.forwardRef<
+const DialogDescription = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (

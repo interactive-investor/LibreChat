@@ -1,7 +1,6 @@
 const { z } = require('zod');
-const { fetch } = require('undici');
+const { ProxyAgent, fetch } = require('undici');
 const { tool } = require('@librechat/agents/langchain/tools');
-const { getEnvProxyDispatcher } = require('@librechat/api');
 const { getApiKey } = require('./credentials');
 
 function createTavilySearchTool(fields = {}) {
@@ -29,9 +28,8 @@ function createTavilySearchTool(fields = {}) {
         body: JSON.stringify(requestBody),
       };
 
-      const dispatcher = getEnvProxyDispatcher();
-      if (dispatcher) {
-        fetchOptions.dispatcher = dispatcher;
+      if (process.env.PROXY) {
+        fetchOptions.dispatcher = new ProxyAgent(process.env.PROXY);
       }
 
       const response = await fetch('https://api.tavily.com/search', fetchOptions);

@@ -1,6 +1,5 @@
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils';
-export default function Blocks({ className = '' }: { className?: string }): JSX.Element {
+export default function Blocks({ className = '' }: { className?: string }) {
   return (
     <svg
       width="24"

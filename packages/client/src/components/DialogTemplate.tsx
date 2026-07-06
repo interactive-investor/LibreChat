@@ -1,4 +1,4 @@
-import { forwardRef, ForwardRefExoticComponent, ReactNode, Ref, RefAttributes } from 'react';
+import { forwardRef, ReactNode, Ref } from 'react';
 import {
   DialogClose,
   DialogContent,
@@ -29,9 +29,7 @@ type DialogTemplateProps = {
   showCancelButton?: boolean;
 };
 
-const DialogTemplate: ForwardRefExoticComponent<
-  DialogTemplateProps & RefAttributes<HTMLDivElement>
-> = forwardRef((props: DialogTemplateProps, ref: Ref<HTMLDivElement>) => {
+const DialogTemplate = forwardRef((props: DialogTemplateProps, ref: Ref<HTMLDivElement>) => {
   const {
     title,
     description,

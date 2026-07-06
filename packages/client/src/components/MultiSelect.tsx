@@ -9,7 +9,6 @@ import {
   SelectProvider,
 } from '@ariakit/react';
 import './AnimatePopover.css';
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils';
 
 type MultiSelectItem<T extends string> = T | { label: string; value: T };
@@ -85,7 +84,7 @@ export default function MultiSelect<T extends string>({
   selectedValues = [],
   setSelectedValues,
   renderItemContent,
-}: MultiSelectProps<T>): JSX.Element {
+}: MultiSelectProps<T>) {
   const selectRef = useRef<HTMLButtonElement>(null);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 

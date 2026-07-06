@@ -1,7 +1,6 @@
 import React from 'react';
-import { JSX } from 'react/jsx-runtime';
 
-export default function SendMessageIcon(): JSX.Element {
+export default function SendMessageIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

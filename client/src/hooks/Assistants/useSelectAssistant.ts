@@ -33,6 +33,7 @@ export default function useSelectAssistant(endpoint: AssistantsEndpoint) {
         newConversation({
           template: currentConvo,
           preset: template as Partial<TPreset>,
+          keepLatestMessage: true,
         });
         return;
       }

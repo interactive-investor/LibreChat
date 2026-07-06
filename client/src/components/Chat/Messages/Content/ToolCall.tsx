@@ -28,7 +28,6 @@ export default function ToolCall({
   attachments,
   auth,
   hideAttachments = false,
-  onExpand,
 }: {
   initialProgress: number;
   isLast?: boolean;
@@ -39,7 +38,6 @@ export default function ToolCall({
   attachments?: TAttachment[];
   auth?: string;
   hideAttachments?: boolean;
-  onExpand?: () => void;
 }) {
   const localize = useLocalize();
   const autoExpand = useRecoilValue(store.autoExpandTools);
@@ -165,16 +163,6 @@ export default function ToolCall({
   const progress = useProgress(initialProgress);
   const showCancelled = cancelled || (errorState && !output);
 
-  const handleToggleInfo = useCallback(() => {
-    setShowInfo((prev) => {
-      const next = !prev;
-      if (next) {
-        onExpand?.();
-      }
-      return next;
-    });
-  }, [onExpand]);
-
   const subtitle = useMemo(() => {
     if (isMCPToolCall && mcpServerName) {
       return localize('com_ui_via_server', { 0: mcpServerName });
@@ -217,7 +205,7 @@ export default function ToolCall({
       <div className="relative my-1.5 flex h-5 shrink-0 items-center gap-2.5">
         <ProgressText
           progress={progress}
-          onClick={handleToggleInfo}
+          onClick={() => setShowInfo((prev) => !prev)}
           inProgressText={
             function_name
               ? localize('com_assistants_running_var', { 0: function_name })

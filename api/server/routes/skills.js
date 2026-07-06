@@ -21,11 +21,14 @@ const {
 const {
   createSkill,
   getSkillById,
+  listSkillsByAccess,
   updateSkill,
   deleteSkill,
+  listSkillFiles,
   upsertSkillFile,
   deleteSkillFile,
   getSkillFileByPath,
+  updateSkillFileContent,
   getRoleByName,
 } = require('~/models');
 const { requireJwtAuth, canAccessSkillResource } = require('~/server/middleware');
@@ -37,14 +40,8 @@ const {
 } = require('~/server/services/PermissionService');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { createFileLimiters } = require('~/server/middleware/limiters/uploadLimiters');
-const { maybeRunGitHubSkillSyncForRequest } = require('~/server/services/Skills/sync');
 const configMiddleware = require('~/server/middleware/config/app');
 const { getFileStrategy } = require('~/server/utils/getFileStrategy');
-const {
-  getSkillDbMethods,
-  withDeploymentSkillIds,
-  getSkillStrategyFunctions,
-} = require('~/server/services/Endpoints/agents/skillDeps');
 
 const router = express.Router();
 
@@ -103,7 +100,6 @@ const checkSkillCreate = generateCheckAccess({
 // Rate limiters (reuse existing file upload limiters)
 // ---------------------------------------------------------------------------
 const { fileUploadIpLimiter, fileUploadUserLimiter } = createFileLimiters();
-const skillDbMethods = getSkillDbMethods();
 
 router.use(requireJwtAuth);
 router.use(configMiddleware);
@@ -114,28 +110,18 @@ router.use(checkSkillAccess);
 // ---------------------------------------------------------------------------
 const handlers = createSkillsHandlers({
   createSkill,
-  getSkillById: skillDbMethods.getSkillById,
-  listSkillsByAccess: skillDbMethods.listSkillsByAccess,
+  getSkillById,
+  listSkillsByAccess,
   updateSkill,
   deleteSkill,
-  listSkillFiles: skillDbMethods.listSkillFiles,
+  listSkillFiles,
   deleteSkillFile,
-  getSkillFileByPath: skillDbMethods.getSkillFileByPath,
-  updateSkillFileContent: skillDbMethods.updateSkillFileContent,
-  getStrategyFunctions: getSkillStrategyFunctions,
-  findAccessibleResources: async (params) =>
-    params.resourceType === 'skill' && params.requiredPermissions === PermissionBits.VIEW
-      ? withDeploymentSkillIds(await findAccessibleResources(params))
-      : findAccessibleResources(params),
-  findPubliclyAccessibleResources: async (params) =>
-    params.resourceType === 'skill' && params.requiredPermissions === PermissionBits.VIEW
-      ? withDeploymentSkillIds(await findPubliclyAccessibleResources(params))
-      : findPubliclyAccessibleResources(params),
-  hasPublicPermission: async (params) =>
-    params.resourceType === 'skill' && params.requiredPermissions === PermissionBits.VIEW
-      ? withDeploymentSkillIds([]).some((id) => id.toString() === params.resourceId.toString()) ||
-        hasPublicPermission(params)
-      : hasPublicPermission(params),
+  getSkillFileByPath,
+  updateSkillFileContent,
+  getStrategyFunctions,
+  findAccessibleResources,
+  findPubliclyAccessibleResources,
+  hasPublicPermission,
   grantPermission,
   isValidObjectIdString,
 });
@@ -286,14 +272,6 @@ async function uploadFileHandler(req, res) {
 // ---------------------------------------------------------------------------
 // Routes
 // ---------------------------------------------------------------------------
-async function maybeStartRequestSkillSync(req, _res, next) {
-  try {
-    await maybeRunGitHubSkillSyncForRequest(req);
-  } catch (error) {
-    logger.error('[GET /skills] Failed to start request-scoped skill sync:', error);
-  }
-  next();
-}
 
 // Import: accepts .md / .zip / .skill via multipart
 router.post(
@@ -306,7 +284,7 @@ router.post(
   importHandler,
 );
 
-router.get('/', maybeStartRequestSkillSync, handlers.list);
+router.get('/', handlers.list);
 router.post('/', checkSkillCreate, handlers.create);
 
 router.get(

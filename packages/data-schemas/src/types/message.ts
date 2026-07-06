@@ -1,5 +1,5 @@
-import type { TFeedbackRating, TFeedbackTag } from 'librechat-data-provider';
 import type { Document } from 'mongoose';
+import type { TFeedbackRating, TFeedbackTag } from 'librechat-data-provider';
 
 // @ts-ignore
 export interface IMessage extends Document {
@@ -18,7 +18,6 @@ export interface IMessage extends Document {
   text?: string;
   summary?: string;
   isCreatedByUser: boolean;
-  isTemporary?: boolean;
   unfinished?: boolean;
   error?: boolean;
   finish_reason?: string;
@@ -54,8 +53,6 @@ export interface IMessage extends Document {
    * the current catalog says.
    */
   alwaysAppliedSkills?: string[];
-  /** Verbatim excerpts the user quoted to reference on this turn. UI-only metadata for `MessageQuotes`. */
-  quotes?: string[];
   expiredAt?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;

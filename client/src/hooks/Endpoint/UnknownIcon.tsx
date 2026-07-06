@@ -4,48 +4,27 @@ import { CustomMinimalIcon, XAIcon, MoonshotIcon } from '@librechat/client';
 import { IconContext } from '~/common';
 import { cn } from '~/utils';
 
-const knownEndpointAssets: Record<string, string> = {
+const knownEndpointAssets = {
   [KnownEndpoints.anyscale]: 'assets/anyscale.png',
   [KnownEndpoints.apipie]: 'assets/apipie.png',
   [KnownEndpoints.cohere]: 'assets/cohere.png',
   [KnownEndpoints.deepseek]: 'assets/deepseek.svg',
   [KnownEndpoints.fireworks]: 'assets/fireworks.png',
-  google: 'assets/google.svg',
+  [KnownEndpoints.google]: 'assets/google.svg',
   [KnownEndpoints.groq]: 'assets/groq.png',
-  [KnownEndpoints.helicone]: 'assets/helicone.svg',
+  [KnownEndpoints.helicone]: 'assets/helicone.png',
   [KnownEndpoints.huggingface]: 'assets/huggingface.svg',
   [KnownEndpoints.mistral]: 'assets/mistral.png',
   [KnownEndpoints.mlx]: 'assets/mlx.png',
   [KnownEndpoints.ollama]: 'assets/ollama.png',
-  openai: 'assets/openai.svg',
+  [KnownEndpoints.openai]: 'assets/openai.svg',
   [KnownEndpoints.openrouter]: 'assets/openrouter.png',
   [KnownEndpoints.perplexity]: 'assets/perplexity.png',
-  qwen: 'assets/qwen.svg',
+  [KnownEndpoints.qwen]: 'assets/qwen.svg',
   [KnownEndpoints.shuttleai]: 'assets/shuttleai.png',
   [KnownEndpoints['together.ai']]: 'assets/together.png',
   [KnownEndpoints.unify]: 'assets/unify.webp',
 };
-
-const knownEndpointComponents = new Set<string>([KnownEndpoints.moonshot, KnownEndpoints.xai]);
-
-export function getKnownEndpointAsset(endpoint?: string | null): string {
-  if (!endpoint) {
-    return '';
-  }
-
-  return knownEndpointAssets[endpoint.toLowerCase()] ?? '';
-}
-
-export function hasKnownEndpointIcon(endpoint?: string | null): boolean {
-  if (!endpoint) {
-    return false;
-  }
-
-  const currentEndpoint = endpoint.toLowerCase();
-  return (
-    getKnownEndpointAsset(currentEndpoint) !== '' || knownEndpointComponents.has(currentEndpoint)
-  );
-}
 
 const knownEndpointClasses = {
   [KnownEndpoints.cohere]: {
@@ -102,7 +81,7 @@ function UnknownIcon({
     return <img className={className} src={iconURL} alt={`${endpoint} Icon`} />;
   }
 
-  const assetPath = getKnownEndpointAsset(currentEndpoint);
+  const assetPath: string = knownEndpointAssets[currentEndpoint] ?? '';
 
   if (!assetPath) {
     return <CustomMinimalIcon className={className} />;

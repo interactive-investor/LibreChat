@@ -406,22 +406,6 @@ const anthropic: Record<string, SettingDefinition> = {
     showDefault: false,
     columnSpan: 2,
   },
-  promptCacheTtl: {
-    key: 'promptCacheTtl',
-    label: 'com_endpoint_prompt_cache_ttl',
-    labelCode: true,
-    description: 'com_endpoint_anthropic_prompt_cache_ttl',
-    descriptionCode: true,
-    type: 'enum',
-    default: anthropicSettings.promptCacheTtl.default,
-    options: ['5m', '1h'],
-    component: 'combobox',
-    optionType: 'conversation',
-    showDefault: false,
-    selectPlaceholder: 'com_endpoint_prompt_cache_ttl_default',
-    selectPlaceholderCode: true,
-    columnSpan: 2,
-  },
   thinking: {
     key: 'thinking',
     label: 'com_endpoint_thinking',
@@ -566,22 +550,6 @@ const bedrock: Record<string, SettingDefinition> = {
     component: 'switch',
     optionType: 'conversation',
     showDefault: false,
-    columnSpan: 2,
-  },
-  promptCacheTtl: {
-    key: 'promptCacheTtl',
-    label: 'com_endpoint_prompt_cache_ttl',
-    labelCode: true,
-    description: 'com_endpoint_anthropic_prompt_cache_ttl',
-    descriptionCode: true,
-    type: 'enum',
-    default: undefined,
-    options: ['5m', '1h'],
-    component: 'combobox',
-    optionType: 'conversation',
-    showDefault: false,
-    selectPlaceholder: 'com_endpoint_prompt_cache_ttl_default',
-    selectPlaceholderCode: true,
     columnSpan: 2,
   },
   reasoning_effort: {
@@ -765,19 +733,6 @@ const google: Record<string, SettingDefinition> = {
     showDefault: false,
     columnSpan: 2,
   },
-  url_context: {
-    key: 'url_context',
-    label: 'com_endpoint_use_url_context',
-    labelCode: true,
-    description: 'com_endpoint_google_use_url_context',
-    descriptionCode: true,
-    type: 'boolean',
-    default: false,
-    component: 'switch',
-    optionType: 'model',
-    showDefault: false,
-    columnSpan: 2,
-  },
 };
 
 const googleConfig: SettingsConfiguration = [
@@ -793,7 +748,6 @@ const googleConfig: SettingsConfiguration = [
   google.thinkingBudget,
   google.thinkingLevel,
   google.web_search,
-  google.url_context,
   librechat.fileTokenLimit,
 ];
 
@@ -814,7 +768,6 @@ const googleCol2: SettingsConfiguration = [
   google.thinkingBudget,
   google.thinkingLevel,
   google.web_search,
-  google.url_context,
   librechat.fileTokenLimit,
 ];
 
@@ -839,11 +792,7 @@ const openAI: SettingsConfiguration = [
   librechat.fileTokenLimit,
 ];
 
-const openRouter: SettingsConfiguration = [
-  ...openAI,
-  anthropic.promptCache,
-  anthropic.promptCacheTtl,
-];
+const openRouter: SettingsConfiguration = [...openAI, anthropic.promptCache];
 
 const openAICol1: SettingsConfiguration = [
   baseDefinitions.model as SettingDefinition,
@@ -880,7 +829,6 @@ const anthropicConfig: SettingsConfiguration = [
   anthropic.topK,
   librechat.resendFiles,
   anthropic.promptCache,
-  anthropic.promptCacheTtl,
   anthropic.thinking,
   anthropic.thinkingBudget,
   anthropic.effort,
@@ -903,7 +851,6 @@ const anthropicCol2: SettingsConfiguration = [
   anthropic.topK,
   librechat.resendFiles,
   anthropic.promptCache,
-  anthropic.promptCacheTtl,
   anthropic.thinking,
   anthropic.thinkingBudget,
   anthropic.effort,
@@ -924,7 +871,6 @@ const bedrockAnthropic: SettingsConfiguration = [
   librechat.resendFiles,
   bedrock.region,
   bedrock.promptCache,
-  bedrock.promptCacheTtl,
   anthropic.thinking,
   anthropic.thinkingBudget,
   anthropic.effort,
@@ -965,7 +911,6 @@ const bedrockGeneral: SettingsConfiguration = [
   librechat.resendFiles,
   bedrock.region,
   bedrock.promptCache,
-  bedrock.promptCacheTtl,
   librechat.fileTokenLimit,
 ];
 
@@ -985,7 +930,6 @@ const bedrockAnthropicCol2: SettingsConfiguration = [
   librechat.resendFiles,
   bedrock.region,
   bedrock.promptCache,
-  bedrock.promptCacheTtl,
   anthropic.thinking,
   anthropic.thinkingBudget,
   anthropic.effort,
@@ -1038,7 +982,6 @@ const bedrockGeneralCol2: SettingsConfiguration = [
   librechat.resendFiles,
   bedrock.region,
   bedrock.promptCache,
-  bedrock.promptCacheTtl,
   librechat.fileTokenLimit,
 ];
 
@@ -1149,7 +1092,7 @@ export const presetSettings: Record<
   [EModelEndpoint.custom]: openAIColumns,
   [Providers.OPENROUTER]: {
     col1: openAICol1,
-    col2: [...openAICol2, anthropic.promptCache, anthropic.promptCacheTtl],
+    col2: [...openAICol2, anthropic.promptCache],
   },
   [EModelEndpoint.anthropic]: {
     col1: anthropicCol1,
@@ -1198,23 +1141,3 @@ export const agentParamSettings: Record<string, SettingsConfiguration | undefine
   }
   return acc;
 }, {});
-
-/**
- * Resolves model-aware defaults for a settings configuration before rendering.
- * Google's `maxOutputTokens` default depends on the selected Gemini model so that
- * current models (2.5 and 3+) surface their 64K output limit instead of the legacy 8K value.
- */
-export function applyModelAwareDefaults(
-  settings: SettingsConfiguration,
-  endpoint: string,
-  model?: string,
-): SettingsConfiguration {
-  if (endpoint !== EModelEndpoint.google || !model) {
-    return settings;
-  }
-  return settings.map((setting) =>
-    setting.key === 'maxOutputTokens'
-      ? { ...setting, default: googleSettings.maxOutputTokens.reset(model) }
-      : setting,
-  );
-}

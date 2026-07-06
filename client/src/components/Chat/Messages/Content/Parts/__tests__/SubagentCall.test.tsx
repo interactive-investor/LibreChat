@@ -1,6 +1,6 @@
 import React from 'react';
 import { RecoilRoot, useRecoilCallback } from 'recoil';
-import { render, screen, act, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
 import type { SubagentUpdateEvent } from 'librechat-data-provider';
 import type {
   SubagentContentPart,
@@ -8,14 +8,15 @@ import type {
   SubagentAggregatorState,
 } from '~/utils/subagentContent';
 import type { SubagentProgress } from '~/store/subagents';
+
 import {
   foldSubagentEvent,
   foldSubagentEventIntoTicker,
   initSubagentAggregatorState,
   initSubagentTickerState,
 } from '~/utils/subagentContent';
-import SubagentCall, { SUBAGENT_TICKER_THROTTLE_MS } from '../SubagentCall';
 import { subagentProgressByToolCallId } from '~/store/subagents';
+import SubagentCall from '../SubagentCall';
 
 jest.mock('~/hooks', () => ({
   useLocalize:
@@ -83,7 +84,6 @@ jest.mock('../Attachment', () => ({
 }));
 
 jest.mock('@librechat/client', () => ({
-  __esModule: true,
   OGDialog: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   OGDialogContent: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dialog-content">{children}</div>
@@ -130,10 +130,6 @@ jest.mock('~/utils', () => ({
   ...jest.requireActual('~/utils/toolLabels'),
   cn: (...classes: unknown[]) => classes.filter(Boolean).join(' '),
 }));
-
-afterEach(() => {
-  jest.useRealTimers();
-});
 
 /** The dialog wraps single parts in `Container` and grouped tool_calls in
  *  `ToolCallGroup`. Stub both as transparent wrappers so the tests still
@@ -233,20 +229,10 @@ function renderWithState(args: {
       />
     </RecoilRoot>,
   );
-  const setProgress = (next: SubagentProgress | null) => {
-    act(() => {
-      setter.current?.(next);
-    });
-  };
-  setProgress(args.progress ?? null);
-  return { ...rendered, setProgress };
-}
-
-/** Open the subagent dialog. Required when another test file in the same Jest
- *  worker has already loaded the real `@librechat/client` module; Radix only
- *  mounts dialog content while `open` is true. */
-function openSubagentDialog(headerLabel = 'Ran agent') {
-  fireEvent.click(screen.getByRole('button', { name: headerLabel }));
+  act(() => {
+    setter.current?.(args.progress ?? null);
+  });
+  return rendered;
 }
 
 describe('SubagentCall — status resolution', () => {
@@ -457,52 +443,6 @@ describe('SubagentCall — ticker', () => {
     /** Only one "Writing:" label, not three — deltas collapse into one live line. */
     expect(screen.getAllByText('Writing:')).toHaveLength(1);
   });
-
-  it('refreshes long live previews after the subagent ticker throttle window', () => {
-    jest.useFakeTimers();
-    const firstPreview = 'First live preview '.repeat(8).trim();
-    const secondPreview = 'Second live preview '.repeat(8).trim();
-    const eventForText = (text: string): SubagentUpdateEvent => ({
-      runId: 'p',
-      subagentRunId: 'run_a',
-      subagentType: 'self',
-      subagentAgentId: 'child',
-      phase: 'message_delta',
-      data: { delta: { content: [{ type: 'text', text }] } },
-      timestamp: '',
-    });
-    const progressForText = (text: string): SubagentProgress =>
-      progressFromEvents({
-        subagentRunId: 'run_a',
-        subagentType: 'self',
-        status: 'message_delta',
-        events: [eventForText(text)],
-      });
-
-    const { setProgress } = renderWithState({
-      toolCallId: 'call_throttled_writing',
-      initialProgress: 0.3,
-      isSubmitting: true,
-      progress: progressForText(firstPreview),
-    });
-    const ticker = within(screen.getByRole('button', { name: 'Running agent' }));
-
-    expect(ticker.getByText(firstPreview)).toBeInTheDocument();
-    setProgress(progressForText(secondPreview));
-    expect(ticker.getByText(firstPreview)).toBeInTheDocument();
-    expect(ticker.queryByText(secondPreview)).not.toBeInTheDocument();
-
-    act(() => {
-      jest.advanceTimersByTime(SUBAGENT_TICKER_THROTTLE_MS - 1);
-    });
-    expect(ticker.getByText(firstPreview)).toBeInTheDocument();
-    expect(ticker.queryByText(secondPreview)).not.toBeInTheDocument();
-
-    act(() => {
-      jest.advanceTimersByTime(1);
-    });
-    expect(ticker.getByText(secondPreview)).toBeInTheDocument();
-  });
 });
 
 describe('SubagentCall — dialog content', () => {
@@ -522,7 +462,6 @@ describe('SubagentCall — dialog content', () => {
       </RecoilRoot>,
     );
 
-    openSubagentDialog();
     expect(screen.getByTestId('prompt-markdown')).toHaveTextContent('# Review prompt');
     expect(screen.getByText('final answer')).toBeInTheDocument();
 
@@ -598,7 +537,8 @@ describe('SubagentCall — dialog content', () => {
       }),
     });
 
-    openSubagentDialog();
+    /** The mocked `OGDialog` always renders children, so dialog content is
+     *  inspectable without simulating a click. */
     expect(screen.getByTestId('reasoning-part')).toHaveTextContent('Let me compute.');
     expect(screen.getByTestId('tool-call-part')).toHaveAttribute('data-name', 'calculator');
     expect(screen.getByTestId('tool-call-part')).toHaveTextContent('4');
@@ -606,9 +546,15 @@ describe('SubagentCall — dialog content', () => {
   });
 
   it('falls back to the raw tool output when no content parts were recorded', () => {
+    renderWithState({
+      toolCallId: 'call_fallback',
+      initialProgress: 1,
+      isSubmitting: false,
+      progress: null,
+    });
     /** No events → no aggregated parts. The SubagentCall should still
      *  render the raw final `output` that came back in the parent's
-     *  tool_call. */
+     *  tool_call (we pass it explicitly below). */
     const { rerender } = render(
       <RecoilRoot>
         <SubagentCall
@@ -619,9 +565,8 @@ describe('SubagentCall — dialog content', () => {
         />
       </RecoilRoot>,
     );
-    openSubagentDialog();
     expect(screen.getByText('raw final text')).toBeInTheDocument();
-    rerender(<RecoilRoot>{null}</RecoilRoot>);
+    rerender(<RecoilRoot />);
   });
 
   it('renders persistedContent parts when no live events are available (page-refresh flow)', () => {
@@ -659,7 +604,6 @@ describe('SubagentCall — dialog content', () => {
       </RecoilRoot>,
     );
 
-    openSubagentDialog();
     expect(screen.getByTestId('reasoning-part')).toHaveTextContent('Prior thinking.');
     expect(screen.getByTestId('tool-call-part')).toHaveAttribute('data-name', 'calculator');
     expect(screen.getByTestId('tool-call-part')).toHaveTextContent('2436');
@@ -693,7 +637,6 @@ describe('SubagentCall — dialog content', () => {
         />
       </RecoilRoot>,
     );
-    openSubagentDialog();
     expect(screen.getByText('Persisted answer.')).toBeInTheDocument();
   });
 

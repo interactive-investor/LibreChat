@@ -1,7 +1,6 @@
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils';
 
-export default function CheckMark({ className = '' }: { className?: string }): JSX.Element {
+export default function CheckMark({ className = '' }: { className?: string }) {
   return (
     <svg
       fill="none"

@@ -1,6 +1,6 @@
-import { logger } from '@librechat/data-schemas';
 import type { Request, Response } from 'express';
 import type { Types } from 'mongoose';
+import { logger } from '@librechat/data-schemas';
 
 export interface ApiKeyHandlerDependencies {
   createAgentApiKey: (params: {
@@ -49,16 +49,8 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
-export function createApiKeyHandlers(deps: ApiKeyHandlerDependencies): {
-  createApiKey: (req: AuthenticatedRequest, res: Response) => Promise<Response | undefined>;
-  listApiKeys: (req: AuthenticatedRequest, res: Response) => Promise<void>;
-  getApiKey: (req: AuthenticatedRequest, res: Response) => Promise<Response | undefined>;
-  deleteApiKey: (req: AuthenticatedRequest, res: Response) => Promise<Response | undefined>;
-} {
-  async function createApiKey(
-    req: AuthenticatedRequest,
-    res: Response,
-  ): Promise<Response | undefined> {
+export function createApiKeyHandlers(deps: ApiKeyHandlerDependencies) {
+  async function createApiKey(req: AuthenticatedRequest, res: Response) {
     try {
       const { name, expiresAt } = req.body;
 
@@ -88,7 +80,7 @@ export function createApiKeyHandlers(deps: ApiKeyHandlerDependencies): {
     }
   }
 
-  async function listApiKeys(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async function listApiKeys(req: AuthenticatedRequest, res: Response) {
     try {
       const keys = await deps.listAgentApiKeys(req.user?.id || '');
       res.status(200).json({ keys });
@@ -98,10 +90,7 @@ export function createApiKeyHandlers(deps: ApiKeyHandlerDependencies): {
     }
   }
 
-  async function getApiKey(
-    req: AuthenticatedRequest,
-    res: Response,
-  ): Promise<Response | undefined> {
+  async function getApiKey(req: AuthenticatedRequest, res: Response) {
     try {
       const key = await deps.getAgentApiKeyById(req.params.id, req.user?.id || '');
 
@@ -116,10 +105,7 @@ export function createApiKeyHandlers(deps: ApiKeyHandlerDependencies): {
     }
   }
 
-  async function deleteApiKey(
-    req: AuthenticatedRequest,
-    res: Response,
-  ): Promise<Response | undefined> {
+  async function deleteApiKey(req: AuthenticatedRequest, res: Response) {
     try {
       const deleted = await deps.deleteAgentApiKey(req.params.id, req.user?.id || '');
 

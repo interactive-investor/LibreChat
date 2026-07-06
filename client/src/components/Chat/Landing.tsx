@@ -3,18 +3,11 @@ import { easings } from '@react-spring/web';
 import { EModelEndpoint } from 'librechat-data-provider';
 import { BirthdayIcon, TooltipAnchor, SplitText } from '@librechat/client';
 import { Pin, PinOff } from 'lucide-react';
-import {
-  getIconEndpoint,
-  getEntity,
-  getModelSpec,
-  createConfigHtmlSanitizer,
-  CONFIG_HTML_MEDIA_TAGS,
-  CONFIG_HTML_MEDIA_ATTR,
-} from '~/utils';
 import { useChatContext, useAgentsMapContext, useAssistantsMapContext } from '~/Providers';
 import { useGetEndpointsQuery, useGetStartupConfig } from '~/data-provider';
 import ConvoIcon from '~/components/Endpoints/ConvoIcon';
 import { useLocalize, useAuthContext, useFavorites } from '~/hooks';
+import { getIconEndpoint, getEntity } from '~/utils';
 
 const containerClassName =
   'shadow-stroke relative flex h-full items-center justify-center rounded-full bg-white dark:bg-presentation dark:text-white text-black dark:after:shadow-none ';
@@ -78,26 +71,8 @@ export default function Landing({ centerFormOnLanding }: { centerFormOnLanding: 
     }
   }, [agentId, toggleFavoriteAgent]);
 
-  const modelSpec = useMemo(
-    () => getModelSpec({ specName: conversation?.spec, startupConfig }),
-    [conversation?.spec, startupConfig],
-  );
-
-  const brandedSpecLabel = modelSpec?.showOnLanding ? modelSpec.label : '';
-  const brandedSpecDescription = (modelSpec?.showOnLanding && modelSpec.description) || '';
-  const name = entity?.name ?? brandedSpecLabel;
-  const description =
-    (entity?.description || brandedSpecDescription || conversation?.greeting) ?? '';
-  const descriptionIsHTML = description.trim().startsWith('<');
-
-  const sanitizeDescription = useMemo(
-    () =>
-      createConfigHtmlSanitizer({
-        allowedTags: CONFIG_HTML_MEDIA_TAGS,
-        allowedAttr: CONFIG_HTML_MEDIA_ATTR,
-      }),
-    [],
-  );
+  const name = entity?.name ?? '';
+  const description = (entity?.description || conversation?.greeting) ?? '';
 
   const getGreeting = useCallback(() => {
     if (typeof startupConfig?.interface?.customWelcome === 'string') {
@@ -250,17 +225,11 @@ export default function Landing({ centerFormOnLanding }: { centerFormOnLanding: 
             />
           )}
         </div>
-        {description &&
-          (descriptionIsHTML ? (
-            <div
-              className="animate-fadeIn mt-4 flex max-w-md items-center justify-center gap-2 text-center text-sm font-normal text-text-primary [&_img]:inline-block [&_img]:h-4 [&_img]:w-4"
-              dangerouslySetInnerHTML={{ __html: sanitizeDescription(description) }}
-            />
-          ) : (
-            <div className="animate-fadeIn mt-4 max-w-md text-center text-sm font-normal text-text-primary">
-              {description}
-            </div>
-          ))}
+        {description && (
+          <div className="animate-fadeIn mt-4 max-w-md text-center text-sm font-normal text-text-primary">
+            {description}
+          </div>
+        )}
       </div>
     </div>
   );

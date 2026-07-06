@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { replaceSpecialVars } from 'librechat-data-provider';
 import { useChatContext, useChatFormContext, useAddedChatContext } from '~/Providers';
-import { useLatestMessage } from '~/hooks/Messages/useLatestMessage';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { mainTextareaId } from '~/common';
 import store from '~/store';
@@ -12,7 +11,7 @@ export default function useSubmitMessage() {
   const methods = useChatFormContext();
   const { conversation: addedConvo } = useAddedChatContext();
   const { ask, index, getMessages, setMessages } = useChatContext();
-  const latestMessage = useLatestMessage(index);
+  const latestMessage = useRecoilValue(store.latestMessageFamily(index));
 
   const autoSendPrompts = useRecoilValue(store.autoSendPrompts);
   const setActivePrompt = useSetRecoilState(store.activePromptByIndex(index));
@@ -30,7 +29,7 @@ export default function useSubmitMessage() {
         setMessages([...(rootMessages || []), latestMessage]);
       }
 
-      const submitted = ask(
+      ask(
         {
           text: data.text,
         },
@@ -38,9 +37,6 @@ export default function useSubmitMessage() {
           addedConvo: addedConvo ?? undefined,
         },
       );
-      if (submitted === false) {
-        return false;
-      }
       methods.reset();
     },
     [ask, methods, addedConvo, setMessages, getMessages, latestMessage],

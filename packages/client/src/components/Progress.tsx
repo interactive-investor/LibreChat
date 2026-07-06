@@ -2,10 +2,7 @@ import * as React from 'react';
 import * as ProgressPrimitive from '@radix-ui/react-progress';
 import { cn } from '~/utils';
 
-const Progress: React.ForwardRefExoticComponent<
-  Omit<ProgressPrimitive.ProgressProps & React.RefAttributes<HTMLDivElement>, 'ref'> &
-    React.RefAttributes<HTMLDivElement>
-> = React.forwardRef<
+const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
 >(({ className, value, ...props }, ref) => (

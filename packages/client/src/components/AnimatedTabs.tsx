@@ -1,9 +1,8 @@
-import { forwardRef, useEffect, useRef } from 'react';
 import * as Ariakit from '@ariakit/react';
+import { forwardRef, useEffect, useRef } from 'react';
 import type { ElementRef } from 'react';
 import { cn } from '~/utils';
 import './AnimatedTabs.css';
-import { JSX } from 'react/jsx-runtime';
 
 export interface TabItem {
   id?: string;
@@ -90,7 +89,7 @@ export function AnimatedTabs({
   containerClassName = '',
   tabListProps = {},
   defaultSelectedId,
-}: AnimatedTabsProps): JSX.Element {
+}: AnimatedTabsProps) {
   const tabIds = tabs.map((tab, index) => tab.id || `tab-${index}`);
   const firstTabId = defaultSelectedId || tabIds[0];
   const tabListRef = useRef<HTMLDivElement | null>(null);

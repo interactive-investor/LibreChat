@@ -4,7 +4,7 @@ import type {
   SandpackProviderProps,
   SandpackPreviewRef,
 } from '@codesandbox/sandpack-react/unstyled';
-import type { SandpackStartupConfig } from '~/utils/artifacts';
+import type { TStartupConfig } from 'librechat-data-provider';
 import type { ArtifactFiles } from '~/common';
 import { sharedFiles, buildSandpackOptions } from '~/utils/artifacts';
 
@@ -23,7 +23,7 @@ export const ArtifactPreview = memo(function ({
   sharedProps: Partial<SandpackProviderProps>;
   previewRef: MutableRefObject<SandpackPreviewRef>;
   currentCode?: string;
-  startupConfig?: SandpackStartupConfig;
+  startupConfig?: TStartupConfig;
 }) {
   const artifactFiles = useMemo(() => {
     if (Object.keys(files).length === 0) {

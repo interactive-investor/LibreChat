@@ -10,11 +10,7 @@ import { getModelSpec, applyModelSpecEphemeralAgent } from '~/utils';
  *
  * When a spec is provided, its tool settings are applied to the ephemeral agent.
  * When no spec is provided but specs are configured, the ephemeral agent is reset
- * to null on context transitions (leaving a spec, or moving to a different
- * conversation key) so BadgeRowContext refills values from localStorage — both
- * transitions re-trigger its init effect. In-place switches (same conversation,
- * non-spec → non-spec) keep the ephemeral agent state (e.g. MCP selections),
- * since no refill would follow the reset.
+ * to null so BadgeRowContext can apply localStorage defaults (non-spec experience).
  */
 export function useApplyModelSpecEffects() {
   const updateEphemeralAgent = useUpdateEphemeralAgent();
@@ -22,25 +18,17 @@ export function useApplyModelSpecEffects() {
     ({
       convoId,
       specName,
-      prevConvoId,
-      prevSpecName,
       startupConfig,
     }: {
       convoId: string | null;
       specName?: string | null;
-      prevConvoId?: string | null;
-      prevSpecName?: string | null;
       startupConfig?: TStartupConfig;
     }) => {
       if (specName == null || !specName) {
-        if (!startupConfig?.modelSpecs?.list?.length) {
-          return;
-        }
-        const targetId = (convoId ?? Constants.NEW_CONVO) || Constants.NEW_CONVO;
-        const sourceId = (prevConvoId ?? Constants.NEW_CONVO) || Constants.NEW_CONVO;
-        const isContextSwitch = Boolean(prevSpecName) || targetId !== sourceId;
-        if (isContextSwitch) {
-          updateEphemeralAgent(targetId, null);
+        if (startupConfig?.modelSpecs?.list?.length) {
+          /** Specs are configured but none selected — reset ephemeral agent to null
+           *  so BadgeRowContext fills all values (tool toggles + MCP) from localStorage. */
+          updateEphemeralAgent((convoId ?? Constants.NEW_CONVO) || Constants.NEW_CONVO, null);
         }
         return;
       }

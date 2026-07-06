@@ -5,6 +5,19 @@ import {
   PrincipalType,
   PermissionBits,
 } from 'librechat-data-provider';
+import type { Response } from 'express';
+import type { Types } from 'mongoose';
+import type {
+  ISkill,
+  ISkillFile,
+  ISkillSummary,
+  CreateSkillInput,
+  CreateSkillResult,
+  UpdateSkillInput,
+  ListSkillsByAccessResult,
+  UpdateSkillResult,
+  ValidationIssue,
+} from '@librechat/data-schemas';
 import type {
   TSkill,
   TSkillFile,
@@ -18,19 +31,6 @@ import type {
   TSkillConflictResponse,
   TSkillFileContentResponse,
 } from 'librechat-data-provider';
-import type {
-  ISkill,
-  ISkillFile,
-  ISkillSummary,
-  CreateSkillInput,
-  CreateSkillResult,
-  UpdateSkillInput,
-  ListSkillsByAccessResult,
-  UpdateSkillResult,
-  ValidationIssue,
-} from '@librechat/data-schemas';
-import type { Response } from 'express';
-import type { Types } from 'mongoose';
 import type { ServerRequest, StrategyFunctions } from '~/types';
 import { isBinaryBuffer } from './binary';
 
@@ -206,7 +206,6 @@ function serializeSkillFile(file: ISkillFile & { _id: Types.ObjectId }): TSkillF
     storageKey: file.storageKey,
     storageRegion: file.storageRegion,
     source: file.source as TSkillFile['source'],
-    sourceMetadata: file.sourceMetadata as TSkillFile['sourceMetadata'],
     mimeType: file.mimeType,
     bytes: file.bytes,
     category: file.category,
@@ -269,16 +268,7 @@ function parseLimit(raw: unknown): number {
  * deps from `~/models` + `PermissionService`, and wires the returned handlers
  * onto the Express router.
  */
-export function createSkillsHandlers(deps: SkillsHandlersDeps): {
-  list: (req: ServerRequest, res: Response) => Promise<Response>;
-  create: (req: ServerRequest, res: Response) => Promise<Response>;
-  get: (req: ServerRequest, res: Response) => Promise<Response>;
-  patch: (req: ServerRequest, res: Response) => Promise<Response>;
-  delete: (req: ServerRequest, res: Response) => Promise<Response>;
-  listFiles: (req: ServerRequest, res: Response) => Promise<Response>;
-  downloadFile: (req: ServerRequest, res: Response) => Promise<Response | undefined>;
-  deleteFile: (req: ServerRequest, res: Response) => Promise<Response>;
-} {
+export function createSkillsHandlers(deps: SkillsHandlersDeps) {
   const {
     createSkill,
     getSkillById,

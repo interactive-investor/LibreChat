@@ -1,7 +1,6 @@
 import { expect } from '@playwright/test';
-import type { MCPServersRegistry as MCPServersRegistryType } from '../MCPServersRegistry';
 import type * as t from '~/mcp/types';
-import { closeRedisClients } from '~/cache/__tests__/redisClients.helper';
+import type { MCPServersRegistry as MCPServersRegistryType } from '../MCPServersRegistry';
 
 // Mock ServerConfigsDB to avoid needing MongoDB for cache integration tests
 jest.mock('../db/ServerConfigsDB', () => ({
@@ -138,8 +137,8 @@ describe('MCPServersRegistry Redis Integration Tests', () => {
     // Resign as leader
     if (leaderInstance) await leaderInstance.resign();
 
-    // Close both Redis clients created by the module import
-    await closeRedisClients();
+    // Close Redis connection
+    if (keyvRedisClient?.isOpen) await keyvRedisClient.disconnect();
   });
 
   // Tests for the old privateServersCache API have been removed

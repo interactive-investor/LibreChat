@@ -1,11 +1,6 @@
 import React from 'react';
-import { JSX } from 'react/jsx-runtime';
 
-export default function XAIcon({
-  className = '',
-}: {
-  className?: string | undefined;
-}): JSX.Element {
+export default function XAIcon({ className = '' }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

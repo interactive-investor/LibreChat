@@ -20,7 +20,6 @@ export default function BashCall({
   attachments,
   commandField = 'command',
   hideAttachments = false,
-  onExpand,
 }: {
   initialProgress: number;
   isSubmitting: boolean;
@@ -29,14 +28,13 @@ export default function BashCall({
   attachments?: TAttachment[];
   commandField?: string;
   hideAttachments?: boolean;
-  onExpand?: () => void;
 }) {
   const localize = useLocalize();
   const command = useMemo(() => parseJsonField(args, commandField), [args, commandField]);
   const isWritingCommand = !command || !areToolCallArgsComplete(args);
 
   const { showCode, toggleCode, expandStyle, expandRef, progress, cancelled, hasError, hasOutput } =
-    useToolCallState(initialProgress, isSubmitting, output, !!command, onExpand);
+    useToolCallState(initialProgress, isSubmitting, output, !!command);
 
   const highlighted = useLazyHighlight(command || undefined, 'bash');
   const outputHasError = useMemo(() => ERROR_PATTERNS.test(output), [output]);

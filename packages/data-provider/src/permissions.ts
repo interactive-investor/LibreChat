@@ -64,10 +64,6 @@ export enum PermissionTypes {
    * Type for Skill Permissions
    */
   SKILLS = 'SKILLS',
-  /**
-   * Type for Shared Link Permissions
-   */
-  SHARED_LINKS = 'SHARED_LINKS',
 }
 
 /**
@@ -91,7 +87,6 @@ export const PERMISSION_TYPE_INTERFACE_FIELDS: Record<PermissionTypes, string> =
   [PermissionTypes.MCP_SERVERS]: 'mcpServers',
   [PermissionTypes.REMOTE_AGENTS]: 'remoteAgents',
   [PermissionTypes.SKILLS]: 'skills',
-  [PermissionTypes.SHARED_LINKS]: 'sharedLinks',
 };
 
 /** Set of interface config field names that correspond to role permissions. */
@@ -103,14 +98,13 @@ export const INTERFACE_PERMISSION_FIELDS = new Set(Object.values(PERMISSION_TYPE
  * DB overrides — other sub-keys (like `placeholder`, `trustCheckbox`) are UI-only and pass through.
  *
  * Mapping to Permissions enum:
- *   'use'           → Permissions.USE       (agents, prompts, mcpServers, remoteAgents, marketplace)
- *   'create'        → Permissions.CREATE    (agents, prompts, mcpServers, remoteAgents)
- *   'share'         → Permissions.SHARE     (agents, prompts, mcpServers, remoteAgents)
- *   'public'        → Permissions.SHARE_PUBLIC (agents, prompts, mcpServers, remoteAgents)
- *   'users'         → Permissions.VIEW_USERS   (peoplePicker only)
- *   'groups'        → Permissions.VIEW_GROUPS  (peoplePicker only)
- *   'roles'         → Permissions.VIEW_ROLES   (peoplePicker only)
- *   'configureObo'  → Permissions.CONFIGURE_OBO (mcpServers only)
+ *   'use'    → Permissions.USE       (agents, prompts, mcpServers, remoteAgents, marketplace)
+ *   'create' → Permissions.CREATE    (agents, prompts, mcpServers, remoteAgents)
+ *   'share'  → Permissions.SHARE     (agents, prompts, mcpServers, remoteAgents)
+ *   'public' → Permissions.SHARE_PUBLIC (agents, prompts, mcpServers, remoteAgents)
+ *   'users'  → Permissions.VIEW_USERS   (peoplePicker only)
+ *   'groups' → Permissions.VIEW_GROUPS  (peoplePicker only)
+ *   'roles'  → Permissions.VIEW_ROLES   (peoplePicker only)
  */
 export const PERMISSION_SUB_KEYS = new Set([
   'use',
@@ -120,7 +114,6 @@ export const PERMISSION_SUB_KEYS = new Set([
   'users',
   'groups',
   'roles',
-  'configureObo',
 ]);
 
 /**
@@ -140,12 +133,6 @@ export enum Permissions {
   VIEW_ROLES = 'VIEW_ROLES',
   /** Can share resources publicly (with everyone) */
   SHARE_PUBLIC = 'SHARE_PUBLIC',
-  /**
-   * Can configure MCP server On-Behalf-Of (OBO) token exchange. Gates the
-   * `obo` field on MCP server configs because OBO silently mints and forwards
-   * per-user delegated tokens to whatever URL the server points at.
-   */
-  CONFIGURE_OBO = 'CONFIGURE_OBO',
 }
 
 export const promptPermissionsSchema = z.object({
@@ -225,7 +212,6 @@ export const mcpServersPermissionsSchema = z.object({
   [Permissions.CREATE]: z.boolean().default(true),
   [Permissions.SHARE]: z.boolean().default(false),
   [Permissions.SHARE_PUBLIC]: z.boolean().default(false),
-  [Permissions.CONFIGURE_OBO]: z.boolean().default(false),
 });
 export type TMcpServersPermissions = z.infer<typeof mcpServersPermissionsSchema>;
 
@@ -245,13 +231,6 @@ export const skillPermissionsSchema = z.object({
 });
 export type TSkillPermissions = z.infer<typeof skillPermissionsSchema>;
 
-export const sharedLinksPermissionsSchema = z.object({
-  [Permissions.CREATE]: z.boolean().default(true),
-  [Permissions.SHARE]: z.boolean().default(true),
-  [Permissions.SHARE_PUBLIC]: z.boolean().default(false),
-});
-export type TSharedLinksPermissions = z.infer<typeof sharedLinksPermissionsSchema>;
-
 // Define a single permissions schema that holds all permission types.
 export const permissionsSchema = z.object({
   [PermissionTypes.PROMPTS]: promptPermissionsSchema,
@@ -269,5 +248,4 @@ export const permissionsSchema = z.object({
   [PermissionTypes.MCP_SERVERS]: mcpServersPermissionsSchema,
   [PermissionTypes.REMOTE_AGENTS]: remoteAgentsPermissionsSchema,
   [PermissionTypes.SKILLS]: skillPermissionsSchema,
-  [PermissionTypes.SHARED_LINKS]: sharedLinksPermissionsSchema,
 });

@@ -1,4 +1,4 @@
-import { DEFAULT_MEMORY_MAX_INPUT_TOKENS, memorySchema } from 'librechat-data-provider';
+import { memorySchema } from 'librechat-data-provider';
 
 import type { TCustomConfig, TMemoryConfig } from 'librechat-data-provider';
 
@@ -23,11 +23,8 @@ export function loadMemoryConfig(config: TCustomConfig['memory']): TMemoryConfig
   }
 
   const charLimit = memorySchema.shape.charLimit.safeParse(config.charLimit).data ?? 10000;
-  const maxInputTokens =
-    memorySchema.shape.maxInputTokens.safeParse(config.maxInputTokens).data ??
-    DEFAULT_MEMORY_MAX_INPUT_TOKENS;
 
-  return { ...config, charLimit, maxInputTokens };
+  return { ...config, charLimit };
 }
 
 export function isMemoryEnabled(config: TMemoryConfig | undefined): boolean {

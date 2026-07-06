@@ -1,13 +1,6 @@
-import {
-  memo,
-  forwardRef,
-  useCallback,
-  useMemo,
-  RefAttributes,
-  ForwardRefExoticComponent,
-} from 'react';
 import DOMPurify from 'dompurify';
 import * as Ariakit from '@ariakit/react';
+import { memo, forwardRef, useCallback, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '~/utils';
 import './Tooltip.css';
@@ -111,9 +104,7 @@ const TooltipPopup = memo(function TooltipPopup({
   );
 });
 
-export const TooltipAnchor: ForwardRefExoticComponent<
-  Omit<TooltipAnchorProps, 'ref'> & RefAttributes<HTMLDivElement>
-> = forwardRef<HTMLDivElement, TooltipAnchorProps>(function TooltipAnchor(
+export const TooltipAnchor = forwardRef<HTMLDivElement, TooltipAnchorProps>(function TooltipAnchor(
   { description, side = 'top', className, role, enableHTML = false, ...props },
   ref,
 ) {

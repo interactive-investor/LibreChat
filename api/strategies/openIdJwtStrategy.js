@@ -1,6 +1,7 @@
 const cookies = require('cookie');
 const jwksRsa = require('jwks-rsa');
 const { logger } = require('@librechat/data-schemas');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 const { SystemRoles } = require('librechat-data-provider');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const {
@@ -9,17 +10,12 @@ const {
   getOpenIdEmail,
   getOpenIdIssuer,
   normalizeOpenIdIssuer,
-  getHttpsProxyAgent,
   math,
 } = require('@librechat/api');
 const { updateUser, findUser } = require('~/models');
 
 const getOpenIdJwtAudience = () => {
-  const parsedAudience = (process.env.OPENID_AUDIENCE ?? '')
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean);
-  const audiences = [process.env.OPENID_CLIENT_ID, ...parsedAudience].filter(Boolean);
+  const audiences = [process.env.OPENID_CLIENT_ID, process.env.OPENID_AUDIENCE].filter(Boolean);
   const uniqueAudiences = [...new Set(audiences)];
 
   return uniqueAudiences.length > 1 ? uniqueAudiences : uniqueAudiences[0];
@@ -73,9 +69,8 @@ const openIdJwtLogin = (openIdConfig) => {
     jwksUri: openIdConfig.serverMetadata().jwks_uri,
   };
 
-  const requestAgent = getHttpsProxyAgent(jwksRsaOptions.jwksUri);
-  if (requestAgent) {
-    jwksRsaOptions.requestAgent = requestAgent;
+  if (process.env.PROXY) {
+    jwksRsaOptions.requestAgent = new HttpsProxyAgent(process.env.PROXY);
   }
 
   return new JwtStrategy(

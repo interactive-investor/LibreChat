@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-namespace */
-import type { FunctionToolCall, SummaryContentPart } from './assistants';
-import type { TTokenUsageEvent, TContextUsageEvent } from './runs';
-import type { TAttachment, TPlugin } from 'src/schemas';
 import { StepTypes, ContentTypes, ToolCallTypes } from './runs';
+import type { FunctionToolCall, SummaryContentPart } from './assistants';
+import type { TAttachment, TPlugin } from 'src/schemas';
 
 export namespace Agents {
   export type MessageType = 'human' | 'ai' | 'generic' | 'system' | 'function' | 'tool' | 'remove';
@@ -218,24 +217,6 @@ export namespace Agents {
     responseMessageId?: string;
     conversationId?: string;
     sender?: string;
-    iconURL?: string;
-    model?: string;
-    titleEvent?: {
-      event: 'title';
-      data?: {
-        conversationId?: string;
-        title?: string;
-      };
-    };
-    replayEvents?: Array<{
-      event: string;
-      data?: unknown;
-      [key: string]: unknown;
-    }>;
-    /** Cumulative provider-reported usage for the run; backfills usage totals on resume */
-    collectedUsage?: TTokenUsageEvent[];
-    /** Latest context window snapshot; restores the usage gauge on resume */
-    contextUsage?: TContextUsageEvent;
   }
   /**
    * Represents a run step delta i.e. any changed fields on a run step during

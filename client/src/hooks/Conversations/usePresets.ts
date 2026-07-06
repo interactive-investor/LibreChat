@@ -218,6 +218,7 @@ export default function usePresets(index = 0) {
       newConversation({
         template: currentConvo,
         preset: currentConvo,
+        keepLatestMessage: true,
         keepAddedConvos: true,
         disableParams,
       });

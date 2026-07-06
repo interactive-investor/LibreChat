@@ -1,33 +1,25 @@
 import {
-  AuthType,
   EModelEndpoint,
   isAgentsEndpoint,
   orderEndpointsConfig,
   defaultAgentCapabilities,
 } from 'librechat-data-provider';
-import type { AgentCapabilities, TEndpointsConfig, TConfig } from 'librechat-data-provider';
 import type { AppConfig } from '@librechat/data-schemas';
+import type { AgentCapabilities, TEndpointsConfig, TConfig } from 'librechat-data-provider';
 import type { ServerRequest, TCustomEndpointsConfig } from '~/types';
 import { loadCustomEndpointsConfig as defaultLoadCustomEndpoints } from '~/endpoints/custom';
 
-type PartialEndpointEntry = Partial<TConfig> & Record<string, unknown>;
+type PartialEndpointEntry = Partial<TConfig>;
 type DefaultEndpointsResult = Record<string, PartialEndpointEntry | false | null>;
 type MutableEndpointsConfig = Record<string, PartialEndpointEntry | false | null | undefined>;
 
 export interface EndpointsConfigDeps {
-  getAppConfig: (params: {
-    role?: string;
-    userId?: string;
-    tenantId?: string;
-  }) => Promise<AppConfig>;
+  getAppConfig: (params: { role?: string | null; tenantId?: string }) => Promise<AppConfig>;
   loadDefaultEndpointsConfig: (appConfig: AppConfig) => Promise<DefaultEndpointsResult>;
   loadCustomEndpointsConfig?: (custom: unknown) => TCustomEndpointsConfig | undefined;
 }
 
-export function createEndpointsConfigService(deps: EndpointsConfigDeps): {
-  getEndpointsConfig: (req: ServerRequest) => Promise<TEndpointsConfig>;
-  checkCapability: (req: ServerRequest, capability: AgentCapabilities) => Promise<boolean>;
-} {
+export function createEndpointsConfigService(deps: EndpointsConfigDeps) {
   const {
     getAppConfig,
     loadDefaultEndpointsConfig,
@@ -36,12 +28,7 @@ export function createEndpointsConfigService(deps: EndpointsConfigDeps): {
 
   async function getEndpointsConfig(req: ServerRequest): Promise<TEndpointsConfig> {
     const appConfig =
-      req.config ??
-      (await getAppConfig({
-        role: req.user?.role,
-        userId: req.user?.id,
-        tenantId: req.user?.tenantId,
-      }));
+      req.config ?? (await getAppConfig({ role: req.user?.role, tenantId: req.user?.tenantId }));
     const defaultEndpointsConfig = await loadDefaultEndpointsConfig(appConfig);
     const customEndpointsConfig = loadCustomEndpointsConfig(appConfig?.endpoints?.custom);
 
@@ -110,17 +97,6 @@ export function createEndpointsConfigService(deps: EndpointsConfigDeps): {
       mergedConfig[EModelEndpoint.bedrock] = {
         ...mergedConfig[EModelEndpoint.bedrock],
         availableRegions,
-      };
-    }
-
-    if (mergedConfig[EModelEndpoint.bedrock]) {
-      mergedConfig[EModelEndpoint.bedrock] = {
-        ...mergedConfig[EModelEndpoint.bedrock],
-        userProvideAccessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID === AuthType.USER_PROVIDED,
-        userProvideSecretAccessKey:
-          process.env.BEDROCK_AWS_SECRET_ACCESS_KEY === AuthType.USER_PROVIDED,
-        userProvideSessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN === AuthType.USER_PROVIDED,
-        userProvideBearerToken: process.env.BEDROCK_AWS_BEARER_TOKEN === AuthType.USER_PROVIDED,
       };
     }
 

@@ -20,6 +20,7 @@ interface MessagesViewContextValue {
   index: ReturnType<typeof useChatContext>['index'];
   latestMessageId: ReturnType<typeof useChatContext>['latestMessageId'];
   latestMessageDepth: ReturnType<typeof useChatContext>['latestMessageDepth'];
+  setLatestMessage: ReturnType<typeof useChatContext>['setLatestMessage'];
   getMessages: ReturnType<typeof useChatContext>['getMessages'];
   setMessages: ReturnType<typeof useChatContext>['setMessages'];
 }
@@ -43,6 +44,7 @@ export function MessagesViewProvider({ children }: { children: React.ReactNode }
     latestMessageDepth,
     setAbortScroll,
     handleContinue,
+    setLatestMessage,
     abortScroll,
     getMessages,
     setMessages,
@@ -85,8 +87,9 @@ export function MessagesViewProvider({ children }: { children: React.ReactNode }
       index,
       latestMessageId,
       latestMessageDepth,
+      setLatestMessage,
     }),
-    [index, latestMessageId, latestMessageDepth],
+    [index, latestMessageId, latestMessageDepth, setLatestMessage],
   );
 
   /** Combine all values into final context value */
@@ -188,9 +191,9 @@ export function useOptionalMessagesConversation() {
 
 /** Hook for components that only need message state */
 export function useMessagesState() {
-  const { index, latestMessageId, latestMessageDepth } = useMessagesViewContext();
+  const { index, latestMessageId, latestMessageDepth, setLatestMessage } = useMessagesViewContext();
   return useMemo(
-    () => ({ index, latestMessageId, latestMessageDepth }),
-    [index, latestMessageId, latestMessageDepth],
+    () => ({ index, latestMessageId, latestMessageDepth, setLatestMessage }),
+    [index, latestMessageId, latestMessageDepth, setLatestMessage],
   );
 }

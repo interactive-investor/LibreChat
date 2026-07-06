@@ -1,7 +1,6 @@
 import {
   EModelEndpoint,
   getConfigDefaults,
-  skillSyncConfigSchema,
   summarizationConfigSchema,
 } from 'librechat-data-provider';
 import type { TCustomConfig, FileSources, DeepPartial } from 'librechat-data-provider';
@@ -52,21 +51,6 @@ export function loadSummarizationConfig(
   };
 }
 
-export function loadSkillSyncConfig(config: DeepPartial<TCustomConfig>): AppConfig['skillSync'] {
-  const raw = config.skillSync;
-  if (!raw || typeof raw !== 'object') {
-    return undefined;
-  }
-
-  const parsed = skillSyncConfigSchema.safeParse(raw);
-  if (!parsed.success) {
-    logger.warn('[AppService] Invalid skill sync config', parsed.error.flatten());
-    return undefined;
-  }
-
-  return parsed.data;
-}
-
 export type Paths = {
   root: string;
   uploads: string;
@@ -99,7 +83,6 @@ export const AppService = async (params?: {
   const webSearch = loadWebSearchConfig(config.webSearch);
   const memory = loadMemoryConfig(config.memory);
   const summarization = loadSummarizationConfig(config);
-  const skillSync = loadSkillSyncConfig(config);
   const filteredTools = config.filteredTools;
   const includedTools = config.includedTools;
   const fileStrategy = (config.fileStrategy ?? configDefaults.fileStrategy) as
@@ -127,7 +110,6 @@ export const AppService = async (params?: {
   const interfaceConfig = await loadDefaultInterface({ config, configDefaults });
   const turnstileConfig = loadTurnstileConfig(config, configDefaults);
   const speech = config.speech;
-  const messageFilter = config.messageFilter;
 
   const defaultConfig = {
     ocr,
@@ -135,17 +117,15 @@ export const AppService = async (params?: {
     config,
     memory,
     speech,
-    actions,
     balance,
-    skillSync,
+    actions,
     webSearch,
     mcpSettings,
+    transactions,
     fileStrategy,
     registration,
-    transactions,
     filteredTools,
     includedTools,
-    messageFilter,
     summarization,
     availableTools,
     imageOutputType,

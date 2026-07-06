@@ -11,14 +11,11 @@
  */
 
 import { useEffect } from 'react';
-import { Tools } from 'librechat-data-provider';
 import { renderHook } from '@testing-library/react';
 import { RecoilRoot, useSetRecoilState } from 'recoil';
-import type { TAttachment, TFile, TAttachmentMetadata } from 'librechat-data-provider';
 import type { ReactNode } from 'react';
+import type { TAttachment } from 'librechat-data-provider';
 import store from '~/store';
-
-type AttachmentFixture = TFile & TAttachmentMetadata;
 
 jest.mock('~/hooks/useLocalize', () => () => (key: string) => key);
 
@@ -26,24 +23,19 @@ import useAttachments from '../useAttachments';
 
 const messageId = 'msg-1';
 
-function makeAttachment(overrides: Partial<AttachmentFixture> = {}): AttachmentFixture {
+function makeAttachment(overrides: Partial<TAttachment> = {}): TAttachment {
   return {
-    user: 'user-1',
-    object: 'file',
-    bytes: 1024,
-    embedded: false,
-    usage: 0,
     file_id: 'fid-1',
     filename: 'data.xlsx',
     filepath: '/uploads/data.xlsx',
-    type: Tools.execute_code,
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     messageId,
     toolCallId: 'tc-1',
-    text: undefined,
-    textFormat: undefined,
+    text: null,
+    textFormat: null,
     status: 'pending',
     ...overrides,
-  };
+  } as unknown as TAttachment;
 }
 
 function setup({
@@ -99,7 +91,7 @@ describe('useAttachments', () => {
      * immediate-persist snapshot; the polling layer fetched the
      * resolved record and inserted it into messageAttachmentsMap; the
      * merge here must surface the resolved fields to the renderer. */
-    const db = makeAttachment({ status: 'pending', text: undefined, textFormat: undefined });
+    const db = makeAttachment({ status: 'pending', text: null, textFormat: null });
     const live = makeAttachment({
       status: 'ready',
       text: '<table>resolved</table>',
@@ -110,7 +102,10 @@ describe('useAttachments', () => {
       liveMap: { [messageId]: [live] },
     });
     expect(result.current.attachments).toHaveLength(1);
-    const merged = result.current.attachments[0] as AttachmentFixture;
+    const merged = result.current.attachments[0] as TAttachment & {
+      text?: string;
+      textFormat?: string;
+    };
     expect(merged.status).toBe('ready');
     expect(merged.text).toBe('<table>resolved</table>');
     expect(merged.textFormat).toBe('html');
@@ -128,7 +123,7 @@ describe('useAttachments', () => {
     /* DB attachments are the authoritative list for THIS message — a
      * live entry without a matching file_id must NOT bleed in. */
     expect(result.current.attachments).toHaveLength(1);
-    expect((result.current.attachments[0] as AttachmentFixture).file_id).toBe('fid-A');
-    expect((result.current.attachments[0] as AttachmentFixture).status).toBe('pending');
+    expect((result.current.attachments[0] as TAttachment).file_id).toBe('fid-A');
+    expect((result.current.attachments[0] as TAttachment).status).toBe('pending');
   });
 });

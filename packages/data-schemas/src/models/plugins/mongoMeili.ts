@@ -13,7 +13,6 @@ import type {
 } from 'mongoose';
 import type { IConversation, IMessage } from '~/types';
 import logger from '~/config/meiliLogger';
-import { buildRetentionVisibilityFilter, legacyPermanentExpirationFilter } from '~/utils/retention';
 
 interface MongoMeiliOptions {
   host: string;
@@ -39,8 +38,6 @@ interface SyncProgress {
 
 interface _DocumentWithMeiliIndex extends Document {
   _meiliIndex?: boolean;
-  isTemporary?: boolean;
-  expiredAt?: Date | null;
   preprocessObjectForIndex?: () => Record<string, unknown>;
   addObjectToMeili?: (next: CallbackWithoutResultAndOptionalError) => Promise<void>;
   updateObjectToMeili?: (next: CallbackWithoutResultAndOptionalError) => Promise<void>;
@@ -93,49 +90,6 @@ const getSyncConfig = () => ({
   delayMs: parseInt(process.env.MEILI_SYNC_DELAY_MS || '100', 10),
 });
 
-const hasSchemaPath = (schema: Schema, path: string): boolean =>
-  Object.prototype.hasOwnProperty.call(schema.obj, path);
-
-const explicitTemporaryFlagKey = 'meiliExplicitTemporaryFlag';
-
-const buildIndexableQuery = (schema: Schema): FilterQuery<unknown> => {
-  if (!hasSchemaPath(schema, 'isTemporary')) {
-    return hasSchemaPath(schema, 'expiredAt') ? legacyPermanentExpirationFilter() : {};
-  }
-
-  return buildRetentionVisibilityFilter();
-};
-
-const hasActiveExpiration = (expiredAt?: Date | null): boolean =>
-  _.isNil(expiredAt) || new Date(expiredAt).getTime() > Date.now();
-
-/**
- * `isTemporary` defaults to `false` on the schema, so hydrated legacy documents
- * can appear non-temporary even when the field is absent from MongoDB. `$isDefault`
- * lets us distinguish that schema default from an explicit stored flag, and
- * `$locals` carries the pre-save answer into post hooks after Mongoose mutates
- * document state.
- */
-const hasExplicitTemporaryFlag = (doc: DocumentWithMeiliIndex): boolean =>
-  typeof doc.$locals?.[explicitTemporaryFlagKey] === 'boolean'
-    ? (doc.$locals[explicitTemporaryFlagKey] as boolean)
-    : doc.isTemporary != null && !doc.$isDefault('isTemporary');
-
-const captureExplicitTemporaryFlag = (doc: DocumentWithMeiliIndex): void => {
-  doc.$locals[explicitTemporaryFlagKey] = doc.isTemporary != null && !doc.$isDefault('isTemporary');
-};
-
-/**
- * Index only retained non-temporary records whose flag was explicitly stored,
- * plus legacy permanent records that have no retention deadline. Legacy records
- * with an expiration are treated as temporary and stay out of search.
- */
-const isIndexableDocument = (doc: DocumentWithMeiliIndex): boolean =>
-  (doc.isTemporary === false &&
-    hasExplicitTemporaryFlag(doc) &&
-    hasActiveExpiration(doc.expiredAt)) ||
-  (!hasExplicitTemporaryFlag(doc) && _.isNil(doc.expiredAt));
-
 /**
  * Validates the required options for configuring the mongoMeili plugin.
  */
@@ -182,13 +136,11 @@ const processBatch = async <T>(
  */
 const createMeiliMongooseModel = ({
   index,
-  getIndexableQuery,
   attributesToIndex,
   primaryKey,
   syncOptions,
 }: {
   index: Index<MeiliIndexable>;
-  getIndexableQuery: () => FilterQuery<unknown>;
   attributesToIndex: string[];
   primaryKey: string;
   syncOptions: { batchSize: number; delayMs: number };
@@ -200,12 +152,8 @@ const createMeiliMongooseModel = ({
      * Get the current sync progress
      */
     static async getSyncProgress(this: SchemaWithMeiliMethods): Promise<SyncProgress> {
-      const indexableQuery = getIndexableQuery();
-      const totalDocuments = await this.countDocuments(indexableQuery);
-      const indexedDocuments = await this.countDocuments({
-        ...indexableQuery,
-        _meiliIndex: true,
-      });
+      const totalDocuments = await this.countDocuments({ expiredAt: null });
+      const indexedDocuments = await this.countDocuments({ expiredAt: null, _meiliIndex: true });
 
       return {
         totalProcessed: indexedDocuments,
@@ -216,7 +164,8 @@ const createMeiliMongooseModel = ({
 
     /**
      * Synchronizes data between the MongoDB collection and the MeiliSearch index by
-     * incrementally indexing only non-temporary documents where `_meiliIndex` is not `true`.
+     * incrementally indexing only documents where `expiredAt` is `null` and `_meiliIndex` is not `true`
+     * (i.e., non-expired documents that have not yet been indexed, including those with missing or null `_meiliIndex`).
      * */
     static async syncWithMeili(this: SchemaWithMeiliMethods): Promise<void> {
       const startTime = Date.now();
@@ -247,9 +196,8 @@ const createMeiliMongooseModel = ({
       let hasMore = true;
 
       while (hasMore) {
-        const indexableQuery = getIndexableQuery();
         const query: FilterQuery<unknown> = {
-          ...indexableQuery,
+          expiredAt: null,
           _meiliIndex: { $ne: true },
         };
 
@@ -351,9 +299,8 @@ const createMeiliMongooseModel = ({
           const query: Record<string, unknown> = {};
           query[primaryKey] = { $in: meiliIds };
 
-          const existingDocs = await this.find({ ...query, ...getIndexableQuery() })
-            .select(primaryKey)
-            .lean();
+          // Find which documents exist in MongoDB
+          const existingDocs = await this.find(query).select(primaryKey).lean();
 
           const existingIds = new Set(
             existingDocs.map((doc: Record<string, unknown>) => doc[primaryKey]),
@@ -466,7 +413,8 @@ const createMeiliMongooseModel = ({
       this: DocumentWithMeiliIndex,
       next: CallbackWithoutResultAndOptionalError,
     ): Promise<void> {
-      if (!isIndexableDocument(this)) {
+      // If this conversation or message has a TTL, don't index it
+      if (!_.isNil(this.expiredAt)) {
         return next();
       }
 
@@ -511,16 +459,6 @@ const createMeiliMongooseModel = ({
       next: CallbackWithoutResultAndOptionalError,
     ): Promise<void> {
       try {
-        if (!isIndexableDocument(this)) {
-          await index.deleteDocument(String(this[primaryKey as keyof DocumentWithMeiliIndex]));
-          const model = this.constructor as Model<DocumentWithMeiliIndex>;
-          await model.updateOne(
-            { _id: this._id as Types.ObjectId },
-            { $set: { _meiliIndex: false } },
-          );
-          return next();
-        }
-
         const object = this.preprocessObjectForIndex!();
         await index.updateDocuments([object], { primaryKey });
         next();
@@ -706,24 +644,9 @@ export default function mongoMeili(schema: Schema, options: MongoMeiliOptions): 
     logger.debug(`[mongoMeili] Added 'user' field to ${indexName} index attributes`);
   }
 
-  schema.loadClass(
-    createMeiliMongooseModel({
-      index,
-      getIndexableQuery: () => buildIndexableQuery(schema),
-      attributesToIndex,
-      primaryKey,
-      syncOptions,
-    }),
-  );
+  schema.loadClass(createMeiliMongooseModel({ index, attributesToIndex, primaryKey, syncOptions }));
 
   // Register Mongoose hooks
-  schema.pre('save', function (this: DocumentWithMeiliIndex, next) {
-    if (hasSchemaPath(schema, 'isTemporary')) {
-      captureExplicitTemporaryFlag(this);
-    }
-    next();
-  });
-
   schema.post('save', function (doc: DocumentWithMeiliIndex, next) {
     doc.postSaveHook?.(next);
   });

@@ -1,11 +1,6 @@
 import { createMethods } from '@librechat/data-schemas';
 import { ResourceType, PermissionBits, hasPermissions } from 'librechat-data-provider';
-import type {
-  AgentApiKeyListItem,
-  AgentApiKeyCreateResult,
-  AllMethods,
-  IUser,
-} from '@librechat/data-schemas';
+import type { AllMethods, IUser } from '@librechat/data-schemas';
 import type { Types } from 'mongoose';
 
 export interface ApiKeyServiceDependencies {
@@ -41,25 +36,19 @@ export class AgentApiKeyService {
     userId: string | Types.ObjectId;
     name: string;
     expiresAt?: Date | null;
-  }): Promise<AgentApiKeyCreateResult> {
+  }) {
     return this.deps.createAgentApiKey(params);
   }
 
-  async listApiKeys(userId: string | Types.ObjectId): Promise<AgentApiKeyListItem[]> {
+  async listApiKeys(userId: string | Types.ObjectId) {
     return this.deps.listAgentApiKeys(userId);
   }
 
-  async deleteApiKey(
-    keyId: string | Types.ObjectId,
-    userId: string | Types.ObjectId,
-  ): Promise<boolean> {
+  async deleteApiKey(keyId: string | Types.ObjectId, userId: string | Types.ObjectId) {
     return this.deps.deleteAgentApiKey(keyId, userId);
   }
 
-  async getApiKeyById(
-    keyId: string | Types.ObjectId,
-    userId: string | Types.ObjectId,
-  ): Promise<AgentApiKeyListItem | null> {
+  async getApiKeyById(keyId: string | Types.ObjectId, userId: string | Types.ObjectId) {
     return this.deps.getAgentApiKeyById(keyId, userId);
   }
 

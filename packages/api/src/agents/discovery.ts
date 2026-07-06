@@ -69,11 +69,6 @@ export interface DiscoverConnectedAgentsParams {
    * allowlist (or the full accessible set when scoping is disabled).
    */
   computeAccessibleSkillIds?: (agent: Agent) => InitializeAgentParams['accessibleSkillIds'];
-  /** Optional per-sub-agent skill authoring gate, paired with the scoped skill IDs. */
-  computeSkillAuthoringAvailable?: (
-    agent: Agent,
-    accessibleSkillIds: InitializeAgentParams['accessibleSkillIds'],
-  ) => InitializeAgentParams['skillAuthoringAvailable'];
   /** Per-user skill active/inactive state, forwarded to each sub-agent. */
   skillStates?: InitializeAgentParams['skillStates'];
   /** Default active-on-share flag, forwarded to each sub-agent. */
@@ -153,7 +148,6 @@ export async function discoverConnectedAgents(
     parentMessageId,
     resourceType = ResourceType.AGENT,
     computeAccessibleSkillIds,
-    computeSkillAuthoringAvailable,
     skillStates,
     defaultActiveOnShare,
     codeEnvAvailable,
@@ -243,7 +237,6 @@ export async function discoverConnectedAgents(
       endpoint: EModelEndpoint.agents,
     };
 
-    const scopedSkillIds = computeAccessibleSkillIds?.(agent);
     const config = await initializeAgent(
       {
         req,
@@ -255,8 +248,7 @@ export async function discoverConnectedAgents(
         parentMessageId,
         endpointOption: subAgentEndpointOption,
         allowedProviders,
-        accessibleSkillIds: scopedSkillIds,
-        skillAuthoringAvailable: computeSkillAuthoringAvailable?.(agent, scopedSkillIds),
+        accessibleSkillIds: computeAccessibleSkillIds?.(agent),
         skillStates,
         defaultActiveOnShare,
         codeEnvAvailable,

@@ -30,10 +30,7 @@ const deprecatedVariables = [
   },
 ];
 
-export const deprecatedAzureVariables: {
-  key: string;
-  description: string;
-}[] = [
+export const deprecatedAzureVariables = [
   /* "related to" precedes description text */
   { key: 'AZURE_OPENAI_DEFAULT_MODEL', description: 'setting a default model' },
   { key: 'AZURE_OPENAI_MODELS', description: 'setting models' },
@@ -62,9 +59,7 @@ export const deprecatedAzureVariables: {
   },
 ];
 
-export const conflictingAzureVariables: {
-  key: string;
-}[] = [
+export const conflictingAzureVariables = [
   {
     key: 'INSTANCE_NAME',
   },
@@ -105,7 +100,7 @@ function checkPasswordReset() {
  * @param {Function} options.isEnabled - Function to check if a feature is enabled
  * @param {Function} options.checkEmailConfig - Function to check email configuration
  */
-export function checkVariables(): void {
+export function checkVariables() {
   let hasDefaultSecrets = false;
   for (const [key, value] of Object.entries(secretDefaults)) {
     if (process.env[key] === value) {
@@ -139,7 +134,7 @@ export function checkVariables(): void {
  * Checks the health of auxiliary API's by attempting a fetch request to their respective `/health` endpoints.
  * Logs information or warning based on the API's availability and response.
  */
-export async function checkHealth(): Promise<void> {
+export async function checkHealth() {
   try {
     const response = await fetch(`${process.env.RAG_API_URL}/health`);
     if (response?.ok && response?.status === 200) {
@@ -174,7 +169,7 @@ function checkAzureVariables() {
   });
 }
 
-export function checkInterfaceConfig(appConfig: AppConfig): void {
+export function checkInterfaceConfig(appConfig: AppConfig) {
   const interfaceConfig = appConfig.interfaceConfig;
   let i = 0;
   const logSettings = () => {
@@ -225,7 +220,7 @@ export function checkInterfaceConfig(appConfig: AppConfig): void {
  * This should be called during application startup before initializing services.
  * @param [appConfig] - The application configuration object.
  */
-export async function performStartupChecks(appConfig?: AppConfig): Promise<void> {
+export async function performStartupChecks(appConfig?: AppConfig) {
   checkVariables();
   if (appConfig?.endpoints?.azureOpenAI) {
     checkAzureVariables();
@@ -249,7 +244,7 @@ export async function performStartupChecks(appConfig?: AppConfig): Promise<void>
  * Performs basic checks on the loaded config object.
  * @param config - The loaded custom configuration.
  */
-export function checkConfig(config: Partial<TCustomConfig>): void {
+export function checkConfig(config: Partial<TCustomConfig>) {
   if (config.version !== Constants.CONFIG_VERSION) {
     logger.info(
       `\nOutdated Config version: ${config.version}
@@ -268,9 +263,7 @@ Latest version: ${Constants.CONFIG_VERSION}
  * Logs debug information for properly configured environment variable references.
  * @param webSearchConfig - The loaded web search configuration object.
  */
-export function checkWebSearchConfig(
-  webSearchConfig?: Partial<TCustomConfig['webSearch']> | null,
-): void {
+export function checkWebSearchConfig(webSearchConfig?: Partial<TCustomConfig['webSearch']> | null) {
   if (!webSearchConfig) {
     return;
   }

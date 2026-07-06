@@ -326,13 +326,11 @@ export default function RetrievalCall({
   isSubmitting,
   output,
   attachments,
-  onExpand,
 }: {
   initialProgress: number;
   isSubmitting: boolean;
   output?: string;
   attachments?: TAttachment[];
-  onExpand?: () => void;
 }) {
   const progress = useProgress(initialProgress);
   const localize = useLocalize();
@@ -402,16 +400,6 @@ export default function RetrievalCall({
     }
   }, [autoExpand, hasOutput]);
 
-  const handleToggleOutput = useCallback(() => {
-    setShowOutput((prev) => {
-      const next = !prev;
-      if (next) {
-        onExpand?.();
-      }
-      return next;
-    });
-  }, [onExpand]);
-
   return (
     <div className="my-1">
       <span className="sr-only" aria-live="polite" aria-atomic="true">
@@ -428,7 +416,7 @@ export default function RetrievalCall({
       <div className="relative my-1 flex h-5 shrink-0 items-center gap-2.5">
         <ProgressText
           progress={progress}
-          onClick={hasOutput ? handleToggleOutput : undefined}
+          onClick={hasOutput ? () => setShowOutput((prev) => !prev) : undefined}
           inProgressText={localize('com_ui_searching_files')}
           finishedText={localize('com_ui_retrieved_files')}
           errorSuffix={errorState && !cancelled ? localize('com_ui_tool_failed') : undefined}

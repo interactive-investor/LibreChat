@@ -1,15 +1,6 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useCallback,
-  useState,
-  useRef,
-} from 'react';
-import { JSX } from 'react/jsx-runtime';
-import applyTheme from '../utils/applyTheme';
+import React, { createContext, useContext, useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import { IThemeRGB } from '../types';
+import applyTheme from '../utils/applyTheme';
 
 const THEME_KEY = 'color-theme';
 const THEME_COLORS_KEY = 'theme-colors';
@@ -26,7 +17,7 @@ type ThemeContextType = {
 };
 
 // Export ThemeContext so it can be imported from hooks
-export const ThemeContext: React.Context<ThemeContextType> = createContext<ThemeContextType>({
+export const ThemeContext = createContext<ThemeContextType>({
   theme: 'system',
   setTheme: () => undefined,
   setThemeRGB: () => undefined,
@@ -124,7 +115,7 @@ export function ThemeProvider({
   themeRGB: propThemeRGB,
   themeName: propThemeName,
   initialTheme,
-}: ThemeProviderProps): JSX.Element {
+}: ThemeProviderProps) {
   const [theme, setThemeState] = useState<string>(getInitialTheme);
   const [themeRGB, setThemeRGBState] = useState<IThemeRGB | undefined>(getInitialThemeColors);
   const [themeName, setThemeNameState] = useState<string | undefined>(getInitialThemeName);
@@ -255,7 +246,7 @@ export function ThemeProvider({
 /**
  * Hook to access the current theme context
  */
-export function useTheme(): ThemeContextType {
+export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {
     throw new Error('useTheme must be used within a ThemeProvider');

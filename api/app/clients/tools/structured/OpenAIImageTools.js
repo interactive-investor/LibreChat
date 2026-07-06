@@ -2,16 +2,12 @@ const axios = require('axios');
 const { v4 } = require('uuid');
 const OpenAI = require('openai');
 const FormData = require('form-data');
+const { ProxyAgent } = require('undici');
 const { logger } = require('@librechat/data-schemas');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 const { tool } = require('@librechat/agents/langchain/tools');
 const { ContentTypes, EImageOutputType } = require('librechat-data-provider');
-const {
-  logAxiosError,
-  oaiToolkit,
-  extractBaseURL,
-  getProxyDispatcher,
-  applyAxiosProxyConfig,
-} = require('@librechat/api');
+const { logAxiosError, oaiToolkit, extractBaseURL } = require('@librechat/api');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { getFiles } = require('~/models');
 
@@ -127,10 +123,10 @@ function createOpenAIImageTools(fields = {}) {
         throw new Error('Missing required field: prompt');
       }
       const clientConfig = { ...closureConfig };
-      const proxyDispatcher = getProxyDispatcher();
-      if (proxyDispatcher) {
+      if (process.env.PROXY) {
+        const proxyAgent = new ProxyAgent(process.env.PROXY);
         clientConfig.fetchOptions = {
-          dispatcher: proxyDispatcher,
+          dispatcher: proxyAgent,
         };
       }
 
@@ -237,10 +233,10 @@ Error Message: ${error.message}`);
       }
 
       const clientConfig = { ...closureConfig };
-      const proxyDispatcher = getProxyDispatcher();
-      if (proxyDispatcher) {
+      if (process.env.PROXY) {
+        const proxyAgent = new ProxyAgent(process.env.PROXY);
         clientConfig.fetchOptions = {
-          dispatcher: proxyDispatcher,
+          dispatcher: proxyAgent,
         };
       }
 
@@ -353,7 +349,9 @@ Error Message: ${error.message}`);
           baseURL,
         };
 
-        applyAxiosProxyConfig(axiosConfig, baseURL);
+        if (process.env.PROXY) {
+          axiosConfig.httpsAgent = new HttpsProxyAgent(process.env.PROXY);
+        }
 
         if (process.env.IMAGE_GEN_OAI_AZURE_API_VERSION && process.env.IMAGE_GEN_OAI_BASEURL) {
           axiosConfig.params = {

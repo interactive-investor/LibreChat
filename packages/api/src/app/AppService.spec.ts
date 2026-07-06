@@ -9,7 +9,6 @@ import {
   defaultAgentCapabilities,
 } from 'librechat-data-provider';
 import type { TCustomConfig } from 'librechat-data-provider';
-import type { FunctionTool } from '@librechat/data-schemas';
 
 jest.mock('@librechat/data-schemas', () => ({
   ...jest.requireActual('@librechat/data-schemas'),
@@ -61,7 +60,7 @@ const azureGroups = [
 ];
 
 describe('AppService', () => {
-  const mockSystemTools: Record<string, FunctionTool> = {
+  const mockSystemTools = {
     ExampleTool: {
       type: 'function',
       function: {
@@ -599,9 +598,9 @@ describe('AppService', () => {
     );
 
     // Verify that optional fields are not set when not provided
-    expect(result.endpoints![EModelEndpoint.openAI]!.titlePrompt).toBeUndefined();
-    expect(result.endpoints![EModelEndpoint.openAI]!.titlePromptTemplate).toBeUndefined();
-    expect(result.endpoints![EModelEndpoint.openAI]!.titleMethod).toBeUndefined();
+    expect(result.endpoints[EModelEndpoint.openAI].titlePrompt).toBeUndefined();
+    expect(result.endpoints[EModelEndpoint.openAI].titlePromptTemplate).toBeUndefined();
+    expect(result.endpoints[EModelEndpoint.openAI].titleMethod).toBeUndefined();
   });
 
   it('should correctly configure titleEndpoint when specified', async () => {
@@ -860,7 +859,7 @@ describe('AppService updating app config and issuing warnings', () => {
     );
 
     // Verify excludedIds is undefined when not provided
-    expect(result.endpoints!.assistants!.excludedIds).toBeUndefined();
+    expect(result.endpoints.assistants.excludedIds).toBeUndefined();
   });
 
   it('should not parse environment variable references in OCR config', async () => {

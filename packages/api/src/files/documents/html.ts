@@ -987,12 +987,12 @@ function renderPptxSlidesBody(slides: PptxSlide[]): string {
       const titleHtml = slide.title
         ? `<h2 class="lc-pptx-slide-title">${escapeHtml(slide.title)}</h2>`
         : '';
-      let bodyHtml = '';
-      if (slide.body.length > 0) {
-        bodyHtml = `<ul class="lc-pptx-slide-body">${slide.body.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>`;
-      } else if (!slide.title) {
-        bodyHtml = '<p class="lc-pptx-slide-empty">(empty slide)</p>';
-      }
+      const bodyHtml =
+        slide.body.length > 0
+          ? `<ul class="lc-pptx-slide-body">${slide.body.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>`
+          : !slide.title
+            ? '<p class="lc-pptx-slide-empty">(empty slide)</p>'
+            : '';
       return `<li class="lc-pptx-slide">
   <span class="lc-pptx-slide-number">Slide ${slide.number}</span>
   ${titleHtml}
@@ -1479,14 +1479,7 @@ async function pptxToSlideListHtmlInternal(buffer: Buffer): Promise<string> {
  * padded fixtures. Not part of the public API — callers in production
  * code should always go through `wordDocToHtml` / `pptxToHtml`.
  */
-export const _internal: {
-  wordDocToHtmlViaCdn: typeof wordDocToHtmlViaCdn;
-  wordDocToHtmlViaMammoth: typeof wordDocToHtmlViaMammoth;
-  MAX_DOCX_CDN_BINARY_BYTES: number;
-  OFFICE_HTML_OUTPUT_CAP: number;
-  pptxToHtmlViaCdn: typeof pptxToHtmlViaCdn;
-  MAX_PPTX_CDN_BINARY_BYTES: number;
-} = {
+export const _internal = {
   wordDocToHtmlViaCdn,
   wordDocToHtmlViaMammoth,
   MAX_DOCX_CDN_BINARY_BYTES,

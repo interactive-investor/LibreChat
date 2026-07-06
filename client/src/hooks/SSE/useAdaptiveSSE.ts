@@ -6,7 +6,12 @@ import useSSE from './useSSE';
 
 type ChatHelpers = Pick<
   EventHandlerParams,
-  'setMessages' | 'getMessages' | 'setConversation' | 'setIsSubmitting' | 'newConversation'
+  | 'setMessages'
+  | 'getMessages'
+  | 'setConversation'
+  | 'setIsSubmitting'
+  | 'newConversation'
+  | 'resetLatestMessage'
 >;
 
 /**

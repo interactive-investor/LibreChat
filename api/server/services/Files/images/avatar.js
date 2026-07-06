@@ -26,7 +26,7 @@ const MAX_AVATAR_BYTES = 10 * 1024 * 1024;
  * measurable benefit on this path. If this ever becomes a hot path, hoist
  * the agents to module scope.
  */
-async function fetchAvatarBuffer(input, fetchOptions = {}) {
+async function fetchAvatarBuffer(input) {
   let parsed;
   try {
     parsed = new URL(input);
@@ -44,7 +44,6 @@ async function fetchAvatarBuffer(input, fetchOptions = {}) {
    * stronger of the two for this path — bounds total slow-loris exposure.
    */
   const response = await fetch(parsed.href, {
-    headers: fetchOptions.headers,
     agent: (urlObj) => (urlObj.protocol === 'https:' ? httpsAgent : httpAgent),
     redirect: 'error',
     timeout: 5000,
@@ -81,7 +80,6 @@ async function fetchAvatarBuffer(input, fetchOptions = {}) {
  * @param {string} options.desiredFormat - The desired output format of the image.
  * @param {(string|Buffer|File)} params.input - The input representing the avatar image. Can be a URL (string),
  *                                               a Buffer, or a File object.
- * @param {{ headers?: Record<string, string> }} [params.fetchOptions] - Optional headers for trusted avatar URLs.
  *
  * @returns {Promise<any>}
  *          A promise that resolves to a resized buffer.
@@ -89,7 +87,7 @@ async function fetchAvatarBuffer(input, fetchOptions = {}) {
  * @throws {Error} Throws an error if the user ID is undefined, the input type is invalid, the image fetching fails,
  *                 or any other error occurs during the processing.
  */
-async function resizeAvatar({ userId, input, desiredFormat = EImageOutputType.PNG, fetchOptions }) {
+async function resizeAvatar({ userId, input, desiredFormat = EImageOutputType.PNG }) {
   try {
     if (userId === undefined) {
       throw new Error('User ID is undefined');
@@ -97,7 +95,7 @@ async function resizeAvatar({ userId, input, desiredFormat = EImageOutputType.PN
 
     let imageBuffer;
     if (typeof input === 'string') {
-      imageBuffer = await fetchAvatarBuffer(input, fetchOptions);
+      imageBuffer = await fetchAvatarBuffer(input);
     } else if (input instanceof Buffer) {
       imageBuffer = input;
     } else if (typeof input === 'object' && input instanceof File) {

@@ -7,7 +7,6 @@ const {
   sessionCache,
   standardCache,
   violationCache,
-  registerShutdownTask,
 } = require('@librechat/api');
 
 const namespaces = {
@@ -196,16 +195,23 @@ if (!cacheConfig.USE_REDIS && !cacheConfig.CI) {
     cleanupIntervals.add(monitor);
   }
 
-  // Register cleanup with the centralized graceful-shutdown coordinator
-  // (see packages/api/src/app/shutdown.ts) rather than attaching a direct
-  // signal handler — multiple competing handlers race the HTTP drain.
-  registerShutdownTask('cache cleanup', async () => {
+  const dispose = () => {
     cacheConfig.DEBUG_MEMORY_CACHE && console.log('[Cache] Cleaning up and shutting down...');
     cleanupIntervals.forEach((interval) => clearInterval(interval));
     cleanupIntervals.clear();
-    await clearAllExpiredFromCache();
-    cacheConfig.DEBUG_MEMORY_CACHE && console.log('[Cache] Final cleanup completed');
-  });
+
+    // One final cleanup before exit
+    clearAllExpiredFromCache().then(() => {
+      cacheConfig.DEBUG_MEMORY_CACHE && console.log('[Cache] Final cleanup completed');
+      process.exit(0);
+    });
+  };
+
+  // Handle various termination signals
+  process.on('SIGTERM', dispose);
+  process.on('SIGINT', dispose);
+  process.on('SIGQUIT', dispose);
+  process.on('SIGHUP', dispose);
 }
 
 /**

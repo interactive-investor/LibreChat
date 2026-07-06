@@ -6,7 +6,7 @@ interface DelayedRenderProps {
   children: React.ReactNode;
 }
 
-const DelayedRender = ({ delay, children }: DelayedRenderProps): React.ReactNode =>
+const DelayedRender = ({ delay, children }: DelayedRenderProps) =>
   useDelayedRender(delay)(() => children);
 
 export default DelayedRender;

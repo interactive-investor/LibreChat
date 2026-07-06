@@ -1,3 +1,5 @@
+const { ProxyAgent } = require('undici');
+
 /**
  * These tests verify the proxy wrapper behavior for GeminiImageGen.
  * Instead of loading the full module (which has many dependencies),
@@ -27,14 +29,14 @@ describe('GeminiImageGen Proxy Configuration', () => {
    * This is the same logic from GeminiImageGen.js lines 30-42.
    */
   function applyProxyWrapper() {
-    const proxyDispatcher = process.env.PROXY ? { type: 'proxy-dispatcher' } : undefined;
-    if (proxyDispatcher) {
+    if (process.env.PROXY) {
       const _originalFetch = globalThis.fetch;
+      const proxyAgent = new ProxyAgent(process.env.PROXY);
 
       globalThis.fetch = function (url, options = {}) {
         const urlString = url.toString();
         if (urlString.includes('googleapis.com')) {
-          options = { ...options, dispatcher: proxyDispatcher };
+          options = { ...options, dispatcher: proxyAgent };
         }
         return _originalFetch.call(this, url, options);
       };
@@ -76,7 +78,7 @@ describe('GeminiImageGen Proxy Configuration', () => {
     await globalThis.fetch('https://generativelanguage.googleapis.com/v1/models', {});
 
     expect(capturedOptions).toBeDefined();
-    expect(capturedOptions.dispatcher).toEqual({ type: 'proxy-dispatcher' });
+    expect(capturedOptions.dispatcher).toBeInstanceOf(ProxyAgent);
   });
 
   it('should not add dispatcher to non-googleapis.com URLs', async () => {
@@ -116,7 +118,7 @@ describe('GeminiImageGen Proxy Configuration', () => {
     });
 
     expect(capturedOptions).toBeDefined();
-    expect(capturedOptions.dispatcher).toEqual({ type: 'proxy-dispatcher' });
+    expect(capturedOptions.dispatcher).toBeInstanceOf(ProxyAgent);
     expect(capturedOptions.headers).toEqual(customHeaders);
     expect(capturedOptions.method).toBe('POST');
   });

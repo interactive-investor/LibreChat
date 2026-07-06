@@ -1,17 +1,11 @@
 import * as React from 'react';
-import { ChevronDownIcon } from '@radix-ui/react-icons';
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
+import { ChevronDownIcon } from '@radix-ui/react-icons';
 import { cn } from '~/utils';
 
-const Accordion: React.ForwardRefExoticComponent<
-  (AccordionPrimitive.AccordionSingleProps | AccordionPrimitive.AccordionMultipleProps) &
-    React.RefAttributes<HTMLDivElement>
-> = AccordionPrimitive.Root;
+const Accordion = AccordionPrimitive.Root;
 
-const AccordionItem: React.ForwardRefExoticComponent<
-  Omit<AccordionPrimitive.AccordionItemProps & React.RefAttributes<HTMLDivElement>, 'ref'> &
-    React.RefAttributes<HTMLDivElement>
-> = React.forwardRef<
+const AccordionItem = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
 >(({ className = '', ...props }, ref) => (
@@ -19,10 +13,7 @@ const AccordionItem: React.ForwardRefExoticComponent<
 ));
 AccordionItem.displayName = 'AccordionItem';
 
-const AccordionTrigger: React.ForwardRefExoticComponent<
-  Omit<AccordionPrimitive.AccordionTriggerProps & React.RefAttributes<HTMLButtonElement>, 'ref'> &
-    React.RefAttributes<HTMLButtonElement>
-> = React.forwardRef<
+const AccordionTrigger = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
 >(({ className = '', children, ...props }, ref) => (
@@ -42,10 +33,7 @@ const AccordionTrigger: React.ForwardRefExoticComponent<
 ));
 AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName;
 
-const AccordionContent: React.ForwardRefExoticComponent<
-  Omit<AccordionPrimitive.AccordionContentProps & React.RefAttributes<HTMLDivElement>, 'ref'> &
-    React.RefAttributes<HTMLDivElement>
-> = React.forwardRef<
+const AccordionContent = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
 >(({ className = '', children, ...props }, ref) => (

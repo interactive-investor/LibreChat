@@ -17,13 +17,6 @@ const {
 
 const userProvidedOpenAI = isUserProvided(openAIApiKey);
 const anthropicUsesVertex = isEnabled(process.env.ANTHROPIC_USE_VERTEX);
-const firstNonEmpty = (...values) => values.find((value) => value != null && value !== '');
-const bedrockUserProvidedCredential = [
-  process.env.BEDROCK_AWS_BEARER_TOKEN,
-  process.env.BEDROCK_AWS_ACCESS_KEY_ID,
-  process.env.BEDROCK_AWS_SECRET_ACCESS_KEY,
-  process.env.BEDROCK_AWS_SESSION_TOKEN,
-].find(isUserProvided);
 
 module.exports = {
   config: {
@@ -45,13 +38,7 @@ module.exports = {
       EModelEndpoint.azureAssistants,
     ),
     [EModelEndpoint.bedrock]: generateConfig(
-      bedrockUserProvidedCredential ??
-        firstNonEmpty(
-          process.env.BEDROCK_AWS_BEARER_TOKEN,
-          process.env.BEDROCK_AWS_SECRET_ACCESS_KEY,
-          process.env.BEDROCK_AWS_PROFILE,
-          process.env.BEDROCK_AWS_DEFAULT_REGION,
-        ),
+      process.env.BEDROCK_AWS_SECRET_ACCESS_KEY ?? process.env.BEDROCK_AWS_DEFAULT_REGION,
     ),
     /* key will be part of separate config */
     [EModelEndpoint.agents]: generateConfig('true', undefined, EModelEndpoint.agents),

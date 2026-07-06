@@ -1,5 +1,5 @@
 import { logger, ResourceCapabilityMap } from '@librechat/data-schemas';
-import { Permissions, PermissionTypes, PrincipalType, ResourceType } from 'librechat-data-provider';
+import { Permissions, PermissionTypes, ResourceType } from 'librechat-data-provider';
 import type { NextFunction, Response } from 'express';
 import type { IRole } from '@librechat/data-schemas';
 import type { CapabilityUser, HasCapabilityFn } from './capabilities';
@@ -18,9 +18,6 @@ type ShareRequest = ServerRequest & {
   };
   body: RequestBody & {
     public?: boolean;
-    updated?: Array<{
-      type?: string;
-    }>;
   };
   sharePermissionContext?: SharePermissionCache;
 };
@@ -48,7 +45,6 @@ const resourceToPermissionType: Record<ResourceType, PermissionTypes> = {
   [ResourceType.MCPSERVER]: PermissionTypes.MCP_SERVERS,
   [ResourceType.REMOTE_AGENT]: PermissionTypes.REMOTE_AGENTS,
   [ResourceType.SKILL]: PermissionTypes.SKILLS,
-  [ResourceType.SHARED_LINK]: PermissionTypes.SHARED_LINKS,
 };
 
 function formatError(error: unknown): string {
@@ -208,12 +204,9 @@ export function createSharePolicyMiddleware({ getRoleByName, hasCapability }: Sh
     next: NextFunction,
   ): Promise<Response | void> {
     try {
-      const { public: isPublic, updated } = req.body;
-      const updatesPublicPrincipal =
-        Array.isArray(updated) &&
-        updated.some((principal) => principal?.type === PrincipalType.PUBLIC);
+      const { public: isPublic } = req.body;
 
-      if (!isPublic && !updatesPublicPrincipal) {
+      if (!isPublic) {
         return next();
       }
 

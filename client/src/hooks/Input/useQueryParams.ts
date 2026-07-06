@@ -23,8 +23,6 @@ import { startupConfigKey, useGetAgentByIdQuery } from '~/data-provider';
 import { useChatContext, useChatFormContext } from '~/Providers';
 import store from '~/store';
 
-const PROJECT_ID_SEARCH_PARAM = 'projectId';
-
 const injectAgentIntoAgentsMap = (queryClient: QueryClient, agent: any) => {
   const editCacheKey = [QueryKeys.agents, { requiredPermission: PermissionBits.EDIT }];
   const editCache = queryClient.getQueryData<AgentListResponse>(editCacheKey);
@@ -74,15 +72,6 @@ export default function useQueryParams({
   const urlAgentId = searchParams.get('agent_id') || '';
   const { data: urlAgent } = useGetAgentByIdQuery(urlAgentId);
 
-  const getPreservedSearchParams = useCallback(() => {
-    const preservedParams = new URLSearchParams();
-    const projectId = searchParams.get(PROJECT_ID_SEARCH_PARAM);
-    if (projectId) {
-      preservedParams.set(PROJECT_ID_SEARCH_PARAM, projectId);
-    }
-    return preservedParams;
-  }, [searchParams]);
-
   /**
    * Applies settings from URL query parameters to create a new conversation.
    * Handles model spec lookup, endpoint normalization, and conversation switching logic.
@@ -101,11 +90,10 @@ export default function useQueryParams({
         if (!spec) {
           return;
         }
-        newPreset = {
-          ...spec.preset,
-          iconURL: getModelSpecIconURL(spec),
-          spec: spec.name,
-        } as TPreset;
+        const { preset } = spec;
+        preset.iconURL = getModelSpecIconURL(spec);
+        preset.spec = spec.name;
+        newPreset = preset;
       }
 
       let newEndpoint = newPreset.endpoint ?? '';
@@ -173,16 +161,13 @@ export default function useQueryParams({
         newConversation({
           template: currentConvo,
           preset: newPreset,
+          keepLatestMessage: true,
           keepAddedConvos: true,
         });
         return;
       }
 
-      newConversation({
-        template: { chatProjectId: conversation?.chatProjectId ?? null },
-        preset: newPreset,
-        keepAddedConvos: true,
-      });
+      newConversation({ preset: newPreset, keepAddedConvos: true });
     },
     [
       queryClient,
@@ -238,8 +223,8 @@ export default function useQueryParams({
       }
     })();
 
-    setSearchParams(getPreservedSearchParams(), { replace: true });
-  }, [methods, submitMessage, setSearchParams, getPreservedSearchParams]);
+    setSearchParams(new URLSearchParams(), { replace: true });
+  }, [methods, submitMessage, setSearchParams]);
 
   useEffect(() => {
     const processQueryParams = () => {
@@ -254,7 +239,6 @@ export default function useQueryParams({
       delete queryParams.prompt;
       delete queryParams.q;
       delete queryParams.submit;
-      delete queryParams[PROJECT_ID_SEARCH_PARAM];
       const validSettings = processValidSettings(queryParams);
 
       return { decodedPrompt, validSettings, shouldAutoSubmit };
@@ -297,7 +281,7 @@ export default function useQueryParams({
 
         // Defer URL cleanup until after submission completes (processSubmission handles it)
         if (!pendingSubmitRef.current) {
-          setSearchParams(getPreservedSearchParams(), { replace: true });
+          setSearchParams(new URLSearchParams(), { replace: true });
         }
       };
 
@@ -365,7 +349,6 @@ export default function useQueryParams({
     newConversation,
     submitMessage,
     setSearchParams,
-    getPreservedSearchParams,
     queryClient,
     processSubmission,
     areSettingsApplied,

@@ -1,6 +1,4 @@
-import { JSX } from 'react/jsx-runtime';
-
-export default function VectorIcon({ className }: { className?: string }): JSX.Element {
+export default function VectorIcon({ className }: { className?: string }) {
   return (
     <svg
       width="20"

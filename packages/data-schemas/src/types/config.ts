@@ -18,8 +18,6 @@ export type Config = {
   priority: number;
   /** Configuration overrides matching librechat.yaml structure */
   overrides: Partial<TCustomConfig>;
-  /** Dot-paths that suppress inherited config values during resolution */
-  tombstones?: string[];
   /** Whether this config override is currently active */
   isActive: boolean;
   /** Version number for cache invalidation, auto-increments on overrides change */

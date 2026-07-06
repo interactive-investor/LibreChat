@@ -1,6 +1,4 @@
-import { JSX } from 'react/jsx-runtime';
-
-export default function VideoPaths(): JSX.Element {
+export default function VideoPaths() {
   return (
     <>
       {/* Video container - rounded rectangle (not filled) */}

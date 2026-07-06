@@ -1,6 +1,5 @@
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils';
-export default function PaLMinimalIcon({ className = '' }: { className?: string }): JSX.Element {
+export default function PaLMinimalIcon({ className = '' }: { className?: string }) {
   return (
     <svg
       stroke="currentColor"

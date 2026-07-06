@@ -7,7 +7,7 @@ import type { FirebaseApp } from 'firebase/app';
 let firebaseInitCount = 0;
 let firebaseApp: FirebaseApp | null = null;
 
-export const initializeFirebase = (): firebase.FirebaseApp | null => {
+export const initializeFirebase = () => {
   if (firebaseApp) {
     return firebaseApp;
   }

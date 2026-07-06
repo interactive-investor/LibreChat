@@ -1,20 +1,7 @@
 const DALLE3 = require('../DALLE3');
+const { ProxyAgent } = require('undici');
 
 const processFileURL = jest.fn();
-const proxyEnvKeys = [
-  'PROXY',
-  'proxy',
-  'HTTP_PROXY',
-  'HTTPS_PROXY',
-  'NO_PROXY',
-  'http_proxy',
-  'https_proxy',
-  'no_proxy',
-];
-
-function clearProxyEnv() {
-  proxyEnvKeys.forEach((key) => delete process.env[key]);
-}
 
 describe('DALLE3 Proxy Configuration', () => {
   let originalEnv;
@@ -26,14 +13,13 @@ describe('DALLE3 Proxy Configuration', () => {
   beforeEach(() => {
     jest.resetModules();
     process.env = { ...originalEnv };
-    clearProxyEnv();
   });
 
   afterEach(() => {
     process.env = originalEnv;
   });
 
-  it('should configure fetchOptions.dispatcher when proxy env is set', () => {
+  it('should configure ProxyAgent in fetchOptions.dispatcher when PROXY env is set', () => {
     // Set proxy environment variable
     process.env.PROXY = 'http://proxy.example.com:8080';
     process.env.DALLE_API_KEY = 'test-api-key';
@@ -48,10 +34,12 @@ describe('DALLE3 Proxy Configuration', () => {
     expect(dalleWithProxy.openai._options).toBeDefined();
     expect(dalleWithProxy.openai._options.fetchOptions).toBeDefined();
     expect(dalleWithProxy.openai._options.fetchOptions.dispatcher).toBeDefined();
-    expect(dalleWithProxy.openai._options.fetchOptions.dispatcher).toBeDefined();
+    expect(dalleWithProxy.openai._options.fetchOptions.dispatcher).toBeInstanceOf(ProxyAgent);
   });
 
-  it('should not configure a dispatcher when proxy env is not set', () => {
+  it('should not configure ProxyAgent when PROXY env is not set', () => {
+    // Ensure PROXY is not set
+    delete process.env.PROXY;
     process.env.DALLE_API_KEY = 'test-api-key';
 
     // Create instance
