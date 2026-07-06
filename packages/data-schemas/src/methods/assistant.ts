@@ -1,19 +1,7 @@
 import type { FilterQuery, Model } from 'mongoose';
 import type { IAssistant } from '~/types';
 
-export function createAssistantMethods(mongoose: typeof import('mongoose')): {
-  updateAssistantDoc: (
-    searchParams: FilterQuery<IAssistant>,
-    updateData: Partial<IAssistant>,
-  ) => Promise<IAssistant | null>;
-  deleteAssistant: (searchParams: FilterQuery<IAssistant>) => Promise<IAssistant | null>;
-  deleteAssistants: (searchParams: FilterQuery<IAssistant>) => Promise<number>;
-  getAssistants: (
-    searchParams: FilterQuery<IAssistant>,
-    select?: string | Record<string, number> | null,
-  ) => Promise<IAssistant[]>;
-  getAssistant: (searchParams: FilterQuery<IAssistant>) => Promise<IAssistant | null>;
-} {
+export function createAssistantMethods(mongoose: typeof import('mongoose')) {
   /**
    * Update an assistant with new data without overwriting existing properties,
    * or create a new assistant if it doesn't exist.
@@ -51,9 +39,7 @@ export function createAssistantMethods(mongoose: typeof import('mongoose')): {
   /**
    * Deletes an assistant based on the provided search params.
    */
-  async function deleteAssistant(
-    searchParams: FilterQuery<IAssistant>,
-  ): Promise<IAssistant | null> {
+  async function deleteAssistant(searchParams: FilterQuery<IAssistant>) {
     const Assistant = mongoose.models.Assistant as Model<IAssistant>;
     return await Assistant.findOneAndDelete(searchParams);
   }

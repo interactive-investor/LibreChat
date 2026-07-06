@@ -1,12 +1,12 @@
 import React from 'react';
 import * as Ariakit from '@ariakit/react';
 import { PinIcon } from '@librechat/client';
-import { ArtifactModes } from 'librechat-data-provider';
 import { ChevronRight, WandSparkles } from 'lucide-react';
+import { ArtifactModes } from 'librechat-data-provider';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 
-interface ArtifactsSubMenuProps extends React.HTMLAttributes<HTMLButtonElement> {
+interface ArtifactsSubMenuProps {
   isArtifactsPinned: boolean;
   setIsArtifactsPinned: (value: boolean) => void;
   artifactsMode: string;
@@ -15,7 +15,7 @@ interface ArtifactsSubMenuProps extends React.HTMLAttributes<HTMLButtonElement> 
   handleCustomToggle: () => void;
 }
 
-const ArtifactsSubMenu = React.forwardRef<HTMLButtonElement, ArtifactsSubMenuProps>(
+const ArtifactsSubMenu = React.forwardRef<HTMLDivElement, ArtifactsSubMenuProps>(
   (
     {
       isArtifactsPinned,
@@ -24,7 +24,6 @@ const ArtifactsSubMenu = React.forwardRef<HTMLButtonElement, ArtifactsSubMenuPro
       handleArtifactsToggle,
       handleShadcnToggle,
       handleCustomToggle,
-      className,
       ...props
     },
     ref,
@@ -42,24 +41,25 @@ const ArtifactsSubMenu = React.forwardRef<HTMLButtonElement, ArtifactsSubMenuPro
     const isCustomEnabled = artifactsMode === ArtifactModes.CUSTOM;
 
     return (
-      <>
+      <div ref={ref}>
         <Ariakit.MenuProvider store={menuStore}>
-          <Ariakit.MenuButton
-            ref={ref}
+          <Ariakit.MenuItem
             {...props}
-            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-              e.stopPropagation();
-              handleArtifactsToggle();
-            }}
-            onMouseEnter={() => {
-              if (isEnabled) {
-                menuStore.show();
-              }
-            }}
-            className={cn(
-              'flex w-full cursor-pointer items-center justify-between rounded-lg p-2 hover:bg-surface-hover',
-              className,
-            )}
+            hideOnClick={false}
+            render={
+              <Ariakit.MenuButton
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.stopPropagation();
+                  handleArtifactsToggle();
+                }}
+                onMouseEnter={() => {
+                  if (isEnabled) {
+                    menuStore.show();
+                  }
+                }}
+                className="flex w-full cursor-pointer items-center justify-between rounded-lg p-2 hover:bg-surface-hover"
+              />
+            }
           >
             <div className="flex items-center gap-2">
               <WandSparkles className="icon-md" aria-hidden="true" />
@@ -83,7 +83,7 @@ const ArtifactsSubMenu = React.forwardRef<HTMLButtonElement, ArtifactsSubMenuPro
                 <PinIcon unpin={isArtifactsPinned} />
               </div>
             </button>
-          </Ariakit.MenuButton>
+          </Ariakit.MenuItem>
 
           {isEnabled && (
             <Ariakit.Menu
@@ -144,7 +144,7 @@ const ArtifactsSubMenu = React.forwardRef<HTMLButtonElement, ArtifactsSubMenuPro
             </Ariakit.Menu>
           )}
         </Ariakit.MenuProvider>
-      </>
+      </div>
     );
   },
 );

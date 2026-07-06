@@ -1,55 +1,15 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type * as t from 'librechat-data-provider';
+import { jest } from '@jest/globals';
 import VirtualizedAgentGrid from '../VirtualizedAgentGrid';
-
-type RowRendererProps = {
-  index: number;
-  key: string;
-  style: React.CSSProperties;
-  parent: { props: { width: number } };
-};
-
-type VirtualListMockProps = {
-  rowRenderer: (props: RowRendererProps) => React.ReactNode;
-  rowCount: number;
-  width?: number;
-  style?: React.CSSProperties;
-  'aria-rowcount'?: number;
-  'data-testid'?: string;
-  'data-total-rows'?: number;
-};
-
-type WindowScrollerChildProps = {
-  height: number;
-  isScrolling: boolean;
-  registerChild: (ref: HTMLElement | null) => void;
-  onChildScroll: () => void;
-  scrollTop: number;
-};
-
-type LocalizeParams = {
-  count?: number;
-  category?: string;
-};
-
-type MockAgentCardProps = {
-  agent: {
-    id: string;
-    name?: string;
-    description?: string;
-  };
-};
+import type * as t from 'librechat-data-provider';
 
 // Mock react-virtualized for performance testing
 const mockRowRenderer = jest.fn();
 
 jest.mock('react-virtualized', () => {
-  const ReactActual = jest.requireActual<typeof import('react')>('react');
-  const mockRowRendererRef: { current: VirtualListMockProps['rowRenderer'] | null } = {
-    current: null,
-  };
+  const mockRowRendererRef = { current: jest.fn() };
 
   return {
     AutoSizer: ({
@@ -64,60 +24,62 @@ jest.mock('react-virtualized', () => {
       }
       return children({ width: 1200, height: 800 });
     },
-    List: ReactActual.forwardRef(
-      (
-        {
-          rowRenderer,
-          rowCount,
-          width,
-          style,
-          'aria-rowcount': ariaRowCount,
-          'data-testid': dataTestId,
-          'data-total-rows': dataTotalRows,
-        }: VirtualListMockProps,
-        ref: React.ForwardedRef<{ forceUpdateGrid: () => void }>,
-      ) => {
-        ReactActual.useImperativeHandle(ref, () => ({
-          forceUpdateGrid: () => {},
-        }));
-
-        // Store the row renderer for testing
-        if (typeof rowRenderer === 'function') {
-          mockRowRendererRef.current = rowRenderer;
-          mockRowRenderer.mockImplementation(rowRenderer);
-        }
-        // Only render visible rows to simulate virtualization
-        const visibleRows = Math.min(10, rowCount); // Simulate 10 visible rows
-        return (
-          <div
-            data-testid={dataTestId || 'virtual-list'}
-            data-total-rows={dataTotalRows || rowCount}
-            aria-rowcount={ariaRowCount}
-            style={style}
-          >
-            {Array.from({ length: visibleRows }, (_, index) =>
-              rowRenderer({
-                index,
-                key: `row-${index}`,
-                style: { height: 184 },
-                parent: { props: { width: width || 1200 } },
-              }),
-            )}
-          </div>
-        );
-      },
-    ),
+    List: ({
+      rowRenderer,
+      rowCount,
+      autoHeight,
+      height,
+      width,
+      rowHeight,
+      overscanRowCount,
+      scrollTop,
+      isScrolling,
+      onScroll,
+      style,
+      'aria-rowcount': ariaRowCount,
+      'data-testid': dataTestId,
+      'data-total-rows': dataTotalRows,
+    }: {
+      rowRenderer: any;
+      rowCount: number;
+      [key: string]: any;
+    }) => {
+      // Store the row renderer for testing
+      if (typeof rowRenderer === 'function') {
+        mockRowRendererRef.current = rowRenderer;
+        mockRowRenderer.mockImplementation(rowRenderer);
+      }
+      // Only render visible rows to simulate virtualization
+      const visibleRows = Math.min(10, rowCount); // Simulate 10 visible rows
+      return (
+        <div
+          data-testid={dataTestId || 'virtual-list'}
+          data-total-rows={dataTotalRows || rowCount}
+          aria-rowcount={ariaRowCount}
+          style={style}
+        >
+          {Array.from({ length: visibleRows }, (_, index) =>
+            rowRenderer({
+              index,
+              key: `row-${index}`,
+              style: { height: 184 },
+              parent: { props: { width: width || 1200 } },
+            }),
+          )}
+        </div>
+      );
+    },
     WindowScroller: ({
       children,
-      scrollElement: _scrollElement,
+      scrollElement,
     }: {
-      children: (props: WindowScrollerChildProps) => React.ReactNode;
+      children: (props: any) => React.ReactNode;
       scrollElement?: HTMLElement | null;
     }) => {
       return children({
         height: 800,
         isScrolling: false,
-        registerChild: (_ref: HTMLElement | null) => {},
+        registerChild: (ref: any) => {},
         onChildScroll: () => {},
         scrollTop: 0,
       });
@@ -164,7 +126,7 @@ jest.mock('~/hooks', () => ({
       { value: 'development', label: 'Development' },
     ],
   }),
-  useLocalize: () => (key: string, params?: LocalizeParams) => {
+  useLocalize: () => (key: string, params?: any) => {
     if (key === 'com_agents_grid_announcement') {
       return `Found ${params?.count || 0} agents in ${params?.category || 'category'}`;
     }
@@ -177,7 +139,7 @@ jest.mock('../SmartLoader', () => ({
 }));
 
 jest.mock('../AgentCard', () => {
-  return function MockAgentCard({ agent }: MockAgentCardProps) {
+  return function MockAgentCard({ agent }: { agent: any }) {
     return (
       <div data-testid={`agent-card-${agent.id}`} style={{ height: '160px' }}>
         <h3>{agent.name}</h3>

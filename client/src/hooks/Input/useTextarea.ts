@@ -1,14 +1,8 @@
-import { useEffect, useRef, useCallback, useMemo } from 'react';
 import debounce from 'lodash/debounce';
+import { useEffect, useRef, useCallback } from 'react';
 import { useRecoilValue, useRecoilState } from 'recoil';
 import type { TEndpointOption } from 'librechat-data-provider';
 import type { KeyboardEvent } from 'react';
-import {
-  parseBinding,
-  isMacPlatform,
-  bindingFromEvent,
-  resolveSubmitOverrideAction,
-} from '~/utils/shortcuts';
 import {
   forceResize,
   insertTextAtCursor,
@@ -17,7 +11,6 @@ import {
   checkIfScrollable,
 } from '~/utils';
 import { useAssistantsMapContext } from '~/Providers/AssistantsMapContext';
-import { useLatestMessage } from '~/hooks/Messages/useLatestMessage';
 import { useAgentsMapContext } from '~/Providers/AgentsMapContext';
 import useGetSender from '~/hooks/Conversations/useGetSender';
 import useFileHandling from '~/hooks/Files/useFileHandling';
@@ -34,13 +27,11 @@ export default function useTextarea({
   submitButtonRef,
   setIsScrollable,
   disabled = false,
-  placeholder,
 }: {
   textAreaRef: React.RefObject<HTMLTextAreaElement>;
   submitButtonRef: React.RefObject<HTMLButtonElement>;
   setIsScrollable: React.Dispatch<React.SetStateAction<boolean>>;
   disabled?: boolean;
-  placeholder?: string;
 }) {
   const localize = useLocalize();
   const getSender = useGetSender();
@@ -50,24 +41,9 @@ export default function useTextarea({
   const assistantMap = useAssistantsMapContext();
   const checkHealth = useInteractionHealthCheck();
   const enterToSend = useRecoilValue(store.enterToSend);
-  const customShortcuts = useRecoilValue(store.customShortcuts);
-
-  /**
-   * Effective `submitMessage` override: `undefined` when unset (default Ctrl/Cmd+Enter applies),
-   * `null` when explicitly unbound, otherwise the rebound chord. When present, the composer
-   * honors it instead of the hard-coded Ctrl/Cmd+Enter so the shortcut can be replaced or
-   * disabled in the main place it is used.
-   */
-  const submitOverride = useMemo(() => {
-    const override = customShortcuts['submitMessage'];
-    if (!override) {
-      return undefined;
-    }
-    return parseBinding(isMacPlatform ? override.mac : override.other);
-  }, [customShortcuts]);
 
   const { index, conversation, isSubmitting, filesLoading, setFilesLoading } = useChatContext();
-  const latestMessage = useLatestMessage(index);
+  const latestMessage = useRecoilValue(store.latestMessageFamily(index));
   const [activePrompt, setActivePrompt] = useRecoilState(store.activePromptByIndex(index));
 
   const { endpoint = '' } = conversation || {};
@@ -80,8 +56,7 @@ export default function useTextarea({
   });
   const entityName = entity?.name ?? '';
 
-  const isNotAppendable =
-    latestMessage?.error === true && latestMessage.isCreatedByUser === true && !isAssistant;
+  const isNotAppendable = latestMessage?.error === true && !isAssistant;
   // && (conversationId?.length ?? 0) > 6; // also ensures that we don't show the wrong placeholder
 
   useEffect(() => {
@@ -119,10 +94,6 @@ export default function useTextarea({
         return localize('com_endpoint_message_not_appendable');
       }
 
-      if (placeholder) {
-        return placeholder;
-      }
-
       const sender =
         isAssistant || isAgent
           ? getEntityName({ name: entityName, isAgent, localize })
@@ -133,17 +104,17 @@ export default function useTextarea({
       })}`;
     };
 
-    const placeholderText = getPlaceholderText();
+    const placeholder = getPlaceholderText();
 
-    if (textAreaRef.current?.getAttribute('placeholder') === placeholderText) {
+    if (textAreaRef.current?.getAttribute('placeholder') === placeholder) {
       return;
     }
 
     const setPlaceholder = () => {
-      const placeholderText = getPlaceholderText();
+      const placeholder = getPlaceholderText();
 
-      if (textAreaRef.current?.getAttribute('placeholder') !== placeholderText) {
-        textAreaRef.current?.setAttribute('placeholder', placeholderText);
+      if (textAreaRef.current?.getAttribute('placeholder') !== placeholder) {
+        textAreaRef.current?.setAttribute('placeholder', placeholder);
         forceResize(textAreaRef.current);
       }
     };
@@ -165,7 +136,6 @@ export default function useTextarea({
     conversation,
     latestMessage,
     isNotAppendable,
-    placeholder,
   ]);
 
   const handleKeyDown = useCallback(
@@ -185,39 +155,6 @@ export default function useTextarea({
 
       // NOTE: isComposing and e.key behave differently in Safari compared to other browsers, forcing us to use e.keyCode instead
       const isComposingInput = isComposing.current || e.key === 'Process' || e.keyCode === 229;
-
-      const submitMessage = () => {
-        const globalAudio = document.getElementById(globalAudioId) as HTMLAudioElement | undefined;
-        if (globalAudio) {
-          console.log('Unmuting global audio');
-          globalAudio.muted = false;
-        }
-        submitButtonRef.current?.click();
-      };
-
-      // A rebound (or unbound) submitMessage shortcut takes over Enter handling in the composer
-      // so the default Ctrl/Cmd+Enter no longer submits once the user has replaced or disabled it.
-      if (submitOverride !== undefined) {
-        if (isComposingInput) {
-          return;
-        }
-        const action = resolveSubmitOverrideAction(
-          bindingFromEvent(e.nativeEvent),
-          submitOverride,
-          enterToSend,
-        );
-        if (action === 'submit') {
-          e.preventDefault();
-          submitMessage();
-          return;
-        }
-        if (action === 'newline' && textAreaRef.current) {
-          e.preventDefault();
-          insertTextAtCursor(textAreaRef.current, '\n');
-          forceResize(textAreaRef.current);
-        }
-        return;
-      }
 
       if (isNonShiftEnter && filesLoading) {
         e.preventDefault();
@@ -241,7 +178,12 @@ export default function useTextarea({
       }
 
       if ((isNonShiftEnter || isCtrlEnter) && !isComposingInput) {
-        submitMessage();
+        const globalAudio = document.getElementById(globalAudioId) as HTMLAudioElement | undefined;
+        if (globalAudio) {
+          console.log('Unmuting global audio');
+          globalAudio.muted = false;
+        }
+        submitButtonRef.current?.click();
       }
     },
     [
@@ -249,7 +191,6 @@ export default function useTextarea({
       checkHealth,
       filesLoading,
       enterToSend,
-      submitOverride,
       setIsScrollable,
       textAreaRef,
       submitButtonRef,

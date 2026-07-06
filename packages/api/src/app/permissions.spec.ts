@@ -99,7 +99,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-        [Permissions.CONFIGURE_OBO]: false,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: false,
@@ -112,11 +111,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
       },
     };
 
@@ -158,7 +152,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-        [Permissions.CONFIGURE_OBO]: true,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: true,
@@ -168,11 +161,6 @@ describe('updateInterfacePermissions - permissions', () => {
       },
       [PermissionTypes.SKILLS]: {
         [Permissions.USE]: true,
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: true,
         [Permissions.SHARE_PUBLIC]: true,
@@ -281,7 +269,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-        [Permissions.CONFIGURE_OBO]: false,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: false,
@@ -294,11 +281,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
       },
     };
 
@@ -340,7 +322,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-        [Permissions.CONFIGURE_OBO]: true,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: true,
@@ -350,11 +331,6 @@ describe('updateInterfacePermissions - permissions', () => {
       },
       [PermissionTypes.SKILLS]: {
         [Permissions.USE]: true,
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: true,
         [Permissions.SHARE_PUBLIC]: true,
@@ -449,7 +425,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: false,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-        [Permissions.CONFIGURE_OBO]: false,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: false,
@@ -462,11 +437,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
       },
     };
 
@@ -508,7 +478,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: true,
         [Permissions.SHARE_PUBLIC]: true,
-        [Permissions.CONFIGURE_OBO]: true,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: true,
@@ -518,11 +487,6 @@ describe('updateInterfacePermissions - permissions', () => {
       },
       [PermissionTypes.SKILLS]: {
         [Permissions.USE]: true,
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: true,
         [Permissions.SHARE_PUBLIC]: true,
@@ -630,7 +594,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: false,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-        [Permissions.CONFIGURE_OBO]: false,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: false,
@@ -643,11 +606,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
       },
     };
 
@@ -689,7 +647,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: true,
         [Permissions.SHARE_PUBLIC]: true,
-        [Permissions.CONFIGURE_OBO]: true,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: true,
@@ -699,11 +656,6 @@ describe('updateInterfacePermissions - permissions', () => {
       },
       [PermissionTypes.SKILLS]: {
         [Permissions.USE]: true,
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: true,
         [Permissions.SHARE_PUBLIC]: true,
@@ -798,7 +750,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: false,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-        [Permissions.CONFIGURE_OBO]: false,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: false,
@@ -811,11 +762,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
       },
     };
 
@@ -857,7 +803,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: true,
         [Permissions.SHARE_PUBLIC]: true,
-        [Permissions.CONFIGURE_OBO]: true,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: true,
@@ -867,11 +812,6 @@ describe('updateInterfacePermissions - permissions', () => {
       },
       [PermissionTypes.SKILLS]: {
         [Permissions.USE]: true,
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: true,
         [Permissions.SHARE_PUBLIC]: true,
@@ -971,7 +911,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: false,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-        [Permissions.CONFIGURE_OBO]: false,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: false,
@@ -984,11 +923,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
       },
     };
 
@@ -1018,7 +952,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: true,
         [Permissions.SHARE_PUBLIC]: true,
-        [Permissions.CONFIGURE_OBO]: true,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: true,
@@ -1028,11 +961,6 @@ describe('updateInterfacePermissions - permissions', () => {
       },
       [PermissionTypes.SKILLS]: {
         [Permissions.USE]: true,
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: true,
         [Permissions.SHARE_PUBLIC]: true,
@@ -1149,7 +1077,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: false,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-        [Permissions.CONFIGURE_OBO]: false,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: false,
@@ -1162,11 +1089,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: false,
         [Permissions.SHARE_PUBLIC]: false,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
       },
     };
 
@@ -1200,7 +1122,6 @@ describe('updateInterfacePermissions - permissions', () => {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: true,
         [Permissions.SHARE_PUBLIC]: true,
-        [Permissions.CONFIGURE_OBO]: true,
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: true,
@@ -1210,11 +1131,6 @@ describe('updateInterfacePermissions - permissions', () => {
       },
       [PermissionTypes.SKILLS]: {
         [Permissions.USE]: true,
-        [Permissions.CREATE]: true,
-        [Permissions.SHARE]: true,
-        [Permissions.SHARE_PUBLIC]: true,
-      },
-      [PermissionTypes.SHARED_LINKS]: {
         [Permissions.CREATE]: true,
         [Permissions.SHARE]: true,
         [Permissions.SHARE_PUBLIC]: true,
@@ -2264,111 +2180,6 @@ describe('updateInterfacePermissions - permissions', () => {
     expect(userCall[1][PermissionTypes.MCP_SERVERS]).not.toHaveProperty(Permissions.SHARE);
   });
 
-  it('should backfill MCP_SERVERS.CONFIGURE_OBO for existing roles (post-OBO permission addition)', async () => {
-    // Existing deployment: MCP_SERVERS row already present from before CONFIGURE_OBO existed.
-    // initializeRoles only fills missing permission *types*, not sub-keys, so backfill is needed.
-    mockGetRoleByName.mockImplementation(async (roleName: string) => {
-      if (roleName === SystemRoles.USER) {
-        return {
-          permissions: {
-            [PermissionTypes.MCP_SERVERS]: {
-              [Permissions.USE]: true,
-              [Permissions.CREATE]: false,
-              [Permissions.SHARE]: false,
-              [Permissions.SHARE_PUBLIC]: false,
-              // CONFIGURE_OBO intentionally absent
-            },
-          },
-        };
-      }
-      return {
-        permissions: {
-          [PermissionTypes.MCP_SERVERS]: {
-            [Permissions.USE]: true,
-            [Permissions.CREATE]: true,
-            [Permissions.SHARE]: true,
-            [Permissions.SHARE_PUBLIC]: true,
-            // CONFIGURE_OBO intentionally absent
-          },
-        },
-      };
-    });
-
-    const config = { interface: {} };
-    const configDefaults = { interface: {} } as TConfigDefaults;
-    const interfaceConfig = await loadDefaultInterface({ config, configDefaults });
-    const appConfig = { config, interfaceConfig } as unknown as AppConfig;
-
-    await updateInterfacePermissions({
-      appConfig,
-      getRoleByName: mockGetRoleByName,
-      updateAccessPermissions: mockUpdateAccessPermissions,
-    });
-
-    const userCall = mockUpdateAccessPermissions.mock.calls.find(
-      (call) => call[0] === SystemRoles.USER,
-    );
-    const adminCall = mockUpdateAccessPermissions.mock.calls.find(
-      (call) => call[0] === SystemRoles.ADMIN,
-    );
-
-    expect(userCall?.[1]?.[PermissionTypes.MCP_SERVERS]?.[Permissions.CONFIGURE_OBO]).toBe(false);
-    expect(adminCall?.[1]?.[PermissionTypes.MCP_SERVERS]?.[Permissions.CONFIGURE_OBO]).toBe(true);
-  });
-
-  it('should not overwrite an admin-set CONFIGURE_OBO value during backfill', async () => {
-    // Operator explicitly set USER.CONFIGURE_OBO=true via the role permissions editor.
-    mockGetRoleByName.mockImplementation(async (roleName: string) => {
-      if (roleName === SystemRoles.USER) {
-        return {
-          permissions: {
-            [PermissionTypes.MCP_SERVERS]: {
-              [Permissions.USE]: true,
-              [Permissions.CREATE]: false,
-              [Permissions.SHARE]: false,
-              [Permissions.SHARE_PUBLIC]: false,
-              [Permissions.CONFIGURE_OBO]: true,
-            },
-          },
-        };
-      }
-      return {
-        permissions: {
-          [PermissionTypes.MCP_SERVERS]: {
-            [Permissions.USE]: true,
-            [Permissions.CREATE]: true,
-            [Permissions.SHARE]: true,
-            [Permissions.SHARE_PUBLIC]: true,
-            [Permissions.CONFIGURE_OBO]: true,
-          },
-        },
-      };
-    });
-
-    const config = { interface: {} };
-    const configDefaults = { interface: {} } as TConfigDefaults;
-    const interfaceConfig = await loadDefaultInterface({ config, configDefaults });
-    const appConfig = { config, interfaceConfig } as unknown as AppConfig;
-
-    await updateInterfacePermissions({
-      appConfig,
-      getRoleByName: mockGetRoleByName,
-      updateAccessPermissions: mockUpdateAccessPermissions,
-    });
-
-    const userCall = mockUpdateAccessPermissions.mock.calls.find(
-      (call) => call[0] === SystemRoles.USER,
-    );
-
-    // Either no update was queued, or the queued update does not flip CONFIGURE_OBO.
-    if (userCall) {
-      const queuedMcp = userCall[1]?.[PermissionTypes.MCP_SERVERS];
-      if (queuedMcp && Permissions.CONFIGURE_OBO in queuedMcp) {
-        expect(queuedMcp[Permissions.CONFIGURE_OBO]).toBe(true);
-      }
-    }
-  });
-
   it('should apply explicit remoteAgents config to USER permissions (regression: loadDefaultInterface omission)', async () => {
     const config = {
       interface: {
@@ -2640,7 +2451,6 @@ describe('updateInterfacePermissions - permissions', () => {
       [Permissions.CREATE]: false,
       [Permissions.SHARE]: false,
       [Permissions.SHARE_PUBLIC]: false,
-      [Permissions.CONFIGURE_OBO]: false,
     });
 
     expect(adminCall[1][PermissionTypes.MCP_SERVERS]).toEqual({
@@ -2648,7 +2458,6 @@ describe('updateInterfacePermissions - permissions', () => {
       [Permissions.CREATE]: true,
       [Permissions.SHARE]: true,
       [Permissions.SHARE_PUBLIC]: true,
-      [Permissions.CONFIGURE_OBO]: true,
     });
   });
 
@@ -2681,7 +2490,6 @@ describe('updateInterfacePermissions - permissions', () => {
 
     expect(userCall[1][PermissionTypes.MCP_SERVERS]).toEqual({
       [Permissions.CREATE]: false,
-      [Permissions.CONFIGURE_OBO]: false,
     });
   });
 
@@ -2723,15 +2531,10 @@ describe('updateInterfacePermissions - permissions', () => {
 
     expect(userCall[1][PermissionTypes.MCP_SERVERS]).toEqual({
       [Permissions.CREATE]: false,
-      [Permissions.CONFIGURE_OBO]: false,
     });
     expect(userCall[1]).not.toHaveProperty(PermissionTypes.AGENTS);
 
-    // Admin's MCP_SERVERS doesn't migrate CREATE (already true) but does receive
-    // the CONFIGURE_OBO backfill since the mocked role doc lacked that sub-key.
-    expect(adminCall[1][PermissionTypes.MCP_SERVERS]).toEqual({
-      [Permissions.CONFIGURE_OBO]: true,
-    });
+    expect(adminCall[1]).not.toHaveProperty(PermissionTypes.MCP_SERVERS);
     expect(adminCall[1]).not.toHaveProperty(PermissionTypes.AGENTS);
   });
 
@@ -2767,79 +2570,5 @@ describe('updateInterfacePermissions - permissions', () => {
     );
 
     expect(userCall[1][PermissionTypes.MCP_SERVERS][Permissions.CREATE]).toBe(true);
-  });
-
-  it('should disable all SHARED_LINKS permissions when sharedLinks: false (boolean)', async () => {
-    mockGetRoleByName.mockResolvedValue({
-      permissions: {
-        [PermissionTypes.SHARED_LINKS]: {
-          [Permissions.CREATE]: true,
-          [Permissions.SHARE]: true,
-          [Permissions.SHARE_PUBLIC]: true,
-        },
-      },
-    });
-
-    const config = {
-      interface: {
-        sharedLinks: false,
-      },
-    };
-    const configDefaults = { interface: {} } as TConfigDefaults;
-    const interfaceConfig = await loadDefaultInterface({ config, configDefaults });
-    const appConfig = { config, interfaceConfig } as unknown as AppConfig;
-
-    await updateInterfacePermissions({
-      appConfig,
-      getRoleByName: mockGetRoleByName,
-      updateAccessPermissions: mockUpdateAccessPermissions,
-    });
-
-    const userCall = mockUpdateAccessPermissions.mock.calls.find(
-      (call) => call[0] === SystemRoles.USER,
-    );
-
-    expect(userCall[1][PermissionTypes.SHARED_LINKS]).toEqual({
-      [Permissions.CREATE]: false,
-      [Permissions.SHARE]: false,
-      [Permissions.SHARE_PUBLIC]: false,
-    });
-  });
-
-  it('should enable all SHARED_LINKS permissions when sharedLinks: true (boolean)', async () => {
-    mockGetRoleByName.mockResolvedValue({
-      permissions: {
-        [PermissionTypes.SHARED_LINKS]: {
-          [Permissions.CREATE]: false,
-          [Permissions.SHARE]: false,
-          [Permissions.SHARE_PUBLIC]: false,
-        },
-      },
-    });
-
-    const config = {
-      interface: {
-        sharedLinks: true,
-      },
-    };
-    const configDefaults = { interface: {} } as TConfigDefaults;
-    const interfaceConfig = await loadDefaultInterface({ config, configDefaults });
-    const appConfig = { config, interfaceConfig } as unknown as AppConfig;
-
-    await updateInterfacePermissions({
-      appConfig,
-      getRoleByName: mockGetRoleByName,
-      updateAccessPermissions: mockUpdateAccessPermissions,
-    });
-
-    const userCall = mockUpdateAccessPermissions.mock.calls.find(
-      (call) => call[0] === SystemRoles.USER,
-    );
-
-    expect(userCall[1][PermissionTypes.SHARED_LINKS]).toEqual({
-      [Permissions.CREATE]: true,
-      [Permissions.SHARE]: true,
-      [Permissions.SHARE_PUBLIC]: true,
-    });
   });
 });

@@ -1,12 +1,10 @@
-import { JSX } from 'react/jsx-runtime';
-
 export default function MinimalPlugin({
   size,
   className = 'icon-md',
 }: {
   size?: number;
   className?: string;
-}): JSX.Element {
+}) {
   return (
     <svg
       width={size}

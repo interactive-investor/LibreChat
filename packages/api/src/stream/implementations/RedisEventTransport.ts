@@ -439,12 +439,6 @@ export class RedisEventTransport implements IEventTransport {
     }
 
     const streamState = this.streams.get(streamId)!;
-    // Internal listeners (for example cross-replica abort) can leave ordering
-    // state behind with no real SSE subscribers. A new subscriber is a fresh
-    // attachment and must not inherit that prior generation's expected seq.
-    if (streamState.count === 0) {
-      this.resetReorderBuffer(streamId);
-    }
     streamState.count++;
     streamState.handlers.set(subscriberId, handlers);
 
@@ -476,13 +470,12 @@ export class RedisEventTransport implements IEventTransport {
 
         // If last subscriber left, unsubscribe from Redis and notify
         if (state.count === 0) {
-          /**
-           * Preserve callbacks for reconnect, but drop ordering state from the
-           * previous attachment. Reconnects always call syncReorderBuffer(), so
-           * keeping nextSeq here only risks poisoning a later generation when
-           * the shared Redis sequence key has already been reset elsewhere.
-           */
-          this.resetReorderBuffer(streamId);
+          // Clear any pending flush timeout and buffered messages
+          if (state.reorderBuffer.flushTimeout) {
+            clearTimeout(state.reorderBuffer.flushTimeout);
+            state.reorderBuffer.flushTimeout = null;
+          }
+          state.reorderBuffer.pending.clear();
 
           this.subscriber.unsubscribe(channel).catch((err) => {
             logger.error(`[RedisEventTransport] Failed to unsubscribe from ${channel}:`, err);

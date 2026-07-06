@@ -1,6 +1,4 @@
-import { JSX } from 'react/jsx-runtime';
-
-export default function PinIcon({ unpin = false }: { unpin?: boolean }): JSX.Element {
+export default function PinIcon({ unpin = false }: { unpin?: boolean }) {
   if (unpin) {
     return (
       <svg

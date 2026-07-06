@@ -1,11 +1,10 @@
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils';
 
 type TrashIconProps = {
   className?: string;
 };
 
-export default function TrashIcon({ className = '' }: TrashIconProps): JSX.Element {
+export default function TrashIcon({ className = '' }: TrashIconProps) {
   return (
     <svg
       fill="none"

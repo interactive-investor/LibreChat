@@ -14,9 +14,6 @@ export type CreatedEvent = {
     text?: string;
     sender: string;
     isCreatedByUser: boolean;
-    /** Quoted excerpts referenced on this turn, carried through resumable job
-     *  metadata so reconstructed user messages keep their `MessageQuotes`. */
-    quotes?: string[];
   };
   streamId: string;
 };

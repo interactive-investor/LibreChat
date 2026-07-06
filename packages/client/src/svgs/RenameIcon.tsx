@@ -1,6 +1,4 @@
-import { JSX } from 'react/jsx-runtime';
-
-export default function RenameIcon(): JSX.Element {
+export default function RenameIcon() {
   return (
     <svg
       fill="none"

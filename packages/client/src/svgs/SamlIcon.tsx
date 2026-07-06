@@ -8,9 +8,8 @@
  *  - AUTHOR: HashiCorp
  */
 import React from 'react';
-import { JSX } from 'react/jsx-runtime';
 
-export default function SamlIcon(): JSX.Element {
+export default function SamlIcon() {
   return (
     <svg
       width="800px"

@@ -1,11 +1,7 @@
-const { fetch } = require('undici');
+const { fetch, ProxyAgent } = require('undici');
 const TavilySearchResults = require('../TavilySearchResults');
-const { getEnvProxyDispatcher } = require('@librechat/api');
 
 jest.mock('undici');
-jest.mock('@librechat/api', () => ({
-  getEnvProxyDispatcher: jest.fn(),
-}));
 
 describe('TavilySearchResults', () => {
   let originalEnv;
@@ -50,29 +46,32 @@ describe('TavilySearchResults', () => {
       fetch.mockResolvedValue(mockResponse);
     });
 
-    it('should use a shared proxy dispatcher when configured', async () => {
-      const mockProxyDispatcher = { type: 'proxy-dispatcher' };
-      getEnvProxyDispatcher.mockReturnValue(mockProxyDispatcher);
+    it('should use ProxyAgent when PROXY env var is set', async () => {
+      const proxyUrl = 'http://proxy.example.com:8080';
+      process.env.PROXY = proxyUrl;
+
+      const mockProxyAgent = { type: 'proxy-agent' };
+      ProxyAgent.mockImplementation(() => mockProxyAgent);
 
       const instance = new TavilySearchResults({ TAVILY_API_KEY: mockApiKey });
       await instance._call({ query: 'test query' });
 
-      expect(getEnvProxyDispatcher).toHaveBeenCalled();
+      expect(ProxyAgent).toHaveBeenCalledWith(proxyUrl);
       expect(fetch).toHaveBeenCalledWith(
         'https://api.tavily.com/search',
         expect.objectContaining({
-          dispatcher: mockProxyDispatcher,
+          dispatcher: mockProxyAgent,
         }),
       );
     });
 
-    it('should not attach a dispatcher when no proxy is configured', async () => {
-      getEnvProxyDispatcher.mockReturnValue(undefined);
+    it('should not use ProxyAgent when PROXY env var is not set', async () => {
+      delete process.env.PROXY;
 
       const instance = new TavilySearchResults({ TAVILY_API_KEY: mockApiKey });
       await instance._call({ query: 'test query' });
 
-      expect(getEnvProxyDispatcher).toHaveBeenCalled();
+      expect(ProxyAgent).not.toHaveBeenCalled();
       expect(fetch).toHaveBeenCalledWith(
         'https://api.tavily.com/search',
         expect.not.objectContaining({

@@ -39,6 +39,7 @@ export default function useSelectAgent() {
       newConversation({
         template: currentConvo,
         preset: template as Partial<TPreset>,
+        keepLatestMessage: true,
       });
     },
     [getConversation, getDefaultConversation, newConversation],

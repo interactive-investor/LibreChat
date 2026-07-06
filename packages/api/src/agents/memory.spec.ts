@@ -27,34 +27,12 @@ const mockResolveHeaders = jest.fn((opts) => {
   return result;
 });
 
-type HeaderCarrier = { defaultHeaders?: Record<string, string> };
-const mockResolveConfigHeaders = jest.fn(
-  (opts: {
-    llmConfig?: { configuration?: HeaderCarrier; clientOptions?: HeaderCarrier };
-    user?: { id?: string; email?: string };
-  }) => {
-    const cfg = opts?.llmConfig;
-    if (cfg?.configuration?.defaultHeaders != null) {
-      cfg.configuration.defaultHeaders = mockResolveHeaders({
-        headers: cfg.configuration.defaultHeaders,
-        user: opts.user,
-      });
-    }
-    if (cfg?.clientOptions?.defaultHeaders != null) {
-      cfg.clientOptions.defaultHeaders = mockResolveHeaders({
-        headers: cfg.clientOptions.defaultHeaders,
-        user: opts.user,
-      });
-    }
-  },
-);
-
 jest.mock('~/utils', () => ({
   Tokenizer: {
     getTokenCount: jest.fn(() => 10),
   },
   createSafeUser: (user: unknown) => mockCreateSafeUser(user),
-  resolveConfigHeaders: (opts: unknown) => mockResolveConfigHeaders(opts as never),
+  resolveHeaders: (opts: unknown) => mockResolveHeaders(opts),
 }));
 
 const { createSafeUser } = jest.requireMock('~/utils');

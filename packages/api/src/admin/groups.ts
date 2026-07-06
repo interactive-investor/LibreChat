@@ -84,16 +84,7 @@ export interface AdminGroupsDeps {
   }) => Promise<DeleteResult>;
 }
 
-export function createAdminGroupsHandlers(deps: AdminGroupsDeps): {
-  listGroups: (req: ServerRequest, res: Response) => Promise<Response>;
-  getGroup: (req: ServerRequest, res: Response) => Promise<Response>;
-  createGroup: (req: ServerRequest, res: Response) => Promise<Response>;
-  updateGroup: (req: ServerRequest, res: Response) => Promise<Response>;
-  deleteGroup: (req: ServerRequest, res: Response) => Promise<Response>;
-  getGroupMembers: (req: ServerRequest, res: Response) => Promise<Response>;
-  addGroupMember: (req: ServerRequest, res: Response) => Promise<Response>;
-  removeGroupMember: (req: ServerRequest, res: Response) => Promise<Response>;
-} {
+export function createAdminGroupsHandlers(deps: AdminGroupsDeps) {
   const {
     listGroups,
     countGroups,

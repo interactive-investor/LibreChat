@@ -1,5 +1,5 @@
-import { dataService, QueryKeys, ResourceType } from 'librechat-data-provider';
 import { useMutation, useQueryClient, UseMutationResult } from '@tanstack/react-query';
+import { dataService, QueryKeys, ResourceType } from 'librechat-data-provider';
 import type * as t from 'librechat-data-provider';
 
 /**
@@ -84,12 +84,9 @@ export const useUpdateMCPServerMutation = (options?: {
         // Update list cache
         const listRes = queryClient.getQueryData<t.MCPServersListResponse>([QueryKeys.mcpServers]);
         if (listRes) {
-          const oldServer = listRes[variables.serverName];
-          listRes[variables.serverName] = {
-            ...updatedServer,
-            dbId: updatedServer.dbId ?? oldServer?.dbId,
-            consumeOnly: updatedServer.consumeOnly ?? oldServer?.consumeOnly,
-          };
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { type, ...oldServer } = listRes[variables.serverName!];
+          listRes[variables.serverName!] = { ...oldServer, ...updatedServer };
 
           queryClient.setQueryData<t.MCPServersListResponse>([QueryKeys.mcpServers], {
             ...listRes,

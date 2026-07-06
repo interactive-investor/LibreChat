@@ -1,10 +1,12 @@
-import { logger } from '@librechat/data-schemas';
 import { getSignedCookies } from '@aws-sdk/cloudfront-signer';
+import { logger } from '@librechat/data-schemas';
+
 import type { NextFunction, Response } from 'express';
+
 import { INLINE_AVATAR_PATH_PREFIX, INLINE_IMAGE_PATH_PREFIX } from '~/storage/constants';
 import { assertPathSegment } from '~/storage/validation';
-import { getCloudFrontConfig } from './cloudfront';
 import { s3Config } from '~/storage/s3/s3Config';
+import { getCloudFrontConfig } from './cloudfront';
 
 const DEFAULT_COOKIE_EXPIRY = 1800;
 
@@ -145,17 +147,11 @@ function getConfiguredCookieExpiry(): number {
   return config?.cookieExpiry ?? DEFAULT_COOKIE_EXPIRY;
 }
 
-export function getCloudFrontCookieRefreshWindowSec(
-  cookieExpiry: number = getConfiguredCookieExpiry(),
-): number {
+export function getCloudFrontCookieRefreshWindowSec(cookieExpiry = getConfiguredCookieExpiry()) {
   return Math.min(300, Math.floor(cookieExpiry / 4));
 }
 
-export function getCloudFrontCookieTiming(): {
-  expiresInSec: number;
-  refreshAfterSec: number;
-  refreshWindowSec: number;
-} {
+export function getCloudFrontCookieTiming() {
   const expiresInSec = getConfiguredCookieExpiry();
   const refreshWindowSec = getCloudFrontCookieRefreshWindowSec(expiresInSec);
   return {
@@ -314,10 +310,6 @@ function getCloudFrontCookieSkipReason(scope: CloudFrontCookieScope): string | n
     return 'missing_user_id';
   }
   return null;
-}
-
-function shouldLogCloudFrontCookieSkip(reason: string): boolean {
-  return reason !== 'cloudfront_disabled';
 }
 
 function getScopeRefreshReason(
@@ -524,6 +516,10 @@ export function setCloudFrontCookies(
       path: '/',
     });
 
+    logger.debug(
+      `[setCloudFrontCookies] Issued signed CloudFront cookies (paths=${signedCookieSets.length}, expiresInSec=${cookieExpiry}).`,
+    );
+
     return true;
   } catch (error) {
     logger.error('[setCloudFrontCookies] Failed to generate signed cookies:', error);
@@ -544,16 +540,14 @@ export function maybeRefreshCloudFrontAuthCookies(
     const timing = getCloudFrontCookieTiming();
 
     if (skipReason) {
-      if (shouldLogCloudFrontCookieSkip(skipReason)) {
-        logger.debug('[maybeRefreshCloudFrontAuthCookies] CloudFront auth cookies skipped', {
-          attempted: false,
-          refreshed: false,
-          reason: skipReason,
-          has_user_id: Boolean(scope.userId),
-          has_tenant_scope: Boolean(scope.tenantId),
-          has_storage_region: Boolean(scope.storageRegion),
-        });
-      }
+      logger.debug('[maybeRefreshCloudFrontAuthCookies] CloudFront auth cookies skipped', {
+        attempted: false,
+        refreshed: false,
+        reason: skipReason,
+        has_user_id: Boolean(scope.userId),
+        has_tenant_scope: Boolean(scope.tenantId),
+        has_storage_region: Boolean(scope.storageRegion),
+      });
       return {
         enabled: false,
         attempted: false,
@@ -571,6 +565,12 @@ export function maybeRefreshCloudFrontAuthCookies(
       : getScopeRefreshReason(previousScope, effectiveScope, refreshWindowSec);
 
     if (!refreshReason) {
+      logger.debug('[maybeRefreshCloudFrontAuthCookies] CloudFront auth cookies still fresh', {
+        attempted: false,
+        refreshed: false,
+        reason: 'fresh',
+        refresh_window_sec: refreshWindowSec,
+      });
       return {
         enabled: true,
         attempted: false,
@@ -593,14 +593,10 @@ export function maybeRefreshCloudFrontAuthCookies(
     };
 
     if (cookiesSet) {
-      return {
-        enabled: true,
-        attempted: true,
-        refreshed: true,
-        reason: refreshReason,
-        expiresInSec: timing.expiresInSec,
-        refreshAfterSec: timing.refreshAfterSec,
-      };
+      logger.debug(
+        '[maybeRefreshCloudFrontAuthCookies] CloudFront auth cookies refreshed',
+        logPayload,
+      );
     } else {
       logger.warn(
         '[maybeRefreshCloudFrontAuthCookies] CloudFront auth cookie refresh failed',
@@ -611,8 +607,8 @@ export function maybeRefreshCloudFrontAuthCookies(
     return {
       enabled: true,
       attempted: true,
-      refreshed: false,
-      reason: 'set_failed',
+      refreshed: cookiesSet,
+      reason: cookiesSet ? refreshReason : 'set_failed',
       expiresInSec: timing.expiresInSec,
       refreshAfterSec: timing.refreshAfterSec,
     };

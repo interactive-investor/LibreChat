@@ -1,15 +1,10 @@
 import { EModelEndpoint } from 'librechat-data-provider';
-import type {
-  TEndpoint,
-  TCustomConfig,
-  TAgentsEndpoint,
-  TAnthropicEndpoint,
-} from 'librechat-data-provider';
+import type { TCustomConfig, TAgentsEndpoint, TAnthropicEndpoint } from 'librechat-data-provider';
 import type { AppConfig } from '~/types';
 import { azureAssistantsDefaults, assistantsConfigSetup } from './assistants';
 import { agentsConfigSetup } from './agents';
-import { vertexConfigSetup } from './vertex';
 import { azureConfigSetup } from './azure';
+import { vertexConfigSetup } from './vertex';
 
 /**
  * Loads custom config endpoints
@@ -19,21 +14,7 @@ import { azureConfigSetup } from './azure';
 export const loadEndpoints = (
   config: Partial<TCustomConfig>,
   agentsDefaults?: Partial<TAgentsEndpoint>,
-): {
-  allowedAddresses?: string[];
-  openAI?: Partial<import('librechat-data-provider').TEndpoint>;
-  google?: Partial<import('librechat-data-provider').TEndpoint>;
-  bedrock?: Partial<import('librechat-data-provider').TEndpoint>;
-  anthropic?: Partial<TAnthropicEndpoint> & {
-    vertexConfig?: import('librechat-data-provider').TVertexAIConfig;
-  };
-  azureOpenAI?: import('librechat-data-provider').TAzureConfig;
-  assistants?: Partial<import('librechat-data-provider').TAssistantEndpoint>;
-  azureAssistants?: Partial<import('librechat-data-provider').TAssistantEndpoint>;
-  all?: Partial<import('librechat-data-provider').TEndpoint>;
-  agents?: Partial<TAgentsEndpoint>;
-  custom?: import('librechat-data-provider').TCustomEndpoints;
-} => {
+) => {
   const loadedEndpoints: AppConfig['endpoints'] = {};
   const endpoints = config?.endpoints;
 
@@ -93,12 +74,7 @@ export const loadEndpoints = (
   });
 
   if (endpoints?.all) {
-    /**
-     * `DeepPartial<TCustomConfig>` widens record values to `string | undefined`
-     * (e.g. `headers`), so cast to the concrete endpoint type — mirrors the
-     * `anthropicConfig as TAnthropicEndpoint` cast above.
-     */
-    loadedEndpoints.all = endpoints.all as Partial<TEndpoint>;
+    loadedEndpoints.all = endpoints.all;
   }
 
   if (endpoints?.allowedAddresses) {

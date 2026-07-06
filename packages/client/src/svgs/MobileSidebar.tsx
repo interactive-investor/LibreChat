@@ -1,6 +1,4 @@
-import { JSX } from 'react/jsx-runtime';
-
-export default function MobileSidebar({ className }: { className?: string }): JSX.Element {
+export default function MobileSidebar({ className }: { className?: string }) {
   return (
     <svg
       width="24"

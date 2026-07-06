@@ -1,7 +1,6 @@
 import React from 'react';
-import { JSX } from 'react/jsx-runtime';
 
-export default function CautionIcon(): JSX.Element {
+export default function CautionIcon() {
   return (
     <svg
       stroke="currentColor"

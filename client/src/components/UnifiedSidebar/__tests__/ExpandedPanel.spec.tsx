@@ -17,17 +17,12 @@ jest.mock('~/store', () => {
     key: 'mock-newChatSwitchToHistory',
     default: true,
   });
-  const customShortcutsAtom = atom({
-    key: 'mock-customShortcuts',
-    default: {},
-  });
   return {
     __esModule: true,
     default: {
       conversationByIndex: () =>
         atom({ key: `mock-conversationByIndex-${counter++}`, default: null }),
       newChatSwitchToHistory: switchAtom,
-      customShortcuts: customShortcutsAtom,
     },
   };
 });

@@ -1,9 +1,9 @@
+import localUser from '../config.local';
 import cleanupUser from './cleanupUser';
-import { getE2EUser } from './user';
 
 async function globalTeardown() {
   try {
-    await cleanupUser(getE2EUser());
+    await cleanupUser(localUser);
   } catch (error) {
     console.error('Error:', error);
   }

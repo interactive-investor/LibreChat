@@ -272,7 +272,7 @@ describe('ErrorDisplay', () => {
     });
 
     it('handles null/undefined errors', () => {
-      render(<ErrorDisplay error={{}} />);
+      render(<ErrorDisplay error={null} />);
 
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();
       expect(

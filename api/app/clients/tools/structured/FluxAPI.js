@@ -2,12 +2,8 @@ const axios = require('axios');
 const fetch = require('node-fetch');
 const { v4: uuidv4 } = require('uuid');
 const { logger } = require('@librechat/data-schemas');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 const { Tool } = require('@librechat/agents/langchain/tools');
-const {
-  applyAxiosProxyConfig,
-  createMinimalRetentionRequest,
-  getHttpsProxyAgent,
-} = require('@librechat/api');
 const { FileContext, ContentTypes } = require('librechat-data-provider');
 
 const fluxApiJsonSchema = {
@@ -114,7 +110,6 @@ class FluxAPI extends Tool {
 
     this.userId = fields.userId;
     this.tenantId = fields.req?.user?.tenantId;
-    this.retentionRequest = createMinimalRetentionRequest(fields.req);
     this.fileStrategy = fields.fileStrategy;
 
     /** @type {boolean} **/
@@ -153,7 +148,10 @@ class FluxAPI extends Tool {
 
   getAxiosConfig() {
     const config = {};
-    return applyAxiosProxyConfig(config, this.baseUrl);
+    if (process.env.PROXY) {
+      config.httpsAgent = new HttpsProxyAgent(process.env.PROXY);
+    }
+    return config;
   }
 
   /** @param {Object|string} value */
@@ -307,9 +305,8 @@ class FluxAPI extends Tool {
       try {
         // Fetch the image and convert to base64
         const fetchOptions = {};
-        const agent = getHttpsProxyAgent(imageUrl);
-        if (agent) {
-          fetchOptions.agent = agent;
+        if (process.env.PROXY) {
+          fetchOptions.agent = new HttpsProxyAgent(process.env.PROXY);
         }
         const imageResponse = await fetch(imageUrl, fetchOptions);
         const arrayBuffer = await imageResponse.arrayBuffer();
@@ -346,7 +343,6 @@ class FluxAPI extends Tool {
         basePath: 'images',
         context: FileContext.image_generation,
         tenantId: this.tenantId,
-        req: this.retentionRequest,
       });
 
       logger.debug('[FluxAPI] Image saved to path:', result.filepath);
@@ -540,9 +536,8 @@ class FluxAPI extends Tool {
     if (this.isAgent) {
       try {
         const fetchOptions = {};
-        const agent = getHttpsProxyAgent(imageUrl);
-        if (agent) {
-          fetchOptions.agent = agent;
+        if (process.env.PROXY) {
+          fetchOptions.agent = new HttpsProxyAgent(process.env.PROXY);
         }
         const imageResponse = await fetch(imageUrl, fetchOptions);
         const arrayBuffer = await imageResponse.arrayBuffer();
@@ -579,7 +574,6 @@ class FluxAPI extends Tool {
         basePath: 'images',
         context: FileContext.image_generation,
         tenantId: this.tenantId,
-        req: this.retentionRequest,
       });
 
       logger.debug('[FluxAPI] Finetuned image saved to path:', result.filepath);

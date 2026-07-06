@@ -69,9 +69,6 @@ const skillFileSchema: Schema<ISkillFileDocument> = new Schema(
       type: String,
       required: true,
     },
-    sourceMetadata: {
-      type: Schema.Types.Mixed,
-    },
     mimeType: {
       type: String,
       required: true,

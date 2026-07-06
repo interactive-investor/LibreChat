@@ -30,7 +30,6 @@ jest.mock('@librechat/data-schemas', () => ({
 /** Bypass SSRF validation — these tests use real local HTTP servers. */
 jest.mock('~/auth', () => ({
   ...jest.requireActual('~/auth'),
-  createSSRFSafeUndiciConnect: jest.fn(() => undefined),
   isSSRFTarget: jest.fn(() => false),
   resolveHostnameSSRF: jest.fn(async () => false),
 }));

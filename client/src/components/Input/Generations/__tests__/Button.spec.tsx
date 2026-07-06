@@ -1,13 +1,9 @@
-/* eslint-disable i18next/no-literal-string */
-import { RecoilRoot } from 'recoil';
 import { render, fireEvent } from '@testing-library/react';
 import Button from '../Button';
 
-const renderWithRecoil = (ui: React.ReactElement) => render(<RecoilRoot>{ui}</RecoilRoot>);
-
 describe('Button', () => {
   it('renders with the correct type and children', () => {
-    const { getByTestId, getByText } = renderWithRecoil(
+    const { getByTestId, getByText } = render(
       <Button
         type="regenerate"
         onClick={() => {
@@ -23,7 +19,7 @@ describe('Button', () => {
 
   it('calls onClick when clicked', () => {
     const handleClick = jest.fn();
-    const { getByText } = renderWithRecoil(
+    const { getByText } = render(
       <Button type="continue" onClick={handleClick}>
         Continue
       </Button>,

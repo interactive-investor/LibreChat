@@ -23,7 +23,6 @@ import { useAgentsMapContext } from '~/Providers/AgentsMapContext';
 import { mapEndpoints, getPresetTitle } from '~/utils';
 import { EndpointIcon } from '~/components/Endpoints';
 import useHasAccess from '~/hooks/Roles/useHasAccess';
-import { filterMentionEndpoints } from './mentions';
 
 const defaultInterface = getConfigDefaults().interface;
 
@@ -83,25 +82,7 @@ export default function useMentions({
     () => startupConfig?.interface ?? defaultInterface,
     [startupConfig?.interface],
   );
-  const includedEndpoints = useMemo(
-    () => new Set(startupConfig?.modelSpecs?.addedEndpoints ?? []),
-    [startupConfig?.modelSpecs?.addedEndpoints],
-  );
-  const validEndpoints = useMemo(
-    () =>
-      filterMentionEndpoints({
-        endpoints,
-        includedEndpoints,
-        includeAssistants,
-        hasAgentAccess,
-      }),
-    [endpoints, includedEndpoints, includeAssistants, hasAgentAccess],
-  );
-  const validEndpointSet = useMemo(() => new Set(validEndpoints), [validEndpoints]);
-  const agentQueryEnabled =
-    hasAgentAccess &&
-    interfaceConfig.modelSelect === true &&
-    (includedEndpoints.size === 0 || includedEndpoints.has(EModelEndpoint.agents));
+  const agentQueryEnabled = hasAgentAccess && interfaceConfig.modelSelect === true;
   const { data: agentsList = null, isLoading: isLoadingAgents } = useListAgentsQuery(
     { requiredPermission: PermissionBits.VIEW },
     {
@@ -171,6 +152,11 @@ export default function useMentions({
   }, [startupConfig, agentsMap]);
 
   const options: MentionOption[] = useMemo(() => {
+    let validEndpoints = endpoints;
+    if (!includeAssistants) {
+      validEndpoints = endpoints.filter((endpoint) => !isAssistantsEndpoint(endpoint));
+    }
+
     const modelOptions = validEndpoints.flatMap((endpoint) => {
       if (isAssistantsEndpoint(endpoint) || isAgentsEndpoint(endpoint)) {
         return [];
@@ -221,18 +207,14 @@ export default function useMentions({
           size: 20,
         }),
       })),
-      ...(interfaceConfig.modelSelect === true && validEndpointSet.has(EModelEndpoint.agents)
-        ? (agentsList ?? [])
-        : []),
+      ...(interfaceConfig.modelSelect === true ? (agentsList ?? []) : []),
       ...(endpointsConfig?.[EModelEndpoint.assistants] &&
       includeAssistants &&
-      validEndpointSet.has(EModelEndpoint.assistants) &&
       interfaceConfig.modelSelect === true
         ? assistantListMap[EModelEndpoint.assistants] || []
         : []),
       ...(endpointsConfig?.[EModelEndpoint.azureAssistants] &&
       includeAssistants &&
-      validEndpointSet.has(EModelEndpoint.azureAssistants) &&
       interfaceConfig.modelSelect === true
         ? assistantListMap[EModelEndpoint.azureAssistants] || []
         : []),
@@ -259,12 +241,11 @@ export default function useMentions({
     return mentions;
   }, [
     presets,
+    endpoints,
     modelSpecs,
     agentsList,
     assistantMap,
     modelsConfig,
-    validEndpoints,
-    validEndpointSet,
     endpointsConfig,
     assistantListMap,
     includeAssistants,

@@ -1,8 +1,7 @@
-import { Model } from 'mongoose';
-import { applyTenantIsolation } from '~/models/plugins/tenantIsolation';
 import presetSchema, { IPreset } from '~/schema/preset';
+import { applyTenantIsolation } from '~/models/plugins/tenantIsolation';
 
-export function createPresetModel(mongoose: typeof import('mongoose')): Model<IPreset> {
+export function createPresetModel(mongoose: typeof import('mongoose')) {
   applyTenantIsolation(presetSchema);
   return mongoose.models.Preset || mongoose.model<IPreset>('Preset', presetSchema);
 }

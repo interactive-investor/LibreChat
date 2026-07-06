@@ -13,7 +13,6 @@ import {
   OGDialogHeader,
   OGDialogContent,
   OGDialogTrigger,
-  SecretInput,
 } from '@librechat/client';
 import { TranslationKeys, useLocalize } from '~/hooks';
 import { cn } from '~/utils';
@@ -23,18 +22,6 @@ export default function ActionsAuth({ disableOAuth }: { disableOAuth?: boolean }
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const { watch, setValue, trigger } = useFormContext();
   const type = watch('type');
-
-  const renderAuthFields = () => {
-    if (type === AuthTypeEnum.None) {
-      return null;
-    }
-
-    if (type === AuthTypeEnum.ServiceHttp) {
-      return <ApiKey />;
-    }
-
-    return <OAuth />;
-  };
 
   return (
     <OGDialog open={openAuthDialog} onOpenChange={setOpenAuthDialog}>
@@ -149,7 +136,7 @@ export default function ActionsAuth({ disableOAuth }: { disableOAuth?: boolean }
               </div>
             </RadioGroup.Root>
           </div>
-          {renderAuthFields()}
+          {type === 'none' ? null : type === 'service_http' ? <ApiKey /> : <OAuth />}
           {/* Cancel/Save */}
           <div className="mt-5 flex flex-col gap-3 sm:mt-4 sm:flex-row-reverse">
             <button
@@ -181,20 +168,18 @@ const ApiKey = () => {
   const { register, watch, setValue } = useFormContext();
   const authorization_type = watch('authorization_type');
   const type = watch('type');
-  const inputClasses = cn(
-    'mb-2 h-9 w-full resize-none overflow-y-auto rounded-lg border px-3 py-2 text-sm',
-    'border-border-medium bg-surface-primary outline-none',
-    'focus:ring-2 focus:ring-ring',
-  );
-
   return (
     <>
       <label className="mb-1 block text-sm font-medium">{localize('com_ui_api_key')}</label>
-      <SecretInput
+      <input
         placeholder="<HIDDEN>"
+        type="new-password"
         autoComplete="new-password"
-        controlsOnHover
-        className={inputClasses}
+        className={cn(
+          'mb-2 h-9 w-full resize-none overflow-y-auto rounded-lg border px-3 py-2 text-sm',
+          'border-border-medium bg-surface-primary outline-none',
+          'focus:ring-2 focus:ring-ring',
+        )}
         {...register('api_key', { required: type === AuthTypeEnum.ServiceHttp })}
       />
       <label className="mb-1 block text-sm font-medium">{localize('com_ui_auth_type')}</label>
@@ -309,18 +294,18 @@ const OAuth = () => {
   return (
     <>
       <label className="mb-1 block text-sm font-medium">{localize('com_ui_client_id')}</label>
-      <SecretInput
+      <input
         placeholder="<HIDDEN>"
+        type="password"
         autoComplete="new-password"
-        controlsOnHover
         className={inputClasses}
         {...register('oauth_client_id', { required: false })}
       />
       <label className="mb-1 block text-sm font-medium">{localize('com_ui_client_secret')}</label>
-      <SecretInput
+      <input
         placeholder="<HIDDEN>"
+        type="password"
         autoComplete="new-password"
-        controlsOnHover
         className={inputClasses}
         {...register('oauth_client_secret', { required: false })}
       />

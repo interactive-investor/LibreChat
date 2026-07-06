@@ -34,7 +34,6 @@ export interface StreamServicesConfig {
   inMemoryOptions?: {
     ttlAfterComplete?: number;
     maxJobs?: number;
-    staleJobTimeout?: number;
   };
 }
 
@@ -120,8 +119,6 @@ function createInMemoryServices(options?: StreamServicesConfig['inMemoryOptions'
   const jobStore = new InMemoryJobStore({
     ttlAfterComplete: options?.ttlAfterComplete ?? 300000, // 5 minutes
     maxJobs: options?.maxJobs ?? 1000,
-    // Failsafe for crashed/hung generations (mirrors RedisJobStore's running-job TTL).
-    staleJobTimeout: options?.staleJobTimeout ?? 1_200_000, // 20 minutes
   });
 
   const eventTransport = new InMemoryEventTransport();

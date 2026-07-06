@@ -1,13 +1,6 @@
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils';
 
-export default function Sparkles({
-  className = '',
-  size = 24,
-}: {
-  className?: string | undefined;
-  size?: number | undefined;
-}): JSX.Element {
+export default function Sparkles({ className = '', size = 24 }) {
   return (
     <svg
       width={size}

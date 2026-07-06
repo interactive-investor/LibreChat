@@ -1,6 +1,5 @@
-import { logger, SYSTEM_TENANT_ID } from '@librechat/data-schemas';
+import { tenantStorage, logger, SYSTEM_TENANT_ID } from '@librechat/data-schemas';
 import type { Request, Response, NextFunction } from 'express';
-import { buildTenantContext, runWithTenantContext } from './tenant';
 
 /**
  * Pre-authentication tenant context middleware for unauthenticated routes.
@@ -28,49 +27,46 @@ import { buildTenantContext, runWithTenantContext } from './tenant';
  * 3. Layer additional resolution on top (e.g., OpenID `tenant` claim → header).
  *
  * If no header is present, downstream runs without tenant ALS context (same as
- * single-tenant mode), while request logging context can still propagate.
+ * single-tenant mode). This preserves backward compatibility.
  */
 const MAX_TENANT_ID_LENGTH = 128;
 const VALID_TENANT_ID = /^[-a-zA-Z0-9_.]+$/;
 
 export function preAuthTenantMiddleware(req: Request, res: Response, next: NextFunction): void {
   const raw = req.headers['x-tenant-id'];
-  const requestContext = buildTenantContext({ headers: req.headers });
 
   if (!raw || typeof raw !== 'string') {
-    runWithTenantContext(requestContext, next);
+    next();
     return;
   }
 
   const tenantId = raw.trim();
 
   if (!tenantId) {
-    runWithTenantContext(requestContext, next);
+    next();
     return;
   }
 
   if (tenantId === SYSTEM_TENANT_ID) {
-    runWithTenantContext(requestContext, () => {
-      logger.warn('[preAuthTenant] Rejected __SYSTEM__ sentinel in X-Tenant-Id header', {
-        ip: req.ip,
-        path: req.path,
-      });
-      next();
+    logger.warn('[preAuthTenant] Rejected __SYSTEM__ sentinel in X-Tenant-Id header', {
+      ip: req.ip,
+      path: req.path,
     });
+    next();
     return;
   }
 
   if (tenantId.length > MAX_TENANT_ID_LENGTH || !VALID_TENANT_ID.test(tenantId)) {
-    runWithTenantContext(requestContext, () => {
-      logger.warn('[preAuthTenant] Rejected malformed X-Tenant-Id header', {
-        ip: req.ip,
-        length: tenantId.length,
-        path: req.path,
-      });
-      next();
+    logger.warn('[preAuthTenant] Rejected malformed X-Tenant-Id header', {
+      ip: req.ip,
+      length: tenantId.length,
+      path: req.path,
     });
+    next();
     return;
   }
 
-  runWithTenantContext(buildTenantContext({ headers: req.headers }, tenantId), next);
+  return void tenantStorage.run({ tenantId }, async () => {
+    next();
+  });
 }

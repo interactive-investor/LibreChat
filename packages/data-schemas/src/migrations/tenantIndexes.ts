@@ -35,7 +35,6 @@ const SUPERSEDED_INDEXES: Record<string, string[]> = {
   mcpservers: ['serverName_1'],
   files: ['filename_1_conversationId_1_context_1'],
   groups: ['idOnTheSource_1_source_1'],
-  skillsyncstatuses: ['provider_1_sourceId_1'],
 };
 
 interface MigrationResult {

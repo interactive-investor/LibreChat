@@ -109,7 +109,7 @@ export default function ArchivedChatsTable({
     },
   });
 
-  const { mutate: unarchiveConversation, isLoading: isUnarchiving } = useArchiveConvoMutation({
+  const unarchiveMutation = useArchiveConvoMutation({
     onSuccess: async () => {
       await refetch();
     },
@@ -253,16 +253,20 @@ export default function ArchivedChatsTable({
                     variant="ghost"
                     className="h-8 w-8 p-0 hover:bg-surface-hover"
                     onClick={() =>
-                      unarchiveConversation({
+                      unarchiveMutation.mutate({
                         conversationId: conversation.conversationId,
                         isArchived: false,
                       })
                     }
                     title={localize('com_ui_unarchive_conversation')}
                     aria-label={localize('com_ui_unarchive_conversation')}
-                    disabled={isUnarchiving}
+                    disabled={unarchiveMutation.isLoading}
                   >
-                    {isUnarchiving ? <Spinner /> : <ArchiveRestore className="size-4" />}
+                    {unarchiveMutation.isLoading ? (
+                      <Spinner />
+                    ) : (
+                      <ArchiveRestore className="size-4" />
+                    )}
                   </Button>
                 }
               />
@@ -292,29 +296,24 @@ export default function ArchivedChatsTable({
         },
       },
     ],
-    [isSmallScreen, localize, unarchiveConversation, isUnarchiving],
+    [isSmallScreen, localize, unarchiveMutation],
   );
 
   return (
     <>
-      {/* Fixed height keeps the loading (skeleton) and loaded states the same
-          size, so the virtualized table can't reflow the dialog on load. */}
-      <div className="h-[60vh]">
-        <DataTable
-          columns={columns}
-          data={allConversations}
-          className="scrollbar-gutter-stable"
-          filterColumn="title"
-          onFilterChange={debouncedFilterChange}
-          filterValue={queryParams.search}
-          fetchNextPage={handleFetchNextPage}
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          isLoading={isLoading}
-          showCheckboxes={false}
-          enableSearch={searchState.enabled === true}
-        />
-      </div>
+      <DataTable
+        columns={columns}
+        data={allConversations}
+        filterColumn="title"
+        onFilterChange={debouncedFilterChange}
+        filterValue={queryParams.search}
+        fetchNextPage={handleFetchNextPage}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        isLoading={isLoading}
+        showCheckboxes={false}
+        enableSearch={searchState.enabled === true}
+      />
 
       <OGDialog open={isDeleteOpen} onOpenChange={onOpenChange}>
         <OGDialogContent

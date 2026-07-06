@@ -42,7 +42,6 @@ export async function ensureRequiredCollectionsExist(db: mongo.Db): Promise<void
     'agents', // Agents collection
     'promptgroups', // Prompt groups collection
     'projects', // Projects collection
-    'chatprojects', // Private chat organization projects
   ];
 
   logger.debug('Ensuring required collections exist for permission system');

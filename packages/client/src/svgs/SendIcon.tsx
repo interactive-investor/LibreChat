@@ -1,13 +1,6 @@
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils';
 
-export default function SendIcon({
-  size = 24,
-  className = '',
-}: {
-  size?: number | undefined;
-  className?: string | undefined;
-}): JSX.Element {
+export default function SendIcon({ size = 24, className = '' }) {
   return (
     <svg
       width={size}

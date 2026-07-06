@@ -1,11 +1,8 @@
-import { Model } from 'mongoose';
-import type { ISkillFileDocument } from '~/types/skill';
-import { applyTenantIsolation } from '~/models/plugins/tenantIsolation';
 import skillFileSchema from '~/schema/skillFile';
+import { applyTenantIsolation } from '~/models/plugins/tenantIsolation';
+import type { ISkillFileDocument } from '~/types/skill';
 
-export function createSkillFileModel(
-  mongoose: typeof import('mongoose'),
-): Model<ISkillFileDocument> {
+export function createSkillFileModel(mongoose: typeof import('mongoose')) {
   applyTenantIsolation(skillFileSchema);
   return (
     mongoose.models.SkillFile || mongoose.model<ISkillFileDocument>('SkillFile', skillFileSchema)

@@ -1,6 +1,4 @@
-import { JSX } from 'react/jsx-runtime';
-
-export default function TextPaths(): JSX.Element {
+export default function TextPaths() {
   return (
     <>
       <path

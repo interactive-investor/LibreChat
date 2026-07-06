@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const fetch = require('node-fetch');
 const passport = require('passport');
 const { ErrorTypes } = require('librechat-data-provider');
 const { hashToken, logger } = require('@librechat/data-schemas');
@@ -12,7 +13,6 @@ const {
   resolveAppConfigForUser,
 } = require('@librechat/api');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
-const { resizeAvatar } = require('~/server/services/Files/images/avatar');
 const { findUser, createUser, updateUser } = require('~/models');
 const { getAppConfig } = require('~/server/services/Config');
 const paths = require('~/config/paths');
@@ -110,17 +110,21 @@ function getPicture(profile) {
   return getSamlClaim(profile, 'SAML_PICTURE_CLAIM', 'picture');
 }
 
-const resizeIdentityProviderAvatar = async (url, userId) => {
-  if (!url) {
-    return null;
-  }
-
+/**
+ * Downloads an image from a URL using an access token.
+ * @param {string} url
+ * @returns {Promise<Buffer>}
+ */
+const downloadImage = async (url) => {
   try {
-    return await resizeAvatar({ userId, input: url });
+    const response = await fetch(url);
+    if (response.ok) {
+      return await response.buffer();
+    } else {
+      throw new Error(`${response.statusText} (HTTP ${response.status})`);
+    }
   } catch (error) {
-    logger.error(
-      `[samlStrategy] resizeIdentityProviderAvatar: Error processing avatar at URL "${url}": ${error}`,
-    );
+    logger.error(`[samlStrategy] Error downloading image at URL "${url}": ${error}`);
     return null;
   }
 };
@@ -260,8 +264,7 @@ function createSamlCallback(existingUsersOnly = false) {
 
       const picture = getPicture(profile);
       if (picture && !user.avatar?.includes('manual=true')) {
-        const userId = user._id.toString();
-        const imageBuffer = await resizeIdentityProviderAvatar(picture, userId);
+        const imageBuffer = await downloadImage(profile.picture);
         if (imageBuffer) {
           let fileName;
           if (crypto) {
@@ -275,7 +278,7 @@ function createSamlCallback(existingUsersOnly = false) {
           const imagePath = await saveBuffer(
             getAvatarSaveParams(fileStrategy, {
               fileName,
-              userId,
+              userId: user._id.toString(),
               buffer: imageBuffer,
               tenantId: user.tenantId,
             }),

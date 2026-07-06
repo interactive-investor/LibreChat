@@ -10,12 +10,11 @@ const voiceDropdownComponentsMap = {
 
 export default function VoiceDropdown() {
   const engineTTS = useRecoilValue<string>(store.engineTTS);
-  const textToSpeech = useRecoilValue(store.textToSpeech);
   const VoiceDropdownComponent = voiceDropdownComponentsMap[engineTTS];
 
   if (!VoiceDropdownComponent) {
     return null;
   }
 
-  return <VoiceDropdownComponent disabled={!textToSpeech} />;
+  return <VoiceDropdownComponent />;
 }

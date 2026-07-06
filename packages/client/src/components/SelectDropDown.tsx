@@ -1,5 +1,4 @@
 import React, { useRef } from 'react';
-import { JSX } from 'react/jsx-runtime';
 import {
   Label,
   Listbox,
@@ -74,7 +73,7 @@ function SelectDropDown({
   searchClassName,
   searchPlaceholder,
   showOptionIcon = false,
-}: SelectDropDownProps): JSX.Element {
+}: SelectDropDownProps) {
   const transitionProps = { className: 'top-full mt-3' };
   if (showAbove) {
     transitionProps.className = 'bottom-full mb-3';

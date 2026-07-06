@@ -1,16 +1,13 @@
 import * as React from 'react';
-import { X } from 'lucide-react';
-import { JSX } from 'react/jsx-runtime';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { Button, ButtonProps } from './Button';
 import { useMediaQuery } from '~/hooks';
+import { Button } from './Button';
+import { X } from 'lucide-react';
 import { cn } from '~/utils';
 
-const Dialog: React.FC<DialogPrimitive.DialogProps> = DialogPrimitive.Root;
+const Dialog = DialogPrimitive.Root;
 
-const DialogTrigger: React.ForwardRefExoticComponent<
-  DialogPrimitive.DialogTriggerProps & React.RefAttributes<HTMLButtonElement>
-> = DialogPrimitive.Trigger;
+const DialogTrigger = DialogPrimitive.Trigger;
 
 type DialogPortalProps = DialogPrimitive.DialogPortalProps & { className?: string };
 
@@ -43,12 +40,10 @@ type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.
   disableScroll?: boolean;
 };
 
-const DialogContent: React.ForwardRefExoticComponent<
-  Omit<DialogPrimitive.DialogContentProps & React.RefAttributes<HTMLDivElement>, 'ref'> & {
-    showCloseButton?: boolean;
-    disableScroll?: boolean;
-  } & React.RefAttributes<HTMLDivElement>
-> = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, DialogContentProps>(
+const DialogContent = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Content>,
+  DialogContentProps
+>(
   (
     { className, children = true, showCloseButton = true, disableScroll = false, ...props },
     ref,
@@ -84,10 +79,7 @@ const DialogContent: React.ForwardRefExoticComponent<
 );
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
-const DialogHeader: {
-  ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>): JSX.Element;
-  displayName: string;
-} = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>): JSX.Element => (
+const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
       'flex flex-col space-y-2 border-b border-black/10 p-6 pb-4 text-left dark:border-white/10',
@@ -98,10 +90,7 @@ const DialogHeader: {
 );
 DialogHeader.displayName = 'DialogHeader';
 
-const DialogFooter: {
-  ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>): JSX.Element;
-  displayName: string;
-} = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>): JSX.Element => (
+const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn('flex flex-row justify-between space-x-2 px-6 py-4', className ?? '')}
     {...props}
@@ -109,10 +98,7 @@ const DialogFooter: {
 );
 DialogFooter.displayName = 'DialogFooter';
 
-const DialogTitle: React.ForwardRefExoticComponent<
-  Omit<DialogPrimitive.DialogTitleProps & React.RefAttributes<HTMLHeadingElement>, 'ref'> &
-    React.RefAttributes<HTMLHeadingElement>
-> = React.forwardRef<
+const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
@@ -124,10 +110,7 @@ const DialogTitle: React.ForwardRefExoticComponent<
 ));
 DialogTitle.displayName = DialogPrimitive.Title.displayName;
 
-const DialogDescription: React.ForwardRefExoticComponent<
-  Omit<DialogPrimitive.DialogDescriptionProps & React.RefAttributes<HTMLParagraphElement>, 'ref'> &
-    React.RefAttributes<HTMLParagraphElement>
-> = React.forwardRef<
+const DialogDescription = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
@@ -139,10 +122,7 @@ const DialogDescription: React.ForwardRefExoticComponent<
 ));
 DialogDescription.displayName = DialogPrimitive.Description.displayName;
 
-const DialogClose: React.ForwardRefExoticComponent<
-  Omit<DialogPrimitive.DialogCloseProps & React.RefAttributes<HTMLButtonElement>, 'ref'> &
-    React.RefAttributes<HTMLButtonElement>
-> = React.forwardRef<
+const DialogClose = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Close>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Close>
 >(({ className, ...props }, ref) => (
@@ -159,10 +139,7 @@ const DialogClose: React.ForwardRefExoticComponent<
 ));
 DialogClose.displayName = DialogPrimitive.Title.displayName;
 
-const DialogButton: React.ForwardRefExoticComponent<
-  Omit<ButtonProps & React.RefAttributes<HTMLButtonElement>, 'ref'> &
-    React.RefAttributes<HTMLButtonElement>
-> = React.forwardRef<
+const DialogButton = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentPropsWithoutRef<typeof Button>
 >(({ className, ...props }, ref) => (

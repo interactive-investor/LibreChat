@@ -131,20 +131,7 @@ Guidelines:
   required: ['image_ids', 'prompt'],
 };
 
-export const oaiToolkit: {
-  readonly image_gen_oai: {
-    readonly name: 'image_gen_oai';
-    readonly description: string;
-    readonly schema: ExtendedJsonSchema;
-    readonly responseFormat: 'content_and_artifact';
-  };
-  readonly image_edit_oai: {
-    readonly name: 'image_edit_oai';
-    readonly description: string;
-    readonly schema: ExtendedJsonSchema;
-    readonly responseFormat: 'content_and_artifact';
-  };
-} = {
+export const oaiToolkit = {
   image_gen_oai: {
     name: 'image_gen_oai' as const,
     description: getImageGenDescription(),

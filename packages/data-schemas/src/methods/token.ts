@@ -3,12 +3,7 @@ import { IToken, TokenCreateData, TokenQuery, TokenUpdateData, TokenDeleteResult
 import logger from '~/config/winston';
 
 // Factory function that takes mongoose instance and returns the methods
-export function createTokenMethods(mongoose: typeof import('mongoose')): {
-  findToken: (query: TokenQuery, options?: QueryOptions) => Promise<IToken | null>;
-  createToken: (tokenData: TokenCreateData) => Promise<IToken>;
-  updateToken: (query: TokenQuery, updateData: TokenUpdateData) => Promise<IToken | null>;
-  deleteTokens: (query: TokenQuery) => Promise<TokenDeleteResult>;
-} {
+export function createTokenMethods(mongoose: typeof import('mongoose')) {
   /**
    * Creates a new Token instance.
    */
@@ -66,8 +61,7 @@ export function createTokenMethods(mongoose: typeof import('mongoose')): {
         conditions.push({ token: query.token });
       }
       if (query.email !== undefined) {
-        const email = query.email === null ? null : query.email.trim().toLowerCase();
-        conditions.push({ email });
+        conditions.push({ email: query.email.trim().toLowerCase() });
       }
       if (query.type !== undefined) {
         conditions.push({ type: query.type });
@@ -104,14 +98,13 @@ export function createTokenMethods(mongoose: typeof import('mongoose')): {
       if (query.token) {
         conditions.push({ token: query.token });
       }
-      if (query.email !== undefined) {
-        const email = query.email === null ? null : query.email.trim().toLowerCase();
-        conditions.push({ email });
+      if (query.email) {
+        conditions.push({ email: query.email.trim().toLowerCase() });
       }
-      if (query.type !== undefined) {
+      if (query.type) {
         conditions.push({ type: query.type });
       }
-      if (query.identifier !== undefined) {
+      if (query.identifier) {
         conditions.push({ identifier: query.identifier });
       }
 

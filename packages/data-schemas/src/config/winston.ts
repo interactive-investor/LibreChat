@@ -1,18 +1,17 @@
 import winston from 'winston';
 import 'winston-daily-rotate-file';
 import { redactFormat, redactMessage, debugTraverse, jsonTruncateFormat } from './parsers';
-import { getTenantId, getUserId, getRequestId, SYSTEM_TENANT_ID } from './tenantContext';
 import { getLogDirectory } from './utils';
 
-const { NODE_ENV, DEBUG_LOGGING, CONSOLE_JSON, DEBUG_CONSOLE, LOG_TO_FILE } = process.env;
+const logDir = getLogDirectory();
+
+const { NODE_ENV, DEBUG_LOGGING, CONSOLE_JSON, DEBUG_CONSOLE } = process.env;
 
 const useConsoleJson = typeof CONSOLE_JSON === 'string' && CONSOLE_JSON.toLowerCase() === 'true';
 
 const useDebugConsole = typeof DEBUG_CONSOLE === 'string' && DEBUG_CONSOLE.toLowerCase() === 'true';
 
 const useDebugLogging = typeof DEBUG_LOGGING === 'string' && DEBUG_LOGGING.toLowerCase() === 'true';
-
-const useFileLogging = typeof LOG_TO_FILE !== 'string' || LOG_TO_FILE.toLowerCase() !== 'false';
 
 const levels: winston.config.AbstractConfigSetLevels = {
   error: 0,
@@ -24,49 +23,6 @@ const levels: winston.config.AbstractConfigSetLevels = {
   activity: 6,
   silly: 7,
 };
-
-const LOG_CONTEXT_KEYS = ['tenantId', 'userId', 'requestId'] as const;
-
-function getLogTenantId(): string | undefined {
-  const tenantId = getTenantId();
-  return tenantId === SYSTEM_TENANT_ID ? undefined : tenantId;
-}
-
-const requestContextFormat = winston.format((info: winston.Logform.TransformableInfo) => {
-  if (info.tenantId === SYSTEM_TENANT_ID) {
-    delete info.tenantId;
-  }
-  const context = {
-    tenantId: getLogTenantId(),
-    userId: getUserId(),
-    requestId: getRequestId(),
-  };
-  LOG_CONTEXT_KEYS.forEach((key) => {
-    if (context[key] && info[key] == null) {
-      info[key] = context[key];
-    }
-  });
-  return info;
-});
-
-function formatRequestContext(info: winston.Logform.TransformableInfo): string {
-  const context: Partial<Record<(typeof LOG_CONTEXT_KEYS)[number], string>> = {};
-  LOG_CONTEXT_KEYS.forEach((key) => {
-    const value = info[key];
-    if (key === 'tenantId' && value === SYSTEM_TENANT_ID) {
-      return;
-    }
-    if (typeof value === 'string' && value) {
-      context[key] = value;
-    }
-  });
-  return Object.keys(context).length > 0 ? JSON.stringify(context) : '';
-}
-
-function appendRequestContext(line: string, info: winston.Logform.TransformableInfo): string {
-  const context = formatRequestContext(info);
-  return context ? `${line} ${context}` : line;
-}
 
 winston.addColors({
   info: 'green',
@@ -85,50 +41,41 @@ const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: () => new Date().toISOString() }),
   winston.format.errors({ stack: true }),
   winston.format.splat(),
-  requestContextFormat(),
 );
 
-const transports: winston.transport[] = [];
+const transports: winston.transport[] = [
+  new winston.transports.DailyRotateFile({
+    level: 'error',
+    filename: `${logDir}/error-%DATE%.log`,
+    datePattern: 'YYYY-MM-DD',
+    zippedArchive: true,
+    maxSize: '20m',
+    maxFiles: '14d',
+    format: winston.format.combine(fileFormat, winston.format.json()),
+  }),
+];
 
-if (useFileLogging) {
-  const logDir = getLogDirectory();
-
+if (useDebugLogging) {
   transports.push(
     new winston.transports.DailyRotateFile({
-      level: 'error',
-      filename: `${logDir}/error-%DATE%.log`,
+      level: 'debug',
+      filename: `${logDir}/debug-%DATE%.log`,
       datePattern: 'YYYY-MM-DD',
       zippedArchive: true,
       maxSize: '20m',
       maxFiles: '14d',
-      format: winston.format.combine(fileFormat, winston.format.json()),
+      format: winston.format.combine(fileFormat, debugTraverse),
     }),
   );
-
-  if (useDebugLogging) {
-    transports.push(
-      new winston.transports.DailyRotateFile({
-        level: 'debug',
-        filename: `${logDir}/debug-%DATE%.log`,
-        datePattern: 'YYYY-MM-DD',
-        zippedArchive: true,
-        maxSize: '20m',
-        maxFiles: '14d',
-        format: winston.format.combine(fileFormat, debugTraverse),
-      }),
-    );
-  }
 }
 
 const consoleFormat = winston.format.combine(
   redactFormat(),
-  requestContextFormat(),
   winston.format.colorize({ all: true }),
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.printf((info) => {
     const message = `${info.timestamp} ${info.level}: ${info.message}`;
-    const line = appendRequestContext(message, info);
-    return info.level.includes('error') ? redactMessage(line) : line;
+    return info.level.includes('error') ? redactMessage(message) : message;
   }),
 );
 
@@ -164,7 +111,7 @@ if (useDebugConsole) {
 }
 
 // Create logger
-const logger: winston.Logger = winston.createLogger({
+const logger = winston.createLogger({
   level: level(),
   levels,
   transports,

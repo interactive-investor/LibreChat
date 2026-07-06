@@ -1,6 +1,4 @@
-import { JSX } from 'react/jsx-runtime';
-
-export default function LinkIcon(): JSX.Element {
+export default function LinkIcon() {
   return (
     <svg
       width="18"

@@ -1,12 +1,7 @@
 import React from 'react';
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils/';
 
-export default function BirthdayIcon({
-  className = '',
-}: {
-  className?: string | undefined;
-}): JSX.Element {
+export default function BirthdayIcon({ className = '' }) {
   return (
     <svg
       version="1.1"

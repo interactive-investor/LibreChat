@@ -1,10 +1,5 @@
 import React from 'react';
-import { JSX } from 'react/jsx-runtime';
-export default function SharePointIcon({
-  className = '',
-}: {
-  className?: string | undefined;
-}): JSX.Element {
+export default function SharePointIcon({ className = '' }) {
   return (
     <svg
       fill="currentColor"

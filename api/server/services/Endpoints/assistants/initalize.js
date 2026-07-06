@@ -1,5 +1,6 @@
 const OpenAI = require('openai');
-const { isUserProvided, checkUserKeyExpiry, getProxyDispatcher } = require('@librechat/api');
+const { ProxyAgent } = require('undici');
+const { isUserProvided, checkUserKeyExpiry } = require('@librechat/api');
 const { ErrorTypes, EModelEndpoint } = require('librechat-data-provider');
 const { getUserKeyValues, getUserKeyExpiry } = require('~/models');
 
@@ -44,10 +45,10 @@ const initializeClient = async ({ req, res, version }) => {
     opts.baseURL = baseURL;
   }
 
-  const proxyDispatcher = getProxyDispatcher(PROXY);
-  if (proxyDispatcher) {
+  if (PROXY) {
+    const proxyAgent = new ProxyAgent(PROXY);
     opts.fetchOptions = {
-      dispatcher: proxyDispatcher,
+      dispatcher: proxyAgent,
     };
   }
 

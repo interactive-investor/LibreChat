@@ -9,7 +9,7 @@ export interface IConversationTag extends Document {
   tenantId?: string;
 }
 
-const conversationTag: Schema<IConversationTag> = new Schema<IConversationTag>(
+const conversationTag = new Schema<IConversationTag>(
   {
     tag: {
       type: String,

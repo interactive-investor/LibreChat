@@ -5,9 +5,6 @@ on:
       - 'api/**'
       - 'packages/**'
 
-permissions:
-  contents: read
-
 env:
   NODE_ENV: CI
   NODE_OPTIONS: '--max-old-space-size=${{ secrets.NODE_MAX_OLD_SPACE_SIZE || 6144 }}'
@@ -20,10 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 24.16.0
+      - name: Use Node.js 20.19
         uses: actions/setup-node@v4
         with:
-          node-version: '24.16.0'
+          node-version: '20.19'
 
       - name: Restore node_modules cache
         id: cache-node-modules
@@ -35,7 +32,7 @@ jobs:
             packages/api/node_modules
             packages/data-provider/node_modules
             packages/data-schemas/node_modules
-          key: node-modules-backend-${{ runner.os }}-24.16.0-${{ hashFiles('package-lock.json') }}
+          key: node-modules-backend-${{ runner.os }}-20.19-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -46,7 +43,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: packages/data-provider/dist
-          key: build-data-provider-${{ runner.os }}-${{ hashFiles('packages/data-provider/src/**', 'packages/data-provider/tsconfig*.json', 'packages/data-provider/tsdown.config.mjs', 'packages/data-provider/package.json') }}
+          key: build-data-provider-${{ runner.os }}-${{ hashFiles('packages/data-provider/src/**', 'packages/data-provider/tsconfig*.json', 'packages/data-provider/rollup.config.js', 'packages/data-provider/package.json') }}
 
       - name: Build data-provider
         if: steps.cache-data-provider.outputs.cache-hit != 'true'
@@ -57,7 +54,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: packages/data-schemas/dist
-          key: build-data-schemas-${{ runner.os }}-${{ hashFiles('packages/data-schemas/src/**', 'packages/data-schemas/tsconfig*.json', 'packages/data-schemas/tsdown.config.mjs', 'packages/data-schemas/package.json', 'packages/data-provider/src/**', 'packages/data-provider/tsconfig*.json', 'packages/data-provider/tsdown.config.mjs', 'packages/data-provider/package.json') }}
+          key: build-data-schemas-${{ runner.os }}-${{ hashFiles('packages/data-schemas/src/**', 'packages/data-schemas/tsconfig*.json', 'packages/data-schemas/rollup.config.js', 'packages/data-schemas/package.json', 'packages/data-provider/src/**', 'packages/data-provider/tsconfig*.json', 'packages/data-provider/rollup.config.js', 'packages/data-provider/package.json') }}
 
       - name: Build data-schemas
         if: steps.cache-data-schemas.outputs.cache-hit != 'true'
@@ -68,7 +65,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: packages/api/dist
-          key: build-api-${{ runner.os }}-${{ hashFiles('packages/api/src/**', 'packages/api/tsconfig*.json', 'packages/api/tsdown.config.mjs', 'packages/api/package.json', 'packages/data-provider/src/**', 'packages/data-provider/tsconfig*.json', 'packages/data-provider/tsdown.config.mjs', 'packages/data-provider/package.json', 'packages/data-schemas/src/**', 'packages/data-schemas/tsconfig*.json', 'packages/data-schemas/tsdown.config.mjs', 'packages/data-schemas/package.json') }}
+          key: build-api-${{ runner.os }}-${{ hashFiles('packages/api/src/**', 'packages/api/tsconfig*.json', 'packages/api/server-rollup.config.js', 'packages/api/package.json', 'packages/data-provider/src/**', 'packages/data-provider/tsconfig*.json', 'packages/data-provider/rollup.config.js', 'packages/data-provider/package.json', 'packages/data-schemas/src/**', 'packages/data-schemas/tsconfig*.json', 'packages/data-schemas/rollup.config.js', 'packages/data-schemas/package.json') }}
 
       - name: Build api
         if: steps.cache-api.outputs.cache-hit != 'true'
@@ -103,10 +100,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 24.16.0
+      - name: Use Node.js 20.19
         uses: actions/setup-node@v4
         with:
-          node-version: '24.16.0'
+          node-version: '20.19'
 
       - name: Restore node_modules cache
         id: cache-node-modules
@@ -118,7 +115,7 @@ jobs:
             packages/api/node_modules
             packages/data-provider/node_modules
             packages/data-schemas/node_modules
-          key: node-modules-backend-${{ runner.os }}-24.16.0-${{ hashFiles('package-lock.json') }}
+          key: node-modules-backend-${{ runner.os }}-20.19-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -162,10 +159,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 24.16.0
+      - name: Use Node.js 20.19
         uses: actions/setup-node@v4
         with:
-          node-version: '24.16.0'
+          node-version: '20.19'
 
       - name: Restore node_modules cache
         id: cache-node-modules
@@ -177,7 +174,7 @@ jobs:
             packages/api/node_modules
             packages/data-provider/node_modules
             packages/data-schemas/node_modules
-          key: node-modules-backend-${{ runner.os }}-24.16.0-${{ hashFiles('package-lock.json') }}
+          key: node-modules-backend-${{ runner.os }}-20.19-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -215,14 +212,10 @@ jobs:
           fi
 
   test-api:
-    name: 'Tests: api (shard ${{ matrix.shard }}/3)'
+    name: 'Tests: api'
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3]
     env:
       MONGO_URI: ${{ secrets.MONGO_URI }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -235,10 +228,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 24.16.0
+      - name: Use Node.js 20.19
         uses: actions/setup-node@v4
         with:
-          node-version: '24.16.0'
+          node-version: '20.19'
 
       - name: Restore node_modules cache
         id: cache-node-modules
@@ -250,7 +243,7 @@ jobs:
             packages/api/node_modules
             packages/data-provider/node_modules
             packages/data-schemas/node_modules
-          key: node-modules-backend-${{ runner.os }}-24.16.0-${{ hashFiles('package-lock.json') }}
+          key: node-modules-backend-${{ runner.os }}-20.19-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -282,8 +275,8 @@ jobs:
       - name: Prepare .env.test file
         run: cp api/test/.env.test.example api/test/.env.test
 
-      - name: Run unit tests (shard ${{ matrix.shard }}/3)
-        run: cd api && npm run test:ci -- --shard=${{ matrix.shard }}/3
+      - name: Run unit tests
+        run: cd api && npm run test:ci
 
   test-data-provider:
     name: 'Tests: data-provider'
@@ -293,10 +286,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 24.16.0
+      - name: Use Node.js 20.19
         uses: actions/setup-node@v4
         with:
-          node-version: '24.16.0'
+          node-version: '20.19'
 
       - name: Restore node_modules cache
         id: cache-node-modules
@@ -308,7 +301,7 @@ jobs:
             packages/api/node_modules
             packages/data-provider/node_modules
             packages/data-schemas/node_modules
-          key: node-modules-backend-${{ runner.os }}-24.16.0-${{ hashFiles('package-lock.json') }}
+          key: node-modules-backend-${{ runner.os }}-20.19-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -331,10 +324,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 24.16.0
+      - name: Use Node.js 20.19
         uses: actions/setup-node@v4
         with:
-          node-version: '24.16.0'
+          node-version: '20.19'
 
       - name: Restore node_modules cache
         id: cache-node-modules
@@ -346,7 +339,7 @@ jobs:
             packages/api/node_modules
             packages/data-provider/node_modules
             packages/data-schemas/node_modules
-          key: node-modules-backend-${{ runner.os }}-24.16.0-${{ hashFiles('package-lock.json') }}
+          key: node-modules-backend-${{ runner.os }}-20.19-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -368,25 +361,17 @@ jobs:
         run: cd packages/data-schemas && npm run test:ci
 
   test-packages-api:
-    name: 'Tests: @librechat/api (shard ${{ matrix.shard }}/4)'
+    name: 'Tests: @librechat/api'
     needs: build
     runs-on: ubuntu-latest
-    # Suite typically completes in ~5 min on a warm runner, but tail-latency
-    # cancellations have started showing up: tests are actively passing right
-    # up to the timeout, then the job is killed mid-suite. Sharding splits the
-    # suite across runners; per-shard headroom still absorbs runner variance.
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 24.16.0
+      - name: Use Node.js 20.19
         uses: actions/setup-node@v4
         with:
-          node-version: '24.16.0'
+          node-version: '20.19'
 
       - name: Restore node_modules cache
         id: cache-node-modules
@@ -398,7 +383,7 @@ jobs:
             packages/api/node_modules
             packages/data-provider/node_modules
             packages/data-schemas/node_modules
-          key: node-modules-backend-${{ runner.os }}-24.16.0-${{ hashFiles('package-lock.json') }}
+          key: node-modules-backend-${{ runner.os }}-20.19-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -422,5 +407,5 @@ jobs:
           name: build-api
           path: packages/api/dist
 
-      - name: Run unit tests (shard ${{ matrix.shard }}/4)
-        run: cd packages/api && npm run test:ci -- --shard=${{ matrix.shard }}/4
+      - name: Run unit tests
+        run: cd packages/api && npm run test:ci

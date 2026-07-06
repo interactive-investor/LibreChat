@@ -14,45 +14,33 @@
  * unrelated citations both show up.
  */
 
-import { Tools } from 'librechat-data-provider';
+import { renderHook, act } from '@testing-library/react';
 import { RecoilRoot, useRecoilValue } from 'recoil';
 import { QueryClient } from '@tanstack/react-query';
-import { renderHook, act } from '@testing-library/react';
-import type {
-  TFile,
-  TAttachment,
-  EventSubmission,
-  TAttachmentMetadata,
-} from 'librechat-data-provider';
+import { Tools } from 'librechat-data-provider';
 import type { ReactNode } from 'react';
+import type { TAttachment, EventSubmission } from 'librechat-data-provider';
 import useAttachmentHandler from '../useAttachmentHandler';
 import store from '~/store';
-
-type AttachmentFixture = TFile & TAttachmentMetadata;
 
 const wrapper = ({ children }: { children: ReactNode }) => <RecoilRoot>{children}</RecoilRoot>;
 
 const submission = {} as EventSubmission;
 const messageId = 'msg-1';
 
-function makeAttachment(overrides: Partial<AttachmentFixture>): AttachmentFixture {
+function makeAttachment(overrides: Partial<TAttachment>): TAttachment {
   return {
-    user: 'user-1',
-    object: 'file',
-    bytes: 1024,
-    embedded: false,
-    usage: 0,
     file_id: 'fid-1',
     filename: 'data.xlsx',
     filepath: '/uploads/data.xlsx',
-    type: Tools.execute_code,
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     messageId,
     toolCallId: 'tc-1',
-    text: undefined,
-    textFormat: undefined,
+    text: null,
+    textFormat: null,
     status: 'pending',
     ...overrides,
-  };
+  } as unknown as TAttachment;
 }
 
 /* Co-mount the handler and a reader of the messageAttachmentsMap atom in
@@ -174,7 +162,7 @@ describe('useAttachmentHandler upsert-by-file_id', () => {
      * downgrade it. Otherwise the chip flickers back to "pending" and
      * polling restarts until the lazy sweep catches up. (Codex P1.) */
     const ctx = setup();
-    ctx.handle(makeAttachment({ status: 'pending', text: undefined }));
+    ctx.handle(makeAttachment({ status: 'pending', text: null }));
     ctx.handle({
       file_id: 'fid-1',
       messageId,
@@ -183,7 +171,7 @@ describe('useAttachmentHandler upsert-by-file_id', () => {
       textFormat: 'html',
     } as unknown as TAttachment);
     /* Phase-1 replay arrives last (finalHandler at stream end). */
-    ctx.handle(makeAttachment({ status: 'pending', text: undefined }));
+    ctx.handle(makeAttachment({ status: 'pending', text: null }));
     expect(ctx.list).toHaveLength(1);
     expect(ctx.list[0]).toMatchObject({
       status: 'ready',

@@ -1,12 +1,11 @@
+import { useRecoilState } from 'recoil';
 import { Dropdown } from '@librechat/client';
-import { useRecoilState, useRecoilValue } from 'recoil';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 
 export default function LanguageSTTDropdown() {
   const localize = useLocalize();
   const [languageSTT, setLanguageSTT] = useRecoilState<string>(store.languageSTT);
-  const speechToText = useRecoilValue(store.speechToText);
 
   const languageOptions = [
     { value: 'af', label: 'Afrikaans' },
@@ -108,7 +107,6 @@ export default function LanguageSTTDropdown() {
         testId="LanguageSTTDropdown"
         className="z-50"
         aria-labelledby={labelId}
-        disabled={!speechToText}
       />
     </div>
   );

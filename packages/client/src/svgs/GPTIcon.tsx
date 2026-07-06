@@ -1,4 +1,3 @@
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils/';
 
 export default function GPTIcon({
@@ -7,7 +6,7 @@ export default function GPTIcon({
 }: {
   size?: number;
   className?: string;
-}): JSX.Element {
+}) {
   const unit = '41';
   const height = size;
   const width = size;

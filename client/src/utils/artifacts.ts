@@ -178,14 +178,9 @@ export const sharedOptions: SandpackProviderProps['options'] = {
   externalResources: [TAILWIND_CDN],
 };
 
-export type SandpackStartupConfig = Pick<
-  Partial<TStartupConfig>,
-  'bundlerURL' | 'staticBundlerURL'
->;
-
 export function buildSandpackOptions(
   template: SandpackProviderProps['template'],
-  startupConfig?: SandpackStartupConfig,
+  startupConfig?: TStartupConfig,
 ): SandpackProviderProps['options'] {
   if (!startupConfig) {
     return sharedOptions;

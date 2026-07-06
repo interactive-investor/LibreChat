@@ -26,7 +26,7 @@ const useDelayedRender = (delay: number) => {
     };
   }, [delay, delayed]);
 
-  return (fn: () => ReactNode): ReactNode => {
+  return (fn: () => ReactNode) => {
     if (delayed && timerPromiseRef.current) {
       throw timerPromiseRef.current;
     }

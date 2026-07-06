@@ -98,10 +98,10 @@ describe('PluginController', () => {
 
       require('~/app/clients/tools').availableTools.push(...mockPlugins);
 
-      mockReq.config = {
+      getAppConfig.mockResolvedValueOnce({
         filteredTools: [],
         includedTools: ['key1'],
-      };
+      });
 
       await getAvailablePluginsController(mockReq, mockRes);
 
@@ -118,10 +118,10 @@ describe('PluginController', () => {
 
       require('~/app/clients/tools').availableTools.push(...mockPlugins);
 
-      mockReq.config = {
+      getAppConfig.mockResolvedValueOnce({
         filteredTools: ['key2'],
         includedTools: [],
-      };
+      });
 
       await getAvailablePluginsController(mockReq, mockRes);
 
@@ -139,10 +139,10 @@ describe('PluginController', () => {
 
       require('~/app/clients/tools').availableTools.push(...mockPlugins);
 
-      mockReq.config = {
+      getAppConfig.mockResolvedValueOnce({
         includedTools: ['key1', 'key2'],
         filteredTools: ['key2'],
-      };
+      });
 
       await getAvailablePluginsController(mockReq, mockRes);
 

@@ -1,7 +1,6 @@
 import React from 'react';
-import { JSX } from 'react/jsx-runtime';
 
-export default function AnthropicMinimalIcon(): JSX.Element {
+export default function AnthropicMinimalIcon() {
   return (
     <svg
       stroke="currentColor"

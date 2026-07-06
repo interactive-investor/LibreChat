@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { createSearchParams } from 'react-router-dom';
-import { LocalStorageKeys, isEphemeralAgentId, Constants } from 'librechat-data-provider';
 import {
   atom,
   selector,
@@ -11,7 +10,14 @@ import {
   useSetRecoilState,
   useRecoilCallback,
 } from 'recoil';
-import type { EModelEndpoint, TConversation, TSubmission, TPreset } from 'librechat-data-provider';
+import { LocalStorageKeys, isEphemeralAgentId, Constants } from 'librechat-data-provider';
+import type {
+  EModelEndpoint,
+  TConversation,
+  TSubmission,
+  TMessage,
+  TPreset,
+} from 'librechat-data-provider';
 import type { TOptionSettings, ExtendedFile } from '~/common';
 import {
   clearModelForNonEphemeralAgent,
@@ -21,14 +27,44 @@ import {
 } from '~/utils';
 import { useSetConvoContext } from '~/Providers/SetConvoContext';
 
+const latestMessageKeysAtom = atom<(string | number)[]>({
+  key: 'latestMessageKeys',
+  default: [],
+});
+
 const submissionKeysAtom = atom<(string | number)[]>({
   key: 'submissionKeys',
   default: [],
 });
 
+const latestMessageFamily = atomFamily<TMessage | null, string | number | null>({
+  key: 'latestMessageByIndex',
+  default: null,
+  effects: [
+    ({ onSet, node }) => {
+      onSet(async (newValue) => {
+        const key = Number(node.key.split(Constants.COMMON_DIVIDER)[1]);
+        logger.log('Recoil Effect: Setting latestMessage', { key, newValue });
+      });
+    },
+  ] as const,
+});
+
 const submissionByIndex = atomFamily<TSubmission | null, string | number>({
   key: 'submissionByIndex',
   default: null,
+});
+
+const latestMessageKeysSelector = selector<(string | number)[]>({
+  key: 'latestMessageKeysSelector',
+  get: ({ get }) => {
+    const keys = get(conversationKeysAtom);
+    return keys.filter((key) => get(latestMessageFamily(key)) !== null);
+  },
+  set: ({ set }, newKeys) => {
+    logger.log('setting latestMessageKeys', { newKeys });
+    set(latestMessageKeysAtom, newKeys);
+  },
 });
 
 const submissionKeysSelector = selector<(string | number)[]>({
@@ -93,9 +129,6 @@ const conversationByIndex = atomFamily<TConversation | null, string | number>({
 
         if (shouldUpdateParams) {
           const newParams = createChatSearchParams(newValue);
-          if (newValue.chatProjectId) {
-            newParams.set('projectId', newValue.chatProjectId);
-          }
           const searchParams = createSearchParams(newParams);
           const url = `${window.location.pathname}?${searchParams.toString()}`;
           window.history.pushState({}, '', url);
@@ -286,20 +319,6 @@ const pendingManualSkillsByConvoId = atomFamily<string[], string>({
   default: [],
 });
 
-/**
- * Per-conversation queue of verbatim excerpts the user quoted via the
- * "Add to chat" selection popup for the next submission. The submit pipeline
- * (`useChatFunctions.ask`) drains this onto the user message's `quotes` field
- * (which the backend merges into the model-facing text and persists for the
- * `MessageQuotes` UI), then resets to `[]`. Compose-time chips above the
- * textarea read this atom directly so users can see and dismiss each quote
- * before sending.
- */
-const pendingQuotesByConvoId = atomFamily<string[], string>({
-  key: 'pendingQuotesByConvoId',
-  default: [],
-});
-
 const globalAudioURLFamily = atomFamily<string | null, string | number | null>({
   key: 'globalAudioURLByIndex',
   default: null,
@@ -366,6 +385,11 @@ function useClearConvoState() {
           }
 
           reset(conversationByIndex(conversationKey));
+
+          const conversation = await snapshot.getPromise(conversationByIndex(conversationKey));
+          if (conversation) {
+            reset(latestMessageFamily(conversationKey));
+          }
         }
 
         reset(conversationKeysAtom);
@@ -400,6 +424,33 @@ function useClearSubmissionState() {
   );
 
   return clearAllSubmissions;
+}
+
+function useClearLatestMessages(context?: string) {
+  const clearAllLatestMessages = useRecoilCallback(
+    ({ reset, set, snapshot }) =>
+      async (skipFirst?: boolean) => {
+        const latestMessageKeys = await snapshot.getPromise(latestMessageKeysSelector);
+        logger.log('[clearAllLatestMessages] latestMessageKeys', latestMessageKeys);
+        if (context != null && context) {
+          logger.log(`[clearAllLatestMessages] context: ${context}`);
+        }
+
+        for (const key of latestMessageKeys) {
+          if (skipFirst === true && key == 0) {
+            continue;
+          }
+
+          logger.log(`[clearAllLatestMessages] resetting latest message; key: ${key}`);
+          reset(latestMessageFamily(key));
+        }
+
+        set(latestMessageKeysSelector, []);
+      },
+    [],
+  );
+
+  return clearAllLatestMessages;
 }
 
 const updateConversationSelector = selectorFamily({
@@ -439,6 +490,7 @@ export default {
   isSubmittingFamily,
   optionSettingsFamily,
   showPopoverFamily,
+  latestMessageFamily,
   messagesSiblingIdxFamily,
   anySubmittingSelector,
   allConversationsSelector,
@@ -462,9 +514,9 @@ export default {
   showPlusPopoverFamily,
   activePromptByIndex,
   useClearSubmissionState,
+  useClearLatestMessages,
   showPromptsPopoverFamily,
   showSkillsPopoverFamily,
   pendingManualSkillsByConvoId,
-  pendingQuotesByConvoId,
   updateConversationSelector,
 };

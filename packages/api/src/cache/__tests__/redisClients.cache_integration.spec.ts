@@ -1,7 +1,5 @@
-/* eslint jest/expect-expect: ["warn", { "assertFunctionNames": ["expect", "testRedisOperations"] }] */
-import type { RedisClientType, RedisClusterType } from '@redis/client';
 import type { Redis, Cluster } from 'ioredis';
-import { closeRedisClients } from './redisClients.helper';
+import type { RedisClientType, RedisClusterType } from '@redis/client';
 
 type RedisClient = RedisClientType | RedisClusterType | Redis | Cluster;
 
@@ -66,10 +64,27 @@ describe('redisClients Integration Tests', () => {
       }
     }
 
-    // Close BOTH clients created by the module import, not just the one the test exercised
-    await closeRedisClients();
-    ioredisClient = null;
-    keyvRedisClient = null;
+    // Cleanup Redis connections
+    if (ioredisClient) {
+      try {
+        if (ioredisClient.status === 'ready') {
+          ioredisClient.disconnect();
+        }
+      } catch (error) {
+        console.warn('Error disconnecting ioredis client:', (error as Error).message);
+      }
+      ioredisClient = null;
+    }
+
+    if (keyvRedisClient) {
+      try {
+        // Try to disconnect - keyv/redis client doesn't have an isReady property
+        await keyvRedisClient.disconnect();
+      } catch (error) {
+        console.warn('Error disconnecting keyv redis client:', (error as Error).message);
+      }
+      keyvRedisClient = null;
+    }
 
     process.env = originalEnv;
     jest.resetModules();

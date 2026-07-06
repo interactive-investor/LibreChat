@@ -1,20 +1,13 @@
 import React, { useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import { useForm, Controller } from 'react-hook-form';
-import { Label, Input, Button, SecretInput } from '@librechat/client';
-import type { Control, FieldErrors } from 'react-hook-form';
+import { Input, Label, Button } from '@librechat/client';
 import { useMCPAuthValuesQuery } from '~/data-provider/Tools/queries';
-import {
-  CONFIG_HTML_INLINE_TAGS,
-  CONFIG_HTML_CLASS_ATTR,
-  createConfigHtmlSanitizer,
-} from '~/utils/configHtml';
 import { useLocalize } from '~/hooks';
 
 export interface CustomUserVarConfig {
   title: string;
   description?: string;
-  /** Whether the field holds a secret and should be masked (defaults to masked when omitted). */
-  sensitive?: boolean;
 }
 
 interface CustomUserVarsSectionProps {
@@ -28,26 +21,42 @@ interface AuthFieldProps {
   name: string;
   config: CustomUserVarConfig;
   hasValue: boolean;
-  control: Control<Record<string, string>>;
-  errors: FieldErrors<Record<string, string>>;
+  control: any;
+  errors: any;
   autoFocus?: boolean;
 }
 
 function AuthField({ name, config, hasValue, control, errors, autoFocus }: AuthFieldProps) {
   const localize = useLocalize();
   const statusText = hasValue ? localize('com_ui_set') : localize('com_ui_unset');
-  const sanitize = useMemo(
-    () =>
-      createConfigHtmlSanitizer({
-        allowedTags: CONFIG_HTML_INLINE_TAGS,
-        allowedAttr: CONFIG_HTML_CLASS_ATTR,
-      }),
-    [],
-  );
+
+  const sanitizer = useMemo(() => {
+    const instance = DOMPurify();
+    instance.addHook('afterSanitizeAttributes', (node) => {
+      if (node.tagName && node.tagName === 'A') {
+        node.setAttribute('target', '_blank');
+        node.setAttribute('rel', 'noopener noreferrer');
+      }
+    });
+    return instance;
+  }, []);
 
   const sanitizedDescription = useMemo(() => {
-    return sanitize(config.description);
-  }, [config.description, sanitize]);
+    if (!config.description) {
+      return '';
+    }
+    try {
+      return sanitizer.sanitize(config.description, {
+        ALLOWED_TAGS: ['a', 'strong', 'b', 'em', 'i', 'br', 'code'],
+        ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
+        ALLOW_DATA_ATTR: false,
+        ALLOW_ARIA_ATTR: false,
+      });
+    } catch (error) {
+      console.error('Sanitization failed', error);
+      return config.description;
+    }
+  }, [config.description, sanitizer]);
 
   return (
     <div className="space-y-2">
@@ -73,30 +82,29 @@ function AuthField({ name, config, hasValue, control, errors, autoFocus }: AuthF
         name={name}
         control={control}
         defaultValue=""
-        render={({ field }) => {
-          const placeholder = hasValue
-            ? localize('com_ui_mcp_update_var', { 0: config.title })
-            : localize('com_ui_mcp_enter_var', { 0: config.title });
-          const className =
-            'w-full rounded border border-border-medium bg-transparent px-2 py-1 text-text-primary placeholder:text-text-secondary focus:outline-none sm:text-sm';
-          // Prevent autofill: browser DOM mutations bypass React's synthetic
-          // onChange, silently emptying react-hook-form state on submit.
-          const sharedProps = {
-            id: name,
-            'data-lpignore': 'true',
-            'data-1p-ignore': 'true',
-            /* autoFocus is generally disorienting, but here the required field is navigated to
-             * anyway, and the section emulates a modal opening where users expect focus to shift. */
-            autoFocus,
-            ...field,
-            placeholder,
-            className,
-          };
-          if (config.sensitive === false) {
-            return <Input {...sharedProps} type="text" autoComplete="off" />;
-          }
-          return <SecretInput {...sharedProps} autoComplete="new-password" controlsOnHover />;
-        }}
+        render={({ field }) => (
+          <Input
+            id={name}
+            // Prevent autofill: browser DOM mutations bypass React's synthetic
+            // onChange, silently emptying react-hook-form state on submit.
+            type="new-password"
+            autoComplete="new-password"
+            data-lpignore="true"
+            data-1p-ignore="true"
+            /* autoFocus is generally disabled due to the fact that it can disorient users,
+             * but in this case, the required field would logically be immediately navigated to anyways, and the component's
+             * functionality emulates that of a new modal opening, where users would expect focus to be shifted to the new content */
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus={autoFocus}
+            {...field}
+            placeholder={
+              hasValue
+                ? localize('com_ui_mcp_update_var', { 0: config.title })
+                : localize('com_ui_mcp_enter_var', { 0: config.title })
+            }
+            className="w-full rounded border border-border-medium bg-transparent px-2 py-1 text-text-primary placeholder:text-text-secondary focus:outline-none sm:text-sm"
+          />
+        )}
       />
       {sanitizedDescription && (
         <p

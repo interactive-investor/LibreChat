@@ -68,7 +68,6 @@ export default function ReadFileCall({
   output = '',
   attachments,
   hideAttachments = false,
-  onExpand,
 }: {
   initialProgress: number;
   isSubmitting: boolean;
@@ -76,7 +75,6 @@ export default function ReadFileCall({
   output?: string;
   attachments?: TAttachment[];
   hideAttachments?: boolean;
-  onExpand?: () => void;
 }) {
   const localize = useLocalize();
   const filePath = useMemo(() => parseJsonField(args, 'file_path'), [args]);
@@ -84,7 +82,7 @@ export default function ReadFileCall({
   const lang = useMemo(() => langFromPath(filePath), [filePath]);
 
   const { showCode, toggleCode, expandStyle, expandRef, progress, cancelled, hasError, hasOutput } =
-    useToolCallState(initialProgress, isSubmitting, output, !!filePath, onExpand);
+    useToolCallState(initialProgress, isSubmitting, output, !!filePath);
 
   const highlighted = useLazyHighlight(hasOutput ? output : undefined, lang);
 

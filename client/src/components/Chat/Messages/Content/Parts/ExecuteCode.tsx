@@ -57,7 +57,6 @@ export default function ExecuteCode({
   output = '',
   attachments,
   hideAttachments = false,
-  onExpand,
 }: {
   initialProgress: number;
   isSubmitting: boolean;
@@ -65,13 +64,12 @@ export default function ExecuteCode({
   output?: string;
   attachments?: TAttachment[];
   hideAttachments?: boolean;
-  onExpand?: () => void;
 }) {
   const localize = useLocalize();
   const { lang = 'py', code } = useParseArgs(args) ?? ({} as ParsedArgs);
 
   const { showCode, toggleCode, expandStyle, expandRef, progress, cancelled, hasError, hasOutput } =
-    useToolCallState(initialProgress, isSubmitting, output, !!code, onExpand);
+    useToolCallState(initialProgress, isSubmitting, output, !!code);
 
   const highlighted = useLazyHighlight(code, lang);
   const outputHasError = useMemo(() => ERROR_PATTERNS.test(output), [output]);

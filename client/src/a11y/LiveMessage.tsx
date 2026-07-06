@@ -16,17 +16,17 @@ const LiveMessage: React.FC<LiveMessageProps> = ({
 
   useEffect(() => {
     if (ariaLive === 'assertive') {
-      announceAssertive({ message });
+      announceAssertive(message);
     } else if (ariaLive === 'polite') {
-      announcePolite({ message });
+      announcePolite(message);
     }
   }, [message, ariaLive, announceAssertive, announcePolite]);
 
   useEffect(() => {
     return () => {
       if (clearOnUnmount === true || clearOnUnmount === 'true') {
-        announceAssertive({ message: '' });
-        announcePolite({ message: '' });
+        announceAssertive('');
+        announcePolite('');
       }
     };
   }, [clearOnUnmount, announceAssertive, announcePolite]);

@@ -1,11 +1,6 @@
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils';
 
-export const QuestionMark = ({
-  className = '',
-}: {
-  className?: string | undefined;
-}): JSX.Element => {
+export const QuestionMark = ({ className = '' }) => {
   return (
     <span>
       <div

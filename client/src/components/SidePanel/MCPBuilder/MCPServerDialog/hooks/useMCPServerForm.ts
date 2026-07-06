@@ -16,7 +16,6 @@ export enum AuthTypeEnum {
   None = 'none',
   ServiceHttp = 'service_http',
   OAuth = 'oauth',
-  OBO = 'obo',
 }
 
 // Authorization type enum
@@ -38,7 +37,6 @@ export interface AuthConfig {
   oauth_authorization_url?: string;
   oauth_token_url?: string;
   oauth_scope?: string;
-  obo_scopes?: string;
   server_id?: string;
 }
 
@@ -79,9 +77,7 @@ export function useMCPServerForm({ server, onSuccess, onClose }: UseMCPServerFor
   const defaultValues = useMemo<MCPServerFormData>(() => {
     if (server) {
       let authType = AuthTypeEnum.None;
-      if ('obo' in server.config && server.config.obo) {
-        authType = AuthTypeEnum.OBO;
-      } else if (server.config.oauth) {
+      if (server.config.oauth) {
         authType = AuthTypeEnum.OAuth;
       } else if ('apiKey' in server.config && server.config.apiKey) {
         authType = AuthTypeEnum.ServiceHttp;
@@ -108,7 +104,6 @@ export function useMCPServerForm({ server, onSuccess, onClose }: UseMCPServerFor
           oauth_authorization_url: server.config.oauth?.authorization_url || '',
           oauth_token_url: server.config.oauth?.token_url || '',
           oauth_scope: server.config.oauth?.scope || '',
-          obo_scopes: 'obo' in server.config && server.config.obo ? server.config.obo.scopes : '',
           server_id: server.serverName,
         },
         trust: true, // Pre-checked for existing servers
@@ -132,7 +127,6 @@ export function useMCPServerForm({ server, onSuccess, onClose }: UseMCPServerFor
         oauth_authorization_url: '',
         oauth_token_url: '',
         oauth_scope: '',
-        obo_scopes: '',
       },
       trust: false,
     };
@@ -148,6 +142,7 @@ export function useMCPServerForm({ server, onSuccess, onClose }: UseMCPServerFor
 
   // Watch URL for auto-fill
   const watchedUrl = watch('url');
+  const watchedTitle = watch('title');
 
   // Auto-fill title from URL when title is empty
   const handleUrlChange = useCallback(
@@ -224,10 +219,6 @@ export function useMCPServerForm({ server, onSuccess, onClose }: UseMCPServerFor
               custom_header: formData.auth.api_key_custom_header,
             }),
         };
-      }
-
-      if (formData.auth.auth_type === AuthTypeEnum.OBO && formData.auth.obo_scopes) {
-        config.obo = { scopes: formData.auth.obo_scopes };
       }
 
       const params: MCPServerCreateParams = { config };

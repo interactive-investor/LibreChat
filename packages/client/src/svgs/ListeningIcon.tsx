@@ -1,11 +1,10 @@
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils/';
 
 type ListeningIconProps = {
   className?: string;
 };
 
-export default function ListeningIcon({ className }: ListeningIconProps): JSX.Element {
+export default function ListeningIcon({ className }: ListeningIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

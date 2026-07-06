@@ -5,7 +5,6 @@ describe('shouldUseSecureCookie', () => {
 
   beforeEach(() => {
     process.env = { ...originalEnv };
-    delete process.env.SESSION_COOKIE_SECURE;
   });
 
   afterAll(() => {
@@ -28,34 +27,6 @@ describe('shouldUseSecureCookie', () => {
     delete process.env.NODE_ENV;
     process.env.DOMAIN_SERVER = 'https://myapp.example.com';
     expect(shouldUseSecureCookie()).toBe(false);
-  });
-
-  it('should return true when SESSION_COOKIE_SECURE=true', () => {
-    process.env.NODE_ENV = 'development';
-    process.env.DOMAIN_SERVER = 'http://localhost:3080';
-    process.env.SESSION_COOKIE_SECURE = 'true';
-    expect(shouldUseSecureCookie()).toBe(true);
-  });
-
-  it('should return false when SESSION_COOKIE_SECURE=false', () => {
-    process.env.NODE_ENV = 'production';
-    process.env.DOMAIN_SERVER = 'http://10.0.0.5:3080';
-    process.env.SESSION_COOKIE_SECURE = 'false';
-    expect(shouldUseSecureCookie()).toBe(false);
-  });
-
-  it('should trim and normalize SESSION_COOKIE_SECURE values', () => {
-    process.env.NODE_ENV = 'development';
-    process.env.DOMAIN_SERVER = 'http://localhost:3080';
-    process.env.SESSION_COOKIE_SECURE = ' TRUE ';
-    expect(shouldUseSecureCookie()).toBe(true);
-  });
-
-  it('should ignore invalid SESSION_COOKIE_SECURE values', () => {
-    process.env.NODE_ENV = 'production';
-    process.env.DOMAIN_SERVER = 'https://myapp.example.com';
-    process.env.SESSION_COOKIE_SECURE = 'yes';
-    expect(shouldUseSecureCookie()).toBe(true);
   });
 
   describe('localhost detection in production', () => {

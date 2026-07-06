@@ -16,7 +16,7 @@ const { createAgent, createFile } = require('~/models');
 
 // Only mock the external dependencies that we don't want to test
 jest.mock('~/server/services/Files/process', () => ({
-  processDeleteRequest: jest.fn().mockResolvedValue({ deletedFileIds: [], failedFileIds: [] }),
+  processDeleteRequest: jest.fn().mockResolvedValue({}),
   filterFile: jest.fn(),
   processFileUpload: jest.fn(),
   processAgentFileUpload: jest.fn(),

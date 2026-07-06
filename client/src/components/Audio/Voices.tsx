@@ -6,7 +6,7 @@ import { useLocalize, useTTSBrowser, useTTSExternal } from '~/hooks';
 import { logger } from '~/utils';
 import store from '~/store';
 
-export function BrowserVoiceDropdown({ disabled = false }: { disabled?: boolean }) {
+export function BrowserVoiceDropdown() {
   const localize = useLocalize();
   const { voices = [] } = useTTSBrowser();
   const [voice, setVoice] = useRecoilState(store.voice);
@@ -33,13 +33,12 @@ export function BrowserVoiceDropdown({ disabled = false }: { disabled?: boolean 
         testId="BrowserVoiceDropdown"
         className="z-50"
         aria-labelledby={labelId}
-        disabled={disabled}
       />
     </div>
   );
 }
 
-export function ExternalVoiceDropdown({ disabled = false }: { disabled?: boolean }) {
+export function ExternalVoiceDropdown() {
   const localize = useLocalize();
   const { voices = [] } = useTTSExternal();
   const [voice, setVoice] = useRecoilState(store.voice);
@@ -66,7 +65,6 @@ export function ExternalVoiceDropdown({ disabled = false }: { disabled?: boolean
         testId="ExternalVoiceDropdown"
         className="z-50"
         aria-labelledby={labelId}
-        disabled={disabled}
       />
     </div>
   );

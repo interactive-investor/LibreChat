@@ -1,5 +1,4 @@
 import React from 'react';
-import { JSX } from 'react/jsx-runtime';
 import type { ControllerRenderProps, FieldValues, FieldPath } from 'react-hook-form';
 import { Label } from './Label';
 import { Input } from './Input';
@@ -26,7 +25,7 @@ export default function FormInput<
   containerClass?: string;
   type?: 'string' | 'number';
   labelAdjacent?: React.ReactNode;
-}): JSX.Element {
+}) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 

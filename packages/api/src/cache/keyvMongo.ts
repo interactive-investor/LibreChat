@@ -271,7 +271,7 @@ class KeyvMongoCustom extends EventEmitter {
   }
 }
 
-const keyvMongo: KeyvMongoCustom = new KeyvMongoCustom({
+const keyvMongo = new KeyvMongoCustom({
   collection: 'logs',
 });
 

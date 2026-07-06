@@ -49,7 +49,6 @@ export default function Settings({ conversation, setOption, models, readonly }: 
   const setTopP = setOption('topP');
   const setTopK = setOption('topK');
   const setMaxOutputTokens = setOption('maxOutputTokens');
-  const maxOutputTokensDefault = google.maxOutputTokens.reset(model ?? '');
 
   return (
     <div className="grid grid-cols-5 gap-6">
@@ -268,7 +267,7 @@ export default function Settings({ conversation, setOption, models, readonly }: 
                 <small className="opacity-40">
                   (
                   {localize('com_endpoint_default_with_num', {
-                    0: maxOutputTokensDefault + '',
+                    0: google.maxOutputTokens.default + '',
                   })}
                   )
                 </small>
@@ -293,9 +292,9 @@ export default function Settings({ conversation, setOption, models, readonly }: 
             </div>
             <Slider
               disabled={readonly}
-              value={[maxOutputTokens ?? maxOutputTokensDefault]}
+              value={[maxOutputTokens ?? google.maxOutputTokens.default]}
               onValueChange={(value) => setMaxOutputTokens(value[0])}
-              onDoubleClick={() => setMaxOutputTokens(maxOutputTokensDefault)}
+              onDoubleClick={() => setMaxOutputTokens(google.maxOutputTokens.default)}
               max={google.maxOutputTokens.max}
               min={google.maxOutputTokens.min}
               step={google.maxOutputTokens.step}

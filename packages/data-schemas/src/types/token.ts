@@ -19,15 +19,15 @@ export interface TokenCreateData {
   identifier?: string;
   token: string;
   expiresIn: number;
-  metadata?: Record<string, unknown> | Map<string, unknown>;
+  metadata?: Map<string, unknown>;
 }
 
 export interface TokenQuery {
   userId?: Types.ObjectId | string;
   token?: string;
-  email?: string | null;
-  type?: string | null;
-  identifier?: string | RegExp | null;
+  email?: string;
+  type?: string;
+  identifier?: string;
 }
 
 export interface TokenUpdateData {
@@ -37,7 +37,7 @@ export interface TokenUpdateData {
   token?: string;
   expiresAt?: Date;
   expiresIn?: number;
-  metadata?: Record<string, unknown> | Map<string, unknown>;
+  metadata?: Map<string, unknown>;
 }
 
 export interface TokenDeleteResult {

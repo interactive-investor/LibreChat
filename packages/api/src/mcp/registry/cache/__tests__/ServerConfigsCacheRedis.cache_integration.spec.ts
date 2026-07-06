@@ -1,12 +1,9 @@
 import { expect } from '@playwright/test';
-import type { RedisClientsModule } from '~/cache/__tests__/redisClients.helper';
-import { closeRedisClients } from '~/cache/__tests__/redisClients.helper';
 import { ParsedServerConfig } from '~/mcp/types';
 
 describe('ServerConfigsCacheRedis Integration Tests', () => {
   let ServerConfigsCacheRedis: typeof import('../ServerConfigsCacheRedis').ServerConfigsCacheRedis;
   let keyvRedisClient: Awaited<typeof import('~/cache/redisClients')>['keyvRedisClient'];
-  let redisClientsModule: RedisClientsModule;
 
   let cache: InstanceType<typeof import('../ServerConfigsCacheRedis').ServerConfigsCacheRedis>;
 
@@ -46,7 +43,6 @@ describe('ServerConfigsCacheRedis Integration Tests', () => {
 
     ServerConfigsCacheRedis = cacheModule.ServerConfigsCacheRedis;
     keyvRedisClient = redisClients.keyvRedisClient;
-    redisClientsModule = redisClients;
 
     // Ensure Redis is connected
     if (!keyvRedisClient) throw new Error('Redis client is not initialized');
@@ -79,9 +75,8 @@ describe('ServerConfigsCacheRedis Integration Tests', () => {
   });
 
   afterAll(async () => {
-    // Close both Redis clients; pass the captured module since
-    // `jest.resetModules()` in beforeEach dropped it from the registry
-    await closeRedisClients(redisClientsModule);
+    // Close Redis connection
+    if (keyvRedisClient?.isOpen) await keyvRedisClient.disconnect();
   });
 
   describe('add and get operations', () => {

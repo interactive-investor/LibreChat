@@ -1,4 +1,3 @@
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils';
 export default function CodeyIcon({
   size = 25,
@@ -6,7 +5,7 @@ export default function CodeyIcon({
 }: {
   size?: number;
   className?: string;
-}): JSX.Element {
+}) {
   return (
     <svg
       // width="100%"

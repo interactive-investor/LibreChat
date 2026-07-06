@@ -3,9 +3,7 @@
  * When a toolkit key appears in an agent's tool list,
  * these extra tools should also be included.
  */
-export const toolkitExpansion: {
-  readonly image_gen_oai: readonly ['image_edit_oai'];
-} = {
+export const toolkitExpansion = {
   image_gen_oai: ['image_edit_oai'],
 } as const satisfies Readonly<Record<string, readonly string[]>>;
 

@@ -1,19 +1,4 @@
-const HEIC_MIME_TYPES = new Set(['image/heic', 'image/heif']);
-const HEIC_EXTENSION_REGEX = /\.(heic|heif)$/i;
-type HeicToModule = typeof import('heic-to');
-
-let heicConverterPromise: Promise<HeicToModule> | null = null;
-
-const loadHeicConverter = async (): Promise<HeicToModule> => {
-  heicConverterPromise ??= import('heic-to').catch((error) => {
-    heicConverterPromise = null;
-    throw error;
-  });
-  return heicConverterPromise;
-};
-
-const hasHEICMetadata = (file: File): boolean =>
-  HEIC_MIME_TYPES.has(file.type.toLowerCase()) || HEIC_EXTENSION_REGEX.test(file.name);
+import { heicTo, isHeic } from 'heic-to';
 
 /**
  * Check if a file is in HEIC format
@@ -21,12 +6,7 @@ const hasHEICMetadata = (file: File): boolean =>
  * @returns Promise<boolean> - True if the file is HEIC
  */
 export const isHEICFile = async (file: File): Promise<boolean> => {
-  if (!hasHEICMetadata(file)) {
-    return false;
-  }
-
   try {
-    const { isHeic } = await loadHeicConverter();
     return await isHeic(file);
   } catch (error) {
     console.warn('Error checking if file is HEIC:', error);
@@ -51,7 +31,6 @@ export const convertHEICToJPEG = async (
     // Report conversion start
     onProgress?.(0.3);
 
-    const { heicTo } = await loadHeicConverter();
     const convertedBlob = await heicTo({
       blob: file,
       type: 'image/jpeg',

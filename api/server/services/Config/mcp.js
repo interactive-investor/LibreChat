@@ -1,17 +1,13 @@
-const { createMCPToolCacheService, MCPServersRegistry } = require('@librechat/api');
+const { createMCPToolCacheService } = require('@librechat/api');
 const { getCachedTools, setCachedTools } = require('./getCachedTools');
 
-const { mergeAppTools, cacheMCPServerTools, updateMCPServerTools, getMCPServerTools } =
-  createMCPToolCacheService({
-    getCachedTools,
-    setCachedTools,
-    getServerConfig: (serverName, userId) =>
-      MCPServersRegistry.getInstance().getServerConfig(serverName, userId),
-  });
+const { mergeAppTools, cacheMCPServerTools, updateMCPServerTools } = createMCPToolCacheService({
+  getCachedTools,
+  setCachedTools,
+});
 
 module.exports = {
   mergeAppTools,
-  getMCPServerTools,
   cacheMCPServerTools,
   updateMCPServerTools,
 };

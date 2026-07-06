@@ -103,11 +103,10 @@ or the user will need to attempt logging in to have a verification link sent to 
     silentExit(1);
   }
 
-  const user = { email, password, name, username, confirm_password: password };
-  const additionalData = { emailVerified, ...(provider !== undefined ? { provider } : {}) };
+  const user = { email, password, name, username, confirm_password: password, provider };
   let result;
   try {
-    result = await registerUser(user, additionalData);
+    result = await registerUser(user, { emailVerified });
   } catch (error) {
     console.red('Error: ' + error.message);
     silentExit(1);

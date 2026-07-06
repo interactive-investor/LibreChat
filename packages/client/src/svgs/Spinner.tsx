@@ -1,4 +1,3 @@
-import { JSX } from 'react/jsx-runtime';
 import { cn } from '~/utils/';
 
 interface SpinnerProps {
@@ -15,7 +14,7 @@ export default function Spinner({
   color = 'currentColor',
   bgOpacity = 0.1,
   speed = 0.75,
-}: SpinnerProps): JSX.Element {
+}: SpinnerProps) {
   const cssVars = {
     '--spinner-speed': `${speed}s`,
   } as React.CSSProperties;

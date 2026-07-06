@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import FormData from 'form-data';
 import { logger } from '@librechat/data-schemas';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import {
   FileSources,
   envVarRegex,
@@ -21,7 +22,6 @@ import type {
   OCRImage,
 } from '~/types';
 import { logAxiosError, createAxiosInstance } from '~/utils/axios';
-import { applyAxiosProxyConfig } from '~/utils/proxy';
 import { readFileAsBuffer } from '~/utils/files';
 import { loadServiceKey } from '~/utils/key';
 
@@ -88,7 +88,9 @@ export async function uploadDocumentToMistral({
     maxContentLength: Infinity,
   };
 
-  applyAxiosProxyConfig(config, `${baseURL}/files`);
+  if (process.env.PROXY) {
+    config.httpsAgent = new HttpsProxyAgent(process.env.PROXY);
+  }
 
   return axios
     .post(`${baseURL}/files`, form, config)
@@ -115,7 +117,9 @@ export async function getSignedUrl({
     },
   };
 
-  applyAxiosProxyConfig(config, `${baseURL}/files/${fileId}/url?expiry=${expiry}`);
+  if (process.env.PROXY) {
+    config.httpsAgent = new HttpsProxyAgent(process.env.PROXY);
+  }
 
   return axios
     .get(`${baseURL}/files/${fileId}/url?expiry=${expiry}`, config)
@@ -157,8 +161,11 @@ export async function performOCR({
     },
   };
 
+  if (process.env.PROXY) {
+    config.httpsAgent = new HttpsProxyAgent(process.env.PROXY);
+  }
+
   const ocrURL = baseURL.endsWith('/ocr') ? baseURL : `${baseURL}/ocr`;
-  applyAxiosProxyConfig(config, ocrURL);
 
   return axios
     .post(
@@ -204,7 +211,9 @@ export async function deleteMistralFile({
     },
   };
 
-  applyAxiosProxyConfig(config, `${baseURL}/files/${fileId}`);
+  if (process.env.PROXY) {
+    config.httpsAgent = new HttpsProxyAgent(process.env.PROXY);
+  }
 
   try {
     const result = await axios.delete(`${baseURL}/files/${fileId}`, config);
@@ -571,7 +580,9 @@ async function exchangeJWTForAccessToken(jwt: string): Promise<string> {
     },
   };
 
-  applyAxiosProxyConfig(config, 'https://oauth2.googleapis.com/token');
+  if (process.env.PROXY) {
+    config.httpsAgent = new HttpsProxyAgent(process.env.PROXY);
+  }
 
   const response = await axios.post(
     'https://oauth2.googleapis.com/token',
@@ -642,7 +653,9 @@ async function performGoogleVertexOCR({
     },
   };
 
-  applyAxiosProxyConfig(config, baseURL);
+  if (process.env.PROXY) {
+    config.httpsAgent = new HttpsProxyAgent(process.env.PROXY);
+  }
 
   return axios
     .post(baseURL, requestBody, config)
