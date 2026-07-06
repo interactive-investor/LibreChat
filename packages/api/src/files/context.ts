@@ -4,6 +4,7 @@ import type { IMongoFile } from '@librechat/data-schemas';
 import type { ServerRequest } from '~/types';
 import { processTextWithTokenLimit } from '~/utils/text';
 import type { FileContextConfig } from 'librechat-data-provider';
+import type { TokenCountFn } from '~/utils/text';
 
 /**
  * Extracts text context from attachments and returns formatted text.
@@ -23,8 +24,8 @@ export async function extractFileContext({
 }: {
   attachments: IMongoFile[];
   req?: ServerRequest;
-  tokenCountFn: (text: string) => number;
   contextConfig?: FileContextConfig;
+  tokenCountFn: TokenCountFn;
 }): Promise<string | undefined> {
   if (!attachments || attachments.length === 0) {
     return undefined;
@@ -35,8 +36,7 @@ export async function extractFileContext({
   const fileContextConfig = contextConfig ?? fileConfig.fileContext;
   const prefixText = fileContextConfig?.prefixText ?? 'Attached document(s):';
   const showFilenameHeaders = fileContextConfig?.showFilenameHeaders ?? true;
-  const filenameHeaderTemplate =
-    fileContextConfig?.filenameHeaderTemplate ?? '# "{filename}"';
+  const filenameHeaderTemplate = fileContextConfig?.filenameHeaderTemplate ?? '# "{filename}"';
 
   if (!fileTokenLimit) {
     // If no token limit, return undefined (no processing)
