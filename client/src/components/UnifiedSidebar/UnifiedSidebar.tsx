@@ -49,13 +49,17 @@ function UnifiedSidebar() {
 
   const links = useUnifiedSidebarLinks();
 
-  // Honour aii_sidebar=collapsed URL param (set by the Chrome extension side panel)
+  // When loaded inside the extension sidepanel iframe, always start collapsed
+  // regardless of any stored sidebar preference. Also honour the explicit URL param.
   useEffect(() => {
+    const isInIframe = (() => {
+      try { return window !== window.parent; } catch { return true; }
+    })();
     const params = new URLSearchParams(window.location.search);
-    if (params.get('aii_sidebar') === 'collapsed') {
+    if (isInIframe || params.get('aii_sidebar') === 'collapsed') {
       setExpanded(false);
     }
-  }, []); 
+  }, []);
 
   const handleCollapse = useCallback(() => {
     startTransition(() => {
