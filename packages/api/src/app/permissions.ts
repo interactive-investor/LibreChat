@@ -174,6 +174,27 @@ export async function updateInterfacePermissions({
     const getConfigPublic = (config: PermissionConfig) =>
       typeof config === 'boolean' ? undefined : config?.public;
 
+    const remoteAgentsUseFromAgents =
+      !interfaceConfig?.remoteAgents &&
+      typeof interfaceConfig?.agents === 'object'
+        ? getConfigUse(loadedInterface.agents)
+        : undefined;
+    const remoteAgentsCreateFromAgents =
+      !interfaceConfig?.remoteAgents &&
+      typeof interfaceConfig?.agents === 'object'
+        ? getConfigCreate(loadedInterface.agents)
+        : undefined;
+    const remoteAgentsShareFromAgents =
+      !interfaceConfig?.remoteAgents &&
+      typeof interfaceConfig?.agents === 'object'
+        ? getConfigShare(loadedInterface.agents)
+        : undefined;
+    const remoteAgentsPublicFromAgents =
+      !interfaceConfig?.remoteAgents &&
+      typeof interfaceConfig?.agents === 'object'
+        ? getConfigPublic(loadedInterface.agents)
+        : undefined;
+
     // Get default values (for backward compat when config is boolean)
     const promptsDefaultUse =
       typeof defaults.prompts === 'boolean' ? defaults.prompts : defaults.prompts?.use;
@@ -407,18 +428,20 @@ export async function updateInterfacePermissions({
       },
       [PermissionTypes.REMOTE_AGENTS]: {
         [Permissions.USE]: getPermissionValue(
-          loadedInterface.remoteAgents?.use,
+          loadedInterface.remoteAgents?.use ?? remoteAgentsUseFromAgents,
           defaultPerms[PermissionTypes.REMOTE_AGENTS]?.[Permissions.USE],
           defaults.remoteAgents?.use,
         ),
         ...((typeof interfaceConfig?.remoteAgents === 'object' &&
           'create' in interfaceConfig.remoteAgents) ||
-        !existingPermissions?.[PermissionTypes.REMOTE_AGENTS]
+        (!existingPermissions?.[PermissionTypes.REMOTE_AGENTS] &&
+          (typeof interfaceConfig?.remoteAgents === 'object' ||
+            typeof interfaceConfig?.agents === 'object'))
           ? {
               [Permissions.CREATE]: getPermissionValue(
                 typeof interfaceConfig?.remoteAgents === 'object'
                   ? interfaceConfig.remoteAgents.create
-                  : undefined,
+                  : remoteAgentsCreateFromAgents,
                 defaultPerms[PermissionTypes.REMOTE_AGENTS]?.[Permissions.CREATE],
                 defaults.remoteAgents?.create,
               ),
@@ -426,15 +449,17 @@ export async function updateInterfacePermissions({
           : {}),
         ...((typeof interfaceConfig?.remoteAgents === 'object' &&
           ('share' in interfaceConfig.remoteAgents || 'public' in interfaceConfig.remoteAgents)) ||
-        !existingPermissions?.[PermissionTypes.REMOTE_AGENTS]
+        (!existingPermissions?.[PermissionTypes.REMOTE_AGENTS] &&
+          (typeof interfaceConfig?.remoteAgents === 'object' ||
+            typeof interfaceConfig?.agents === 'object'))
           ? {
               [Permissions.SHARE]: getPermissionValue(
-                loadedInterface.remoteAgents?.share,
+                loadedInterface.remoteAgents?.share ?? remoteAgentsShareFromAgents,
                 defaultPerms[PermissionTypes.REMOTE_AGENTS]?.[Permissions.SHARE],
                 defaults.remoteAgents?.share,
               ),
               [Permissions.SHARE_PUBLIC]: getPermissionValue(
-                loadedInterface.remoteAgents?.public,
+                loadedInterface.remoteAgents?.public ?? remoteAgentsPublicFromAgents,
                 defaultPerms[PermissionTypes.REMOTE_AGENTS]?.[Permissions.SHARE_PUBLIC],
                 defaults.remoteAgents?.public,
               ),

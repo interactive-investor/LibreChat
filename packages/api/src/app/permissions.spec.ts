@@ -2218,6 +2218,32 @@ describe('updateInterfacePermissions - permissions', () => {
     });
   });
 
+  it('should inherit remoteAgents use from agents.use when remoteAgents config is absent', async () => {
+    const config = {
+      interface: {
+        agents: { use: true, create: true, share: true, public: true },
+      },
+    };
+    const configDefaults = { interface: {} } as TConfigDefaults;
+    const interfaceConfig = await loadDefaultInterface({ config, configDefaults });
+    const appConfig = { config, interfaceConfig } as unknown as AppConfig;
+
+    await updateInterfacePermissions({
+      appConfig,
+      getRoleByName: mockGetRoleByName,
+      updateAccessPermissions: mockUpdateAccessPermissions,
+    });
+
+    const userCall = mockUpdateAccessPermissions.mock.calls.find(
+      (call) => call[0] === SystemRoles.USER,
+    );
+
+    expect(userCall[1][PermissionTypes.REMOTE_AGENTS][Permissions.USE]).toBe(true);
+    expect(userCall[1][PermissionTypes.REMOTE_AGENTS][Permissions.CREATE]).toBe(true);
+    expect(userCall[1][PermissionTypes.REMOTE_AGENTS][Permissions.SHARE]).toBe(true);
+    expect(userCall[1][PermissionTypes.REMOTE_AGENTS][Permissions.SHARE_PUBLIC]).toBe(true);
+  });
+
   it('should enable all remoteAgents permissions when fully enabled in config', async () => {
     const config = {
       interface: {
